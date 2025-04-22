@@ -1,4 +1,4 @@
-// إعداد Firebase
+// إعدادات Firebase (ضع معلومات مشروعك هنا)
 const firebaseConfig = {
   apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
   authDomain: "messengerapp-58f7a.firebaseapp.com",
@@ -9,71 +9,39 @@ const firebaseConfig = {
   appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
-// تهيئة Firebase
+// بدء Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const username = localStorage.getItem('username');
-if (!username) window.location.href = "index.html";
+// جلب اسم المستخدم
+const username = localStorage.getItem("username");
+document.getElementById("userDisplay").innerText = username;
 
-document.getElementById('userDisplay').textContent = username;
+// زر الإرسال
+document.getElementById("sendBtn").addEventListener("click", () => {
+  const recipient = document.getElementById("recipientInput").value.trim();
+  const message = document.getElementById("messageInput").value.trim();
 
-// تسجيل المستخدم في قاعدة البيانات
-db.ref('users/' + username).set(true);
+  if (recipient && message) {
+    const msgData = {
+      from: username,
+      to: recipient,
+      message: message,
+      time: Date.now()
+    };
 
-// تحميل قائمة المستخدمين
-db.ref('users').on('value', snapshot => {
-  const users = snapshot.val();
-  const select = document.getElementById('receiverSelect');
-  select.innerHTML = '<option disabled selected>اختر مستخدم للمراسلة</option>';
-
-  for (let user in users) {
-    if (user !== username) {
-      const option = document.createElement('option');
-      option.value = user;
-      option.textContent = user;
-      select.appendChild(option);
-    }
+    db.ref("messages").push(msgData);
+    document.getElementById("messageInput").value = "";
   }
 });
 
-// إرسال رسالة
-function sendMessage() {
-  const receiver = document.getElementById('receiverSelect').value;
-  const message = document.getElementById('messageInput').value.trim();
-  if (!receiver || !message) return;
-
-  const chatId = username < receiver ? ${username}_${receiver} : ${receiver}_${username};
-  const messageData = {
-    sender: username,
-    receiver: receiver,
-    message: message,
-    timestamp: Date.now()
-  };
-
-  db.ref('chats/' + chatId).push(messageData);
-  document.getElementById('messageInput').value = '';
-}
-
 // عرض الرسائل
-document.getElementById('receiverSelect').addEventListener('change', function () {
-  const receiver = this.value;
-  const chatId = username < receiver ? ${username}_${receiver} : ${receiver}_${username};
-  const messagesDiv = document.getElementById('messages');
-  messagesDiv.innerHTML = '...تحميل الرسائل';
-
-  db.ref('chats/' + chatId).off(); // تنظيف المستمع القديم
-
-  db.ref('chats/' + chatId).on('value', snapshot => {
-    const messages = snapshot.val();
-    messagesDiv.innerHTML = '';
-    for (let key in messages) {
-      const msg = messages[key];
-      const div = document.createElement('div');
-      div.textContent = ${msg.sender}: ${msg.message};
-      div.style.textAlign = msg.sender === username ? 'right' : 'left';
-      messagesDiv.appendChild(div);
-    }
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  });
+db.ref("messages").on("child_added", (snapshot) => {
+  const data = snapshot.val();
+  if ((data.to === username || data.from === username)) {
+    const msg = [${data.from} إلى ${data.to}]: ${data.message};
+    const li = document.createElement("li");
+    li.textContent = msg;
+    document.getElementById("chatBox").appendChild(li);
+  }
 });
