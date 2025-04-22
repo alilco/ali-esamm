@@ -2,10 +2,17 @@
 <html>
 <head>
   <title>Login</title>
+  <style>
+    body { font-family: Arial; background: #f2f2f2; text-align: center; margin-top: 100px; }
+    input { padding: 10px; width: 250px; margin: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #45a049; }
+  </style>
 </head>
 <body>
   <h2>تسجيل الدخول</h2>
   <input type="text" id="usernameInput" placeholder="اسم المستخدم">
+  <br>
   <button onclick="login()">دخول</button>
 
   <script>
