@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Messenger</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>تسجيل الدخول</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم">
+    <button onclick="login()">دخول</button>
+  </div>
+
+  <script>
+    function login() {
+      const username = document.getElementById('username').value.trim();
+      if (username) {
+        localStorage.setItem('username', username);
+        window.location.href = "chat.html";
+      } else {
+        alert("يرجى إدخال اسم المستخدم");
+      }
+    }
+  </script>
+</body>
+</html>
