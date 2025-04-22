@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chat - Messenger</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <h2>مرحباً <span id="userDisplay"></span></h2>
+    
+    <select id="receiverSelect">
+      <option disabled selected>اختر مستخدم للمراسلة</option>
+    </select>
+
+    <div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></div>
+
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا">
+    <button onclick="sendMessage()">إرسال</button>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  
+  <!-- سكربت المراسلة -->
+  <script src="script.js"></script>
+</body>
+</html>
