@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إنشاء حساب</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="center-box">
+    <h2>إنشاء حساب جديد</h2>
+    <input type="text" id="signupUsername" placeholder="اسم المستخدم">
+    <button onclick="signup()">تسجيل</button>
+    <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    function signup() {
+      const username = document.getElementById("signupUsername").value.trim();
+      if (!username) return alert("يرجى إدخال اسم المستخدم");
+
+      set(ref(db, "users/" + username), {
+        username,
+        lastSeen: new Date().toISOString()
+      });
+
+      const user = { username };
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      window.location.href = "friends.html";
+    }
+
+    window.signup = signup;
+  </script>
+</body>
+</html>
