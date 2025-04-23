@@ -1,90 +1,46 @@
-/* إعدادات عامة */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+  direction: rtl;
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(to right, #2b5876, #4e4376);
+  color: white;
+  text-align: center;
+  padding-top: 50px;
 }
 
 .container {
-    background-color: white;
-    padding: 20px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    width: 100%;
-    max-width: 400px;
+  max-width: 350px;
+  margin: auto;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 15px;
 }
 
-h2 {
-    text-align: center;
-    font-size: 24px;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-/* تنسيق الحقول */
 input {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    color: #333;
-    background-color: #fafafa;
+  display: block;
+  width: 90%;
+  padding: 10px;
+  margin: 10px auto;
+  border: none;
+  border-radius: 10px;
 }
 
-input:focus {
-    border-color: #4CAF50;
-    background-color: #fff;
-    outline: none;
-}
-
-/* زر التسجيل */
 button {
-    width: 100%;
-    padding: 12px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+  padding: 10px 30px;
+  background-color: #00c9a7;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
 }
 
 button:hover {
-    background-color: #45a049;
+  background-color: #007f6b;
 }
 
-button:focus {
-    outline: none;
-}
-
-/* استجابة للأجهزة المحمولة */
-@media (max-width: 480px) {
-    .container {
-        padding: 15px;
-    }
-
-    h2 {
-        font-size: 20px;
-    }
-
-    input {
-        font-size: 14px;
-    }
-
-    button {
-        font-size: 16px;
-    }
+.logo {
+  font-size: 2.5em;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #fff;
 }
