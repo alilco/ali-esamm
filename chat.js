@@ -1,71 +1,52 @@
-import { db, storage } from "./firebase-config.js";
+// chat.js
+import { db, auth } from "./firebase-config.js";
 import {
-  ref as dbRef,
+  ref,
   push,
-  onChildAdded
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+  onChildAdded,
+  set
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-const user = JSON.parse(localStorage.getItem("currentUser"));
-const friend = JSON.parse(localStorage.getItem("chatWith"));
+const uid = localStorage.getItem("uid");
+const msgRef = ref(db, "messages");
 
-if (!user || !friend) window.location.href = "friends.html";
-
-document.getElementById("chatWithName").textContent = "الدردشة مع: " + friend.username;
-
-const messageInput = document.getElementById("messageInput");
-const imageInput = document.getElementById("imageInput");
-const messagesDiv = document.getElementById("messages");
-const form = document.getElementById("messageForm");
-
-const chatPath = [user.username, friend.username].sort().join("_");
-const chatRef = dbRef(db, "chats/" + chatPath);
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  let message = messageInput.value.trim();
-  let imageFile = imageInput.files[0];
-
-  const newMessage = {
-    sender: user.username,
-    timestamp: Date.now()
-  };
-
-  if (message) {
-    newMessage.text = message;
-  }
-
-  if (imageFile) {
-    const imageStorageRef = storageRef(storage, `images/${chatPath}/${Date.now()}_${imageFile.name}`);
-    await uploadBytes(imageStorageRef, imageFile);
-    newMessage.image = await getDownloadURL(imageStorageRef);
-  }
-
-  if (newMessage.text || newMessage.image) {
-    await push(chatRef, newMessage);
-    messageInput.value = "";
-    imageInput.value = "";
-  }
+onAuthStateChanged(auth, user => {
+  if (!user) window.location.href = "index.html";
 });
 
-onChildAdded(chatRef, (snapshot) => {
-  const data = snapshot.val();
-  const div = document.createElement("div");
-  div.className = data.sender === user.username ? "my-message" : "friend-message";
+document.getElementById("imageInput").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = () => {
+    sendMessage(reader.result, true);
+  };
+  reader.readAsDataURL(file);
+});
 
-  if (data.text) {
-    div.innerHTML += `<p>${data.text}</p>`;
+window.sendMessage = () => {
+  const text = document.getElementById("messageInput").value;
+  if (text.trim() !== "") {
+    sendMessage(text, false);
+    document.getElementById("messageInput").value = "";
   }
+};
 
-  if (data.image) {
-    div.innerHTML += `<img src="${data.image}" width="200"/>`;
-  }
+function sendMessage(content, isImage) {
+  push(msgRef, {
+    sender: uid,
+    content,
+    isImage,
+    time: new Date().toISOString()
+  });
+}
 
-  messagesDiv.appendChild(div);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+onChildAdded(msgRef, snapshot => {
+  const msg = snapshot.val();
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "msg";
+  msgDiv.innerHTML = msg.isImage ? `<img src="${msg.content}" style="max-width: 200px;">` : msg.content;
+  document.getElementById("messages").appendChild(msgDiv);
 });
