@@ -2,21 +2,36 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
+  <title>إضافة صديق - rengeM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إضافة صديق</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="add-friend-container">
-    <h2>إضافة صديق</h2>
-    <form id="addFriendForm">
-      <input type="text" id="friendUsername" placeholder="اسم المستخدم للصديق" required />
-      <button type="submit">إضافة</button>
+<body class="add-friend-page">
+  <div class="container">
+    <h1 class="page-title">إضافة صديق</h1>
+
+    <form id="addFriendForm" class="form">
+      <label for="friendUsername">اسم المستخدم:</label>
+      <input type="text" id="friendUsername" name="friendUsername" placeholder="ادخل اسم المستخدم" required>
+      <button type="submit" class="btn">إضافة</button>
     </form>
-    <p id="statusMessage"></p>
+
+    <button onclick="goBack()" class="btn secondary">رجوع</button>
   </div>
 
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="add-friend.js"></script>
+  <script>
+    function goBack() {
+      window.history.back();
+    }
+
+    document.getElementById('addFriendForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('friendUsername').value;
+      
+      // هنا يمكنك تنفيذ إضافة الصديق إلى قاعدة البيانات Firebase أو ما تريد
+      alert('تم إرسال طلب الإضافة إلى: ' + username);
+      document.getElementById('friendUsername').value = '';
+    });
+  </script>
 </body>
 </html>
