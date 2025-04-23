@@ -2,54 +2,61 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>محادثة خاصة</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #fff;
-      margin: 0;
-      padding: 0;
-      direction: rtl;
-    }
-    .topbar {
-      background-color: #343a40;
-      color: white;
-      padding: 12px;
-      text-align: center;
-      position: relative;
-    }
-    .back-btn {
-      position: absolute;
-      left: 10px;
-      top: 10px;
-      background: #ffc107;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      color: black;
-    }
-    .chat-container {
-      padding: 20px;
-    }
-  </style>
+  <title>دردشة خاصة</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div class="topbar">
-    <button class="back-btn" onclick="history.back()">رجوع</button>
-    محادثة مع <span id="chatWith">...</span>
-  </div>
-
+  <h2>الدردشة مع: <span id="chatWith"></span></h2>
   <div class="chat-container">
-    <p>ابدأ المحادثة مع صديقك الآن!</p>
+    <div id="chatMessages"></div>
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
+    <button id="sendBtn">إرسال</button>
   </div>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const user = params.get("user");
-    document.getElementById("chatWith").textContent = user || "صديق";
-  </script>
+  <!-- Firebase & Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const username = localStorage.getItem("username") || "مستخدم";
+    const chatUser = params.get("user");
+    const chatRef = ref(db, "privateMessages/" + [username, chatUser].sort().join("_"));
+
+    document.getElementById("chatWith").textContent = chatUser;
+
+    document.getElementById("sendBtn").addEventListener("click", () => {
+      const msg = document.getElementById("messageInput").value.trim();
+      if (msg) {
+        push(chatRef, {
+          from: username,
+          text: msg,
+          time: Date.now()
+        });
+        document.getElementById("messageInput").value = "";
+      }
+    });
+
+    const chatBox = document.getElementById("chatMessages");
+    onChildAdded(chatRef, (data) => {
+      const msg = data.val();
+      const p = document.createElement("p");
+      p.textContent = msg.from + ": " + msg.text;
+      chatBox.appendChild(p);
+    });
+  </script>
 </body>
 </html>
