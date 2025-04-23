@@ -1,6 +1,13 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  push,
+  onValue
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
+// إعدادات Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
   authDomain: "messengerapp-58f7a.firebaseapp.com",
@@ -11,32 +18,82 @@ const firebaseConfig = {
   appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
+// تشغيل Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const user = JSON.parse(localStorage.getItem("currentUser"));
-const chatBox = document.getElementById("chatBox");
-const input = document.getElementById("messageInput");
-const chatRef = ref(db, `messages/global`);
+// عناصر الصفحة
+const friendsList = document.getElementById("friendsList");
+const messagesDiv = document.getElementById("messages");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const chatWith = document.getElementById("chatWith");
+const backBtn = document.getElementById("backBtn");
 
-window.sendMessage = function () {
-  const text = input.value;
-  if (!text) return;
+let currentUser = JSON.parse(localStorage.getItem("user"));
+let selectedFriend = null;
 
-  const message = {
-    user: user.username,
-    text: btoa(text), // تشفير Base64
-    time: new Date().toLocaleTimeString()
-  };
+// تحميل الأصدقاء
+fetch("users.json")
+  .then(res => res.json())
+  .then(users => {
+    users.forEach(user => {
+      if (user.username !== currentUser.username) {
+        const li = document.createElement("li");
+        li.textContent = user.fullname;
+        li.onclick = () => openChat(user);
+        friendsList.appendChild(li);
+      }
+    });
+  });
 
-  push(chatRef, message);
-  input.value = "";
+// فتح محادثة خاصة
+function openChat(friend) {
+  selectedFriend = friend;
+  chatWith.textContent = `الدردشة مع ${friend.fullname}`;
+  messagesDiv.innerHTML = "";
+  const chatId = generateChatId(currentUser.username, friend.username);
+  const messagesRef = ref(db, `messages/${chatId}`);
+
+  onValue(messagesRef, snapshot => {
+    messagesDiv.innerHTML = "";
+    snapshot.forEach(child => {
+      const data = child.val();
+      const msg = decrypt(data.message);
+      const div = document.createElement("div");
+      div.className = data.sender === currentUser.username ? "my-msg" : "their-msg";
+      div.textContent = msg;
+      messagesDiv.appendChild(div);
+    });
+  });
+}
+
+// إرسال رسالة
+sendBtn.onclick = () => {
+  if (!selectedFriend || messageInput.value.trim() === "") return;
+  const chatId = generateChatId(currentUser.username, selectedFriend.username);
+  const msgRef = push(ref(db, `messages/${chatId}`));
+  set(msgRef, {
+    sender: currentUser.username,
+    message: encrypt(messageInput.value.trim())
+  });
+  messageInput.value = "";
 };
 
-onChildAdded(chatRef, (snapshot) => {
-  const msg = snapshot.val();
-  const div = document.createElement("div");
-  const sender = msg.user === user.username ? "أنا" : msg.user;
-  div.innerHTML = `<strong>${sender}:</strong> ${atob(msg.text)} <span style="font-size:10px">(${msg.time})</span>`;
-  chatBox.appendChild(div);
-});
+// زر الرجوع
+backBtn.onclick = () => {
+  location.href = "index.html";
+};
+
+// توليد معرف المحادثة
+function generateChatId(user1, user2) {
+  return [user1, user2].sort().join("_");
+}
+
+// تشفير بسيط (يمكن تغييره بخوارزمية أقوى)
+function encrypt(msg) {
+  return btoa(unescape(encodeURIComponent(msg)));
+}
+function decrypt(enc) {
+  return decodeURIComponent(escape(atob(enc)));
+}
