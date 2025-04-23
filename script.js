@@ -1,76 +1,98 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  get,
-  child,
-  update
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+// script.js
 
-// إعدادات Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-  authDomain: "messengerapp-58f7a.firebaseapp.com",
-  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-  projectId: "messengerapp-58f7a",
-  storageBucket: "messengerapp-58f7a.appspot.com",
-  messagingSenderId: "46178168523",
-  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-};
+const db = firebase.database();
 
-// تهيئة التطبيق
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// الحصول على اسم المستخدم الحالي من localStorage
-const currentUsername = localStorage.getItem("username");
-
-// دالة لإضافة صديق
-window.addFriend = async function () {
-  const friendUsername = document.getElementById("friendUsername").value.trim();
-
-  if (!friendUsername || friendUsername === currentUsername) {
-    alert("اسم المستخدم غير صالح.");
-    return;
-  }
-
-  const dbRef = ref(db);
-  try {
-    const snapshot = await get(child(dbRef, `users/${friendUsername}`));
+// تسجيل مستخدم جديد
+function register(fullName, username, password) {
+  db.ref("users/" + username).once("value").then(snapshot => {
     if (snapshot.exists()) {
-      const userFriendsRef = ref(db, `friends/${currentUsername}/${friendUsername}`);
-      await update(userFriendsRef, {
-        username: friendUsername,
-        addedAt: new Date().toISOString()
-      });
-      alert("تمت إضافة الصديق بنجاح!");
-      location.reload();
+      alert("اسم المستخدم موجود بالفعل");
     } else {
-      alert("المستخدم غير موجود.");
+      db.ref("users/" + username).set({
+        fullName,
+        username,
+        password,
+        active: true,
+        lastSeen: new Date().toISOString(),
+        bio: "",
+        profileImage: "default.png",
+        friends: {}
+      }).then(() => {
+        localStorage.setItem("username", username);
+        window.location.href = "chat.html";
+      });
     }
-  } catch (error) {
-    console.error("خطأ في الإضافة:", error);
-    alert("حدث خطأ أثناء إضافة الصديق.");
-  }
-};
-
-// عرض قائمة الأصدقاء
-async function showFriends() {
-  const list = document.getElementById("friendsList");
-  const snapshot = await get(ref(db, `friends/${currentUsername}`));
-  if (snapshot.exists()) {
-    const friends = snapshot.val();
-    list.innerHTML = "";
-    for (const key in friends) {
-      const li = document.createElement("li");
-      li.textContent = key;
-      list.appendChild(li);
-    }
-  } else {
-    list.innerHTML = "<li>لا يوجد أصدقاء بعد</li>";
-  }
+  });
 }
 
-if (document.getElementById("friendsList")) {
-  showFriends();
+// تسجيل الدخول
+function login(username, password) {
+  db.ref("users/" + username).once("value").then(snapshot => {
+    if (snapshot.exists() && snapshot.val().password === password) {
+      localStorage.setItem("username", username);
+      db.ref("users/" + username + "/active").set(true);
+      window.location.href = "chat.html";
+    } else {
+      alert("بيانات الدخول غير صحيحة");
+    }
+  });
+}
+
+// إضافة صديق
+function addFriend(friendUsername) {
+  const myUsername = localStorage.getItem("username");
+  if (myUsername === friendUsername) return alert("لا يمكنك إضافة نفسك!");
+
+  db.ref("users/" + friendUsername).once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      // إضافة كل واحد لقائمة أصدقاء الآخر
+      db.ref("users/" + myUsername + "/friends/" + friendUsername).set(true);
+      db.ref("users/" + friendUsername + "/friends/" + myUsername).set(true);
+      window.location.href = "chat.html?user=" + friendUsername;
+    } else {
+      alert("المستخدم غير موجود");
+    }
+  });
+}
+
+// جلب بيانات المستخدم في الملف الشخصي
+function loadProfile() {
+  const username = localStorage.getItem("username");
+  if (!username) return;
+
+  db.ref("users/" + username).once("value").then(snapshot => {
+    const user = snapshot.val();
+    document.getElementById("username").innerText = user.username;
+    document.getElementById("fullname").innerText = user.fullName;
+    document.getElementById("bio").innerText = user.bio;
+    document.getElementById("profile-image").src = user.profileImage;
+  });
+}
+
+// تعديل الملف الشخصي
+function updateProfile(fullName, bio, imageUrl) {
+  const username = localStorage.getItem("username");
+  db.ref("users/" + username).update({
+    fullName,
+    bio,
+    profileImage: imageUrl
+  }).then(() => {
+    alert("تم حفظ التعديلات");
+    window.location.href = "profile.html";
+  });
+}
+
+// تحديث آخر ظهور
+function updateLastSeen() {
+  const username = localStorage.getItem("username");
+  db.ref("users/" + username + "/lastSeen").set(new Date().toISOString());
+}
+
+// تشفير الرسائل (بسيط للتجربة فقط)
+function encryptMessage(text) {
+  return btoa(text); // base64
+}
+
+function decryptMessage(encoded) {
+  return atob(encoded);
 }
