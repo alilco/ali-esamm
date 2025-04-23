@@ -1,68 +1,37 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>محادثة</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-      authDomain: "messengerapp-58f7a.firebaseapp.com",
-      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-      projectId: "messengerapp-58f7a",
-      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const receiverId = urlParams.get("uid");
-    const currentUserId = localStorage.getItem("userId"); // تأكد من تخزين ID المستخدم عند تسجيل الدخول
-
-    const messagesRef = ref(db, `messages/${currentUserId}_${receiverId}`);
-    const chatBox = document.getElementById("chat-box");
-
-    onValue(messagesRef, (snapshot) => {
-      chatBox.innerHTML = "";
-      const messages = snapshot.val();
-      for (let id in messages) {
-        const msg = messages[id];
-        const div = document.createElement("div");
-        div.className = msg.sender === currentUserId ? "me" : "them";
-        div.textContent = msg.text;
-        chatBox.appendChild(div);
-      }
-    });
-
-    document.getElementById("send-btn").onclick = () => {
-      const input = document.getElementById("message");
-      const msg = input.value;
-      if (!msg) return;
-      push(messagesRef, {
-        sender: currentUserId,
-        receiver: receiverId,
-        text: msg,
-        timestamp: Date.now()
-      });
-      input.value = "";
-    };
-  </script>
-  <style>
-    body { font-family: Tahoma; direction: rtl; padding: 20px; background: #fff; }
-    #chat-box { min-height: 300px; background: #f5f5f5; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
-    .me { background: #00bfff; color: white; margin: 5px 0; padding: 10px; border-radius: 10px; text-align: right; }
-    .them { background: #e0e0e0; margin: 5px 0; padding: 10px; border-radius: 10px; text-align: left; }
-    #message { width: 80%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; }
-    #send-btn { padding: 10px 20px; background: #00bfff; color: white; border: none; border-radius: 10px; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>rengeM - المحادثة</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>الدردشة</h2>
-  <div id="chat-box"></div>
-  <input type="text" id="message" placeholder="اكتب رسالة...">
-  <button id="send-btn">إرسال</button>
+  <header class="chat-header">
+    <button id="backBtn">رجوع</button>
+    <h2>rengeM</h2>
+    <button id="settingsBtn">الإعدادات</button>
+  </header>
+
+  <main class="chat-container">
+    <section class="friend-list">
+      <h3>الأصدقاء</h3>
+      <ul id="friendsList">
+        <!-- يتم توليد الأصدقاء هنا -->
+      </ul>
+    </section>
+
+    <section class="chat-box">
+      <div class="chat-header" id="chatWith">يرجى اختيار صديق</div>
+      <div class="messages" id="messages"></div>
+
+      <div class="message-input">
+        <input type="text" id="messageInput" placeholder="اكتب رسالتك..."/>
+        <button id="sendBtn">إرسال</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="chat.js"></script>
 </body>
 </html>
