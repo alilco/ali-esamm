@@ -1,22 +1,18 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>إنشاء حساب - ماسنجر</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Signup | Messenger</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="login-body">
-  <div class="login-container">
-    <h2>إنشاء حساب</h2>
-    <input type="text" id="signupName" placeholder="اسم العرض">
-    <input type="email" id="signupEmail" placeholder="البريد الإلكتروني">
-    <input type="password" id="signupPassword" placeholder="كلمة المرور">
-    <button onclick="signup()">تسجيل</button>
-    <p>لديك حساب؟ <a href="index.html">سجل الدخول</a></p>
+<body>
+  <div class="container">
+    <h2>Sign Up</h2>
+    <input type="email" id="signupEmail" placeholder="Email">
+    <input type="password" id="signupPassword" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <p>Already have an account? <a href="index.html">Login</a></p>
   </div>
-
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="auth.js"></script>
+  <script type="module" src="signup.js"></script>
 </body>
 </html>
