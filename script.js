@@ -1,11 +1,15 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import {
   getDatabase,
   ref,
   push,
   onChildAdded,
-  set
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+  set,
+  serverTimestamp,
+  update,
+  onValue
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
@@ -20,54 +24,42 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const user = JSON.parse(localStorage.getItem("currentUser"));
-const friend = localStorage.getItem("chatWith");
-const room = [user.username, friend].sort().join("_");
+const username = localStorage.getItem("username");
+const receiver = localStorage.getItem("receiver");
 
-const chatRef = ref(db, "chats/" + room);
-const input = document.getElementById("messageInput");
-const chatBox = document.getElementById("chatBox");
-const imageInput = document.getElementById("imageInput");
+const chatRef = ref(db, `chats/${username}_${receiver}`);
+const reverseChatRef = ref(db, `chats/${receiver}_${username}`);
+const messagesDiv = document.getElementById("messages");
 
-function sendMessage() {
-  const message = input.value.trim();
-  const file = imageInput.files[0];
-  if (!message && !file) return;
-
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      push(chatRef, {
-        sender: user.username,
-        image: e.target.result,
-        timestamp: Date.now()
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-
-  if (message) {
-    push(chatRef, {
-      sender: user.username,
+document.getElementById("sendButton").onclick = () => {
+  const message = document.getElementById("messageInput").value;
+  if (message.trim() !== "") {
+    const newMsg = {
+      sender: username,
       message: message,
-      timestamp: Date.now()
-    });
-    input.value = "";
+      timestamp: serverTimestamp()
+    };
+    push(chatRef, newMsg);
+    push(reverseChatRef, newMsg);
+    document.getElementById("messageInput").value = "";
   }
-
-  set(ref(db, "users/" + user.username + "/lastSeen"), new Date().toISOString());
-}
+};
 
 onChildAdded(chatRef, (data) => {
   const msg = data.val();
-  const div = document.createElement("div");
-  div.style.margin = "10px";
-  div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.message || ''}`;
-  if (msg.image) {
-    const img = document.createElement("img");
-    img.src = msg.image;
-    img.style.maxWidth = "200px";
-    div.appendChild(img);
-  }
-  chatBox.appendChild(div);
+  const msgElement = document.createElement("div");
+  msgElement.className = msg.sender === username ? "msg-sent" : "msg-received";
+  msgElement.textContent = `${msg.sender}: ${msg.message}`;
+  messagesDiv.appendChild(msgElement);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+});
+
+// تحديث آخر ظهور
+const userStatusRef = ref(db, `users/${username}`);
+update(userStatusRef, { lastSeen: new Date().toLocaleString() });
+
+// عرض آخر ظهور للمستقبل
+const receiverStatusRef = ref(db, `users/${receiver}/lastSeen`);
+onValue(receiverStatusRef, (snapshot) => {
+  document.getElementById("lastSeen").innerText = "آخر ظهور: " + snapshot.val();
 });
