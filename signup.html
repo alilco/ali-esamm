@@ -2,19 +2,49 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>إنشاء حساب | rengeM</title>
+  <title>إنشاء حساب</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1 class="logo">rengeM</h1>
+  <div class="form-container">
     <h2>إنشاء حساب</h2>
     <input type="text" id="fullName" placeholder="الاسم الكامل">
-    <input type="text" id="signupUsername" placeholder="اسم المستخدم">
-    <input type="password" id="signupPassword" placeholder="كلمة السر">
-    <button onclick="signup()">إنشاء الحساب</button>
-    <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+    <input type="text" id="username" placeholder="اسم المستخدم">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    <button onclick="signup()">إنشاء</button>
+    <p id="error"></p>
   </div>
-  <script type="module" src="app.js"></script>
+
+  <script>
+    async function signup() {
+      const fullName = document.getElementById("fullName").value.trim();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!username || !password || !fullName) {
+        document.getElementById("error").innerText = "يرجى تعبئة جميع الحقول";
+        return;
+      }
+
+      const res = await fetch('users.json');
+      const users = await res.json();
+
+      if (users[username]) {
+        document.getElementById("error").innerText = "اسم المستخدم مستخدم مسبقًا";
+        return;
+      }
+
+      users[username] = { fullName, password };
+
+      await fetch('save_users.php', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(users)
+      });
+
+      alert("تم إنشاء الحساب بنجاح");
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>
