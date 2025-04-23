@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Signup | Messenger</title>
+  <title>إنشاء حساب - ماسنجر</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>Sign Up</h2>
-    <input type="email" id="signupEmail" placeholder="Email">
-    <input type="password" id="signupPassword" placeholder="Password">
-    <button onclick="signup()">Sign Up</button>
-    <p>Already have an account? <a href="index.html">Login</a></p>
+  <div class="signup-container">
+    <h2>إنشاء حساب</h2>
+    <input type="text" id="fullname" placeholder="الاسم الكامل">
+    <input type="text" id="signup-username" placeholder="اسم المستخدم">
+    <input type="password" id="signup-password" placeholder="كلمة المرور">
+    <button onclick="signup()">تسجيل</button>
   </div>
-  <script type="module" src="signup.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
