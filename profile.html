@@ -1,90 +1,26 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
   <title>الملف الشخصي | rengeM</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container profile-box">
-    <h1>الملف الشخصي</h1>
-    
-    <img id="profile-image" src="default.png" alt="الصورة الشخصية" width="100" height="100">
-    <p id="fullname">الاسم الكامل: </p>
-    <p id="username">اسم المستخدم: </p>
-    <p id="bio">السيرة الذاتية: </p>
-    <p id="status">حالة النشاط: </p>
-    <p id="last-seen">آخر ظهور: </p>
-
-    <h2>تعديل الملف الشخصي</h2>
-    <input type="text" id="new-fullname" placeholder="الاسم الكامل">
-    <textarea id="new-bio" placeholder="السيرة الذاتية"></textarea>
-    <input type="file" id="new-profile-image">
-    <button onclick="updateProfile()">حفظ التعديلات</button>
-
-    <button onclick="logout()">تسجيل الخروج</button>
+  <div class="container">
+    <h1 class="logo">rengeM</h1>
+    <img id="profileImage" src="" alt="الصورة الشخصية" width="100" height="100">
+    <h2 id="profileName"></h2>
+    <p id="profileUsername"></p>
+    <p id="profileBio"></p>
+    <a href="settings.html">الإعدادات</a>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-  <!-- سكربتات المشروع -->
-  <script src="firebase-config.js"></script>
-  <script src="script.js"></script>
-
   <script>
-    // جلب بيانات الملف الشخصي
-    function loadProfile() {
-      const username = localStorage.getItem("username");
-      db.ref("users/" + username).once("value").then(snapshot => {
-        const user = snapshot.val();
-        document.getElementById("profile-image").src = user.profileImage;
-        document.getElementById("fullname").innerText = "الاسم الكامل: " + user.fullName;
-        document.getElementById("username").innerText = "اسم المستخدم: " + user.username;
-        document.getElementById("bio").innerText = "السيرة الذاتية: " + user.bio;
-        document.getElementById("status").innerText = "حالة النشاط: " + (user.active ? "نشط" : "غير نشط");
-        document.getElementById("last-seen").innerText = "آخر ظهور: " + user.lastSeen;
-      });
-    }
-
-    // تحديث الملف الشخصي
-    function updateProfile() {
-      const newFullname = document.getElementById("new-fullname").value;
-      const newBio = document.getElementById("new-bio").value;
-      const newImage = document.getElementById("new-profile-image").files[0];
-
-      const username = localStorage.getItem("username");
-
-      let imageUrl = "default.png";  // قيمة افتراضية في حالة عدم تحميل صورة جديدة
-      if (newImage) {
-        // رفع الصورة إلى Firebase Storage (اختياري حسب الحاجة)
-        const storageRef = firebase.storage().ref("profileImages/" + username + ".jpg");
-        storageRef.put(newImage).then(snapshot => {
-          snapshot.ref.getDownloadURL().then(url => {
-            imageUrl = url;
-            updateUserData(newFullname, newBio, imageUrl);
-          });
-        });
-      } else {
-        updateUserData(newFullname, newBio, imageUrl);
-      }
-    }
-
-    function updateUserData(fullname, bio, imageUrl) {
-      const username = localStorage.getItem("username");
-      db.ref("users/" + username).update({
-        fullName: fullname,
-        bio: bio,
-        profileImage: imageUrl
-      }).then(() => {
-        alert("تم تحديث الملف الشخصي بنجاح!");
-        loadProfile(); // إعادة تحميل البيانات المحدثة
-      });
-    }
-
-    // تنفيذ التحميل للملف الشخصي
-    loadProfile();
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    document.getElementById("profileImage").src = user.profileImage || "https://via.placeholder.com/100";
+    document.getElementById("profileName").textContent = user.fullName;
+    document.getElementById("profileUsername").textContent = `@${user.username}`;
+    document.getElementById("profileBio").textContent = user.bio || "لا توجد سيرة ذاتية بعد";
   </script>
 </body>
 </html>
