@@ -1,20 +1,74 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>قائمة الأصدقاء</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>الأصدقاء - rengeM</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .friend-item {
+      background: #f0f8ff;
+      padding: 10px;
+      border-radius: 10px;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h2>أضف صديق</h2>
-    <input type="text" id="friendUsername" placeholder="اسم المستخدم" />
+    <input type="text" id="friendUsername" placeholder="اسم المستخدم">
     <button onclick="addFriend()">إضافة</button>
 
     <h3>أصدقائي</h3>
-    <ul id="friendsList"></ul>
+    <div id="friendsList"></div>
   </div>
 
-  <script src="script.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+  <script src="firebase.js"></script>
+  <script>
+    const db = firebase.database();
+    const username = localStorage.getItem("username");
+    const userRef = db.ref("users/" + username);
+
+    if (!username) {
+      window.location.href = "login.html";
+    }
+
+    function addFriend() {
+      const friend = document.getElementById("friendUsername").value.trim();
+      if (friend === "" || friend === username) return;
+
+      db.ref("users/" + friend).get().then(snapshot => {
+        if (snapshot.exists()) {
+          db.ref("friends/" + username + "/" + friend).set(true);
+          db.ref("friends/" + friend + "/" + username).set(true);
+          loadFriends();
+        } else {
+          alert("المستخدم غير موجود");
+        }
+      });
+    }
+
+    function loadFriends() {
+      db.ref("friends/" + username).on("value", snapshot => {
+        const list = document.getElementById("friendsList");
+        list.innerHTML = "";
+        snapshot.forEach(child => {
+          const friend = child.key;
+          const div = document.createElement("div");
+          div.className = "friend-item";
+          div.textContent = friend;
+          div.onclick = () => {
+            window.location.href = "chat.html?user=" + friend;
+          };
+          list.appendChild(div);
+        });
+      });
+    }
+
+    loadFriends();
+  </script>
 </body>
 </html>
