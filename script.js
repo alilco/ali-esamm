@@ -1,4 +1,7 @@
-// إعداد Firebase
+// Firebase إعداد
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, get, child } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
   authDomain: "messengerapp-58f7a.firebaseapp.com",
@@ -9,94 +12,82 @@ const firebaseConfig = {
   appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const auth = firebase.auth();
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-let currentUser = null;
-let selectedFriend = null;
+// المتغيرات
+let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+let currentChatUser = null;
 
-// التأكد من تسجيل الدخول
-auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    loadFriends();
-  } else {
-    window.location.href = "login.html";
-  }
-});
-
-// تحميل الأصدقاء
-function loadFriends() {
-  const friendsList = document.getElementById("friendsList");
-  friendsList.innerHTML = "";
-  db.ref("users").once("value", snapshot => {
+// إظهار المستخدمين
+function searchUsers() {
+  const search = document.getElementById("searchUser").value.toLowerCase();
+  const usersRef = ref(db, "users");
+  get(usersRef).then(snapshot => {
+    const usersList = document.getElementById("usersList");
+    usersList.innerHTML = "";
     snapshot.forEach(child => {
-      const userData = child.val();
-      if (userData.uid !== currentUser.uid) {
+      const user = child.val();
+      if (user.username.toLowerCase().includes(search) && user.username !== currentUser.username) {
         const li = document.createElement("li");
-        li.textContent = userData.displayName || userData.username;
-        li.onclick = () => openChat(userData.uid, userData.username);
-        friendsList.appendChild(li);
+        li.textContent = user.username;
+        li.onclick = () => startChat(user.username);
+        usersList.appendChild(li);
       }
     });
   });
 }
 
-// فتح المحادثة
-function openChat(friendUid, friendUsername) {
-  selectedFriend = friendUid;
-  document.getElementById("chatWith").textContent = "الدردشة مع: " + friendUsername;
-  listenToMessages();
+// بدء محادثة
+function startChat(username) {
+  currentChatUser = username;
+  document.getElementById("chatWith").innerText = `الدردشة مع ${username}`;
+  loadMessages();
 }
 
-// إرسال الرسالة
-function sendMessage() {
-  const msgInput = document.getElementById("messageInput");
-  const message = msgInput.value.trim();
-  if (!message || !selectedFriend) return;
-
-  const encodedMessage = btoa(message); // تشفير بسيط
-  const timestamp = Date.now();
-
-  const chatId = createChatId(currentUser.uid, selectedFriend);
-  const newMsgRef = db.ref(`chats/${chatId}`).push();
-  newMsgRef.set({
-    from: currentUser.uid,
-    to: selectedFriend,
-    message: encodedMessage,
-    time: timestamp
-  });
-
-  msgInput.value = "";
-}
-
-// الاستماع للرسائل
-function listenToMessages() {
-  const messagesDiv = document.getElementById("messages");
-  messagesDiv.innerHTML = "";
-  const chatId = createChatId(currentUser.uid, selectedFriend);
-  db.ref(`chats/${chatId}`).on("value", snapshot => {
+// تحميل الرسائل
+function loadMessages() {
+  const messagesRef = ref(db, `messages/${getChatId(currentUser.username, currentChatUser)}`);
+  onValue(messagesRef, snapshot => {
+    const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
     snapshot.forEach(child => {
-      const data = child.val();
-      const msg = document.createElement("div");
-      msg.className = data.from === currentUser.uid ? "sent" : "received";
-      msg.textContent = atob(data.message); // فك التشفير
-      messagesDiv.appendChild(msg);
+      const msg = child.val();
+      const div = document.createElement("div");
+      div.className = msg.sender === currentUser.username ? "message sent" : "message received";
+      div.innerText = msg.text;
+      messagesDiv.appendChild(div);
     });
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
 }
 
-// إنشاء معرف محادثة ثابت بين شخصين
-function createChatId(uid1, uid2) {
-  return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+// إرسال رسالة
+function sendMessage() {
+  const input = document.getElementById("messageInput");
+  const text = input.value.trim();
+  if (text && currentChatUser) {
+    const msgRef = ref(db, `messages/${getChatId(currentUser.username, currentChatUser)}`);
+    push(msgRef, {
+      sender: currentUser.username,
+      text: text,
+      timestamp: Date.now()
+    });
+    input.value = "";
+  }
+}
+
+// معرف المحادثة بين مستخدمين
+function getChatId(user1, user2) {
+  return [user1, user2].sort().join("_");
 }
 
 // تسجيل الخروج
 function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "login.html";
-  });
+  localStorage.removeItem("currentUser");
+  window.location.href = "login.html";
 }
+
+window.sendMessage = sendMessage;
+window.searchUsers = searchUsers;
+window.logout = logout;
