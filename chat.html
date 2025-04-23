@@ -1,33 +1,31 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>rengeM - المحادثة</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>محادثة - rengeM</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>rengeM - المحادثة</header>
+  <header>rengeM - محادثة</header>
 
   <div class="container">
-    <div class="sidebar">
-      <h3>أصدقائي</h3>
-      <ul id="friendsList"></ul>
-      <button class="logout" onclick="logout()">تسجيل الخروج</button>
-    </div>
+    <div class="chat-header" id="chatWith">اختر مستخدمًا لبدء المحادثة</div>
 
-    <div class="chat-area">
-      <div id="chatWith">يرجى اختيار صديق لبدء المحادثة</div>
-      <div id="messages"></div>
-      <div id="inputArea">
-        <input type="text" id="messageInput" placeholder="اكتب رسالة...">
-        <button id="sendBtn" onclick="sendMessage()">إرسال</button>
-      </div>
+    <ul class="users-list" id="usersList"></ul>
+
+    <div id="messages"></div>
+
+    <div class="input-bar">
+      <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." />
+      <button id="sendBtn">إرسال</button>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="chat.js"></script>
 </body>
 </html>
