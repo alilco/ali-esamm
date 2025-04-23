@@ -1,37 +1,33 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>rengeM - المحادثة</title>
+  <title>دردشة | rengeM</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="chat-header">
-    <button id="backBtn">رجوع</button>
-    <h2>rengeM</h2>
-    <button id="settingsBtn">الإعدادات</button>
+
+  <header>
+    <span>rengeM - الدردشة</span>
+    <button onclick="logout()">تسجيل الخروج</button>
   </header>
 
-  <main class="chat-container">
-    <section class="friend-list">
-      <h3>الأصدقاء</h3>
-      <ul id="friendsList">
-        <!-- يتم توليد الأصدقاء هنا -->
-      </ul>
-    </section>
+  <div class="container">
+    <ul id="friendsList">
+      <!-- سيتم ملء قائمة الأصدقاء من script.js -->
+    </ul>
 
-    <section class="chat-box">
-      <div class="chat-header" id="chatWith">يرجى اختيار صديق</div>
-      <div class="messages" id="messages"></div>
-
-      <div class="message-input">
-        <input type="text" id="messageInput" placeholder="اكتب رسالتك..."/>
+    <div id="chatArea">
+      <div id="chatWith">اختر صديقاً لبدء المحادثة</div>
+      <div id="messages"></div>
+      <div id="inputArea" style="display: none;">
+        <input type="text" id="messageInput" placeholder="اكتب رسالتك..." />
         <button id="sendBtn">إرسال</button>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
-  <script type="module" src="chat.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
