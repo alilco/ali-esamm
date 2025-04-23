@@ -1,24 +1,6 @@
 {
-  "users": {
-    "user1": {
-      "username": "john_doe",
-      "fullName": "John Doe",
-      "email": "john@example.com",
-      "password": "password123",
-      "profileImage": "https://example.com/profile1.jpg",
-      "status": "active",
-      "lastSeen": "2025-04-23T14:30:00Z",
-      "bio": "Hello, I'm John!"
-    },
-    "user2": {
-      "username": "jane_doe",
-      "fullName": "Jane Doe",
-      "email": "jane@example.com",
-      "password": "password456",
-      "profileImage": "https://example.com/profile2.jpg",
-      "status": "offline",
-      "lastSeen": "2025-04-23T12:00:00Z",
-      "bio": "Hey there, I'm Jane!"
-    }
+  "testuser": {
+    "fullName": "مستخدم تجريبي",
+    "password": "123456"
   }
 }
