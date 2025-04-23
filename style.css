@@ -1,0 +1,30 @@
+body {
+  font-family: Arial;
+  background: #f1f1f1;
+  direction: rtl;
+}
+
+.center-box {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  text-align: center;
+}
+
+input, button {
+  display: block;
+  width: 90%;
+  margin: 10px auto;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.btn {
+  background-color: #4caf50;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+}
