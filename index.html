@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل حساب</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js"></script>
+  <meta charset="UTF-8">
+  <title>rengeM - تطبيق المراسلة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="home-page">
+  <div class="container">
+    <header class="logo">
+      <h1 class="app-name">rengeM</h1>
+    </header>
 
-    <div class="container">
-        <h2>تسجيل حساب جديد</h2>
-        <form id="signup-form">
-            <input type="text" id="full-name" placeholder="الاسم الكامل" required>
-            <input type="text" id="username" placeholder="اسم المستخدم" required>
-            <input type="password" id="password" placeholder="كلمة المرور" required>
-            <button type="submit">تسجيل</button>
-        </form>
-    </div>
+    <main class="welcome">
+      <h2>مرحبًا بك في rengeM</h2>
+      <p>تطبيق دردشة بسيط، سريع وآمن. تواصل مع أصدقائك الآن!</p>
 
-    <script src="app.js"></script>
+      <div class="actions">
+        <a href="login.html" class="btn">تسجيل الدخول</a>
+        <a href="signup.html" class="btn secondary">إنشاء حساب</a>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>© 2025 rengeM - جميع الحقوق محفوظة</p>
+    </footer>
+  </div>
 </body>
 </html>
