@@ -52,3 +52,29 @@ document.getElementById('signup-form').addEventListener('submit', function(event
         alert("الرجاء ملء جميع الحقول.");
     }
 });
+
+// التعامل مع نموذج تسجيل الدخول
+document.getElementById('login-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // منع الإرسال التلقائي للنموذج
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    if (username && password) {
+        // تسجيل الدخول باستخدام Firebase Auth
+        firebase.auth().signInWithEmailAndPassword(username + "@gmail.com", password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log("تم تسجيل الدخول بنجاح:", user);
+                window.location.href = "profile.html"; // تحويل إلى صفحة الملف الشخصي
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.error("خطأ في تسجيل الدخول:", errorCode, errorMessage);
+                alert("حدث خطأ أثناء تسجيل الدخول: " + errorMessage);
+            });
+    } else {
+        alert("الرجاء ملء جميع الحقول.");
+    }
+});
