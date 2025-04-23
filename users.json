@@ -1,6 +1,22 @@
 {
-  "testuser": {
-    "fullName": "مستخدم تجريبي",
-    "password": "123456"
+  "users": {
+    "user1id": {
+      "username": "ahmed123",
+      "password": "123456",
+      "displayName": "أحمد",
+      "profileImage": "https://i.imgur.com/abc123.png",
+      "bio": "أهلاً! أنا أستخدم التطبيق",
+      "status": "متصل",
+      "lastSeen": "2025-04-23T20:00:00Z"
+    },
+    "user2id": {
+      "username": "sara456",
+      "password": "654321",
+      "displayName": "سارة",
+      "profileImage": "https://i.imgur.com/xyz456.png",
+      "bio": "مرحباً بالجميع",
+      "status": "غير متصل",
+      "lastSeen": "2025-04-23T18:45:00Z"
+    }
   }
 }
