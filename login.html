@@ -1,26 +1,77 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>تسجيل الدخول - rengeM</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: linear-gradient(to bottom, #1e1e2f, #2a2a3d);
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: #2f2f40;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 10px #00000080;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-container h2 {
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      background: #444;
+      color: white;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .signup-link {
+      margin-top: 15px;
+      color: #ccc;
+    }
+    .signup-link a {
+      color: #00bfff;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
+
   <div class="login-container">
-    <h2 class="app-title">rengeM</h2>
-    <form id="loginForm">
-      <input type="text" id="username" placeholder="اسم المستخدم" required />
-      <input type="password" id="password" placeholder="كلمة المرور" required />
-      <button type="submit">تسجيل الدخول</button>
-      <p>ليس لديك حساب؟ <a href="signup.html">إنشاء حساب</a></p>
-    </form>
+    <h2>تسجيل الدخول إلى rengeM</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم" required>
+    <input type="password" id="password" placeholder="كلمة المرور" required>
+    <button id="loginBtn">تسجيل الدخول</button>
+    <div class="signup-link">
+      ليس لديك حساب؟ <a href="signup.html">إنشاء حساب</a>
+    </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="login.js"></script>
+  <script type="module" src="login.js"></script>
 </body>
 </html>
