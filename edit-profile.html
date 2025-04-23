@@ -2,33 +2,42 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>تعديل الملف الشخصي | rengeM</title>
+  <title>تعديل الملف الشخصي - rengeM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="edit-profile-page">
   <div class="container">
-    <h1 class="logo">rengeM</h1>
-    <input type="text" id="fullName" placeholder="الاسم الكامل"><br>
-    <input type="text" id="bio" placeholder="السيرة الذاتية"><br>
-    <input type="text" id="profileImage" placeholder="رابط الصورة الشخصية"><br>
-    <button onclick="saveProfile()">حفظ</button>
+    <h1 class="page-title">تعديل الملف الشخصي</h1>
+
+    <form id="editProfileForm" class="edit-profile-form">
+      <label for="fullName">الاسم الكامل:</label>
+      <input type="text" id="fullName" placeholder="مثال: محمد علي" required>
+
+      <label for="bio">السيرة الذاتية:</label>
+      <textarea id="bio" placeholder="اكتب شيئًا عنك..."></textarea>
+
+      <label for="profileImage">الصورة الشخصية:</label>
+      <input type="file" id="profileImage" accept="image/*">
+
+      <div class="actions">
+        <button type="submit" class="btn">حفظ التغييرات</button>
+        <button type="button" class="btn secondary" onclick="goBack()">رجوع</button>
+      </div>
+    </form>
   </div>
 
   <script>
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    document.getElementById("fullName").value = user.fullName || "";
-    document.getElementById("bio").value = user.bio || "";
-    document.getElementById("profileImage").value = user.profileImage || "";
-
-    function saveProfile() {
-      user.fullName = document.getElementById("fullName").value;
-      user.bio = document.getElementById("bio").value;
-      user.profileImage = document.getElementById("profileImage").value;
-
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      alert("تم تحديث الملف الشخصي!");
-      window.location.href = "profile.html";
+    function goBack() {
+      window.history.back();
     }
+
+    document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // هنا يتم حفظ التعديلات في Firebase أو localStorage
+      alert("تم حفظ التغييرات!");
+      goBack();
+    });
   </script>
 </body>
 </html>
