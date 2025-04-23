@@ -1,102 +1,21 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
   <title>الدردشة | rengeM</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container chat-box">
-    <h1>الدردشة</h1>
-    
-    <div id="friends-list">
-      <h2>الأصدقاء</h2>
-      <!-- سيتم ملء هذه القائمة بواسطة JavaScript -->
-    </div>
-
-    <div id="chat-area">
-      <h2>المحادثة</h2>
-      <div id="messages"></div>
-      <textarea id="message-input" placeholder="اكتب رسالتك هنا"></textarea>
-      <button onclick="sendMessage()">إرسال</button>
-    </div>
-
-    <div class="profile-box">
-      <button onclick="logout()">تسجيل الخروج</button>
-    </div>
+  <div class="container">
+    <h1 class="logo">rengeM</h1>
+    <div id="chatBox" class="chat-box"></div>
+    <input type="text" id="messageInput" placeholder="اكتب رسالة...">
+    <button onclick="sendMessage()">إرسال</button>
+    <br><br>
+    <a href="profile.html">الملف الشخصي</a> | 
+    <a href="settings.html">الإعدادات</a>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-  <!-- سكربتات المشروع -->
-  <script src="firebase-config.js"></script>
-  <script src="script.js"></script>
-
-  <script>
-    // جلب الأصدقاء من Firebase
-    function loadFriends() {
-      const username = localStorage.getItem("username");
-      db.ref("users/" + username + "/friends").once("value").then(snapshot => {
-        const friends = snapshot.val();
-        const friendsList = document.getElementById("friends-list");
-        friendsList.innerHTML = '';
-        for (let friend in friends) {
-          const friendItem = document.createElement("div");
-          friendItem.innerHTML = `<button onclick="startChat('${friend}')">${friend}</button>`;
-          friendsList.appendChild(friendItem);
-        }
-      });
-    }
-
-    // فتح محادثة مع صديق
-    function startChat(friendUsername) {
-      const username = localStorage.getItem("username");
-      window.location.href = `chat.html?user=${friendUsername}`;
-    }
-
-    // إرسال رسالة
-    function sendMessage() {
-      const message = document.getElementById("message-input").value;
-      const friendUsername = new URLSearchParams(window.location.search).get("user");
-      const myUsername = localStorage.getItem("username");
-
-      if (message) {
-        const encryptedMessage = encryptMessage(message); // تشفير الرسالة
-        db.ref("messages/" + myUsername + "/" + friendUsername).push({
-          sender: myUsername,
-          message: encryptedMessage,
-          timestamp: new Date().toISOString()
-        });
-
-        db.ref("messages/" + friendUsername + "/" + myUsername).push({
-          sender: myUsername,
-          message: encryptedMessage,
-          timestamp: new Date().toISOString()
-        });
-
-        document.getElementById("message-input").value = ''; // مسح مربع النص
-      }
-    }
-
-    // جلب الرسائل
-    function loadMessages() {
-      const friendUsername = new URLSearchParams(window.location.search).get("user");
-      const myUsername = localStorage.getItem("username");
-
-      db.ref("messages/" + myUsername + "/" + friendUsername).on("child_added", snapshot => {
-        const message = snapshot.val();
-        const decryptedMessage = decryptMessage(message.message); // فك تشفير الرسالة
-        const messageElement = document.createElement("div");
-        messageElement.innerText = `${message.sender}: ${decryptedMessage}`;
-        document.getElementById("messages").appendChild(messageElement);
-      });
-    }
-
-    // تنفيذ التحميل للأصدقاء والرسائل
-    loadFriends();
-    loadMessages();
-  </script>
+  <script type="module" src="chat.js"></script>
 </body>
 </html>
