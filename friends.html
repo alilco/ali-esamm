@@ -1,26 +1,20 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>الأصدقاء</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>قائمة الأصدقاء</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="center-box">
-    <h2>اختر صديقاً للمحادثة</h2>
-    <input type="text" id="friendUsername" placeholder="اسم المستخدم">
-    <button onclick="startChat()">بدء المحادثة</button>
-    <a href="edit-profile.html">تعديل الملف الشخصي</a>
+  <div class="container">
+    <h2>أضف صديق</h2>
+    <input type="text" id="friendUsername" placeholder="اسم المستخدم" />
+    <button onclick="addFriend()">إضافة</button>
+
+    <h3>أصدقائي</h3>
+    <ul id="friendsList"></ul>
   </div>
 
-  <script>
-    function startChat() {
-      const friendUsername = document.getElementById("friendUsername").value.trim();
-      if (!friendUsername) return alert("يرجى إدخال اسم المستخدم");
-
-      localStorage.setItem("chatWith", friendUsername);
-      window.location.href = "chat.html";
-    }
-  </script>
+  <script src="script.js" type="module"></script>
 </body>
 </html>
