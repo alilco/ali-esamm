@@ -2,61 +2,88 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>الدردشة - rengeM</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <title>rengeM - المحادثات</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      direction: rtl;
+    }
+    .topbar {
+      background-color: #007bff;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 20px;
+      position: relative;
+    }
+    #addUserBtn {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #addUserModal {
+      display: none;
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 999;
+    }
+    .chat-list {
+      padding: 20px;
+    }
+  </style>
 </head>
-<body class="chat-page">
-  <div class="chat-container">
-    <header class="chat-header">
-      <h2 id="chatWith">الدردشة مع: صديقك</h2>
-      <button onclick="goBack()" class="btn secondary small">رجوع</button>
-    </header>
+<body>
 
-    <div class="messages" id="messages">
-      <!-- الرسائل تظهر هنا -->
-    </div>
+  <div class="topbar">
+    المحادثات
+    <button id="addUserBtn">+ إضافة صديق</button>
+  </div>
 
-    <form id="messageForm" class="message-form">
-      <input type="text" id="messageInput" placeholder="اكتب رسالة..." required>
-      <input type="file" id="imageInput" accept="image/*" hidden>
-      <button type="submit" class="btn">إرسال</button>
-      <button type="button" class="btn secondary" onclick="document.getElementById('imageInput').click()">صورة</button>
-    </form>
+  <div class="chat-list">
+    <p>لا توجد محادثات حالياً</p>
+  </div>
+
+  <!-- نافذة إضافة مستخدم -->
+  <div id="addUserModal">
+    <h3>إضافة صديق</h3>
+    <input type="text" id="friendUsername" placeholder="اسم المستخدم" style="padding: 8px; width: 100%; margin-bottom: 10px;">
+    <br>
+    <button onclick="addFriend()">إضافة</button>
+    <button onclick="closeAddUserModal()" style="margin-right: 10px;">إلغاء</button>
   </div>
 
   <script>
-    function goBack() {
-      window.history.back();
+    document.getElementById("addUserBtn").addEventListener("click", function () {
+      document.getElementById("addUserModal").style.display = "block";
+    });
+
+    function closeAddUserModal() {
+      document.getElementById("addUserModal").style.display = "none";
     }
 
-    // إرسال رسالة
-    document.getElementById('messageForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const msg = document.getElementById('messageInput').value.trim();
-      if (msg !== '') {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message sent';
-        msgDiv.textContent = msg;
-        document.getElementById('messages').appendChild(msgDiv);
-        document.getElementById('messageInput').value = '';
+    function addFriend() {
+      const username = document.getElementById("friendUsername").value.trim();
+      if (username !== "") {
+        window.location.href = "private-chat.html?user=" + encodeURIComponent(username);
+      } else {
+        alert("يرجى إدخال اسم المستخدم");
       }
-    });
-
-    // إرسال صورة (عرضها فقط كمثال)
-    document.getElementById('imageInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function() {
-          const img = document.createElement('img');
-          img.src = reader.result;
-          img.className = 'message-image sent';
-          document.getElementById('messages').appendChild(img);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+      closeAddUserModal();
+    }
   </script>
+
 </body>
 </html>
