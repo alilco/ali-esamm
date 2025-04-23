@@ -2,51 +2,26 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول - rengeM</title>
+  <title>تسجيل الدخول | rengeM</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>تسجيل الدخول</h2>
-    <input type="text" id="username" placeholder="اسم المستخدم">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="login()">دخول</button>
+  <div class="container login-box">
+    <h1>تسجيل الدخول إلى rengeM</h1>
+    
+    <input type="text" id="login-username" placeholder="اسم المستخدم" required>
+    <input type="password" id="login-password" placeholder="كلمة السر" required>
+    
+    <button onclick="loginHandler()">تسجيل الدخول</button>
     <p>ليس لديك حساب؟ <a href="signup.html">إنشاء حساب</a></p>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-  <script src="firebase.js"></script>
-  <script>
-    const db = firebase.database();
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-    function login() {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-
-      if (!username || !password) {
-        alert('يرجى إدخال اسم المستخدم وكلمة المرور');
-        return;
-      }
-
-      db.ref("users/" + username).get().then(snapshot => {
-        if (snapshot.exists()) {
-          const user = snapshot.val();
-          if (user.password === password) {
-            db.ref("users/" + username).update({
-              online: true,
-              lastSeen: new Date().toISOString()
-            });
-            localStorage.setItem("username", username);
-            window.location.href = "chat.html";
-          } else {
-            alert("كلمة المرور غير صحيحة");
-          }
-        } else {
-          alert("اسم المستخدم غير موجود");
-        }
-      });
-    }
-  </script>
+  <!-- سكربتات المشروع -->
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
