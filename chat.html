@@ -2,88 +2,26 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>rengeM - المحادثات</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      direction: rtl;
-    }
-    .topbar {
-      background-color: #007bff;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      font-size: 20px;
-      position: relative;
-    }
-    #addUserBtn {
-      position: absolute;
-      left: 10px;
-      top: 10px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #addUserModal {
-      display: none;
-      position: fixed;
-      top: 30%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      z-index: 999;
-    }
-    .chat-list {
-      padding: 20px;
-    }
-  </style>
+  <title>الدردشة</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div class="topbar">
-    المحادثات
-    <button id="addUserBtn">+ إضافة صديق</button>
-  </div>
-
   <div class="chat-list">
-    <p>لا توجد محادثات حالياً</p>
-  </div>
-
-  <!-- نافذة إضافة مستخدم -->
-  <div id="addUserModal">
-    <h3>إضافة صديق</h3>
-    <input type="text" id="friendUsername" placeholder="اسم المستخدم" style="padding: 8px; width: 100%; margin-bottom: 10px;">
-    <br>
+    <h2>الأصدقاء</h2>
+    <ul id="friendsList"></ul>
+    <input type="text" id="friendUsername" placeholder="أدخل اسم المستخدم">
     <button onclick="addFriend()">إضافة</button>
-    <button onclick="closeAddUserModal()" style="margin-right: 10px;">إلغاء</button>
   </div>
 
   <script>
-    document.getElementById("addUserBtn").addEventListener("click", function () {
-      document.getElementById("addUserModal").style.display = "block";
-    });
+    async function addFriend() {
+      const friend = document.getElementById("friendUsername").value.trim();
+      if (!friend) return;
 
-    function closeAddUserModal() {
-      document.getElementById("addUserModal").style.display = "none";
+      window.location.href = `private-chat.html?user=${friend}`;
     }
 
-    function addFriend() {
-      const username = document.getElementById("friendUsername").value.trim();
-      if (username !== "") {
-        window.location.href = "private-chat.html?user=" + encodeURIComponent(username);
-      } else {
-        alert("يرجى إدخال اسم المستخدم");
-      }
-      closeAddUserModal();
-    }
+    // تحميل قائمة الأصدقاء لاحقاً
   </script>
-
 </body>
 </html>
