@@ -2,55 +2,41 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>إنشاء حساب - rengeM</title>
+  <title>إنشاء حساب | rengeM</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>إنشاء حساب جديد</h2>
-    <input type="text" id="fullName" placeholder="الاسم الكامل">
-    <input type="text" id="username" placeholder="اسم المستخدم">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="signup()">إنشاء الحساب</button>
+  <div class="container login-box">
+    <h1>إنشاء حساب جديد</h1>
+    
+    <input type="text" id="signup-fullname" placeholder="الاسم الكامل" required>
+    <input type="text" id="signup-username" placeholder="اسم المستخدم" required>
+    <input type="password" id="signup-password" placeholder="كلمة السر" required>
+    
+    <button onclick="signupHandler()">إنشاء الحساب</button>
     <p>هل لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-  <script src="firebase.js"></script>
-  <script>
-    const db = firebase.database();
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-    function signup() {
-      const fullName = document.getElementById('fullName').value.trim();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
+  <!-- سكربتات المشروع -->
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    function signupHandler() {
+      const fullName = document.getElementById("signup-fullname").value.trim();
+      const username = document.getElementById("signup-username").value.trim();
+      const password = document.getElementById("signup-password").value.trim();
 
       if (!fullName || !username || !password) {
-        alert('يرجى ملء جميع الحقول');
+        alert("يرجى تعبئة كل الحقول");
         return;
       }
 
-      const usersRef = db.ref("users");
-
-      usersRef.child(username).get().then(snapshot => {
-        if (snapshot.exists()) {
-          alert("اسم المستخدم مستخدم بالفعل");
-        } else {
-          usersRef.child(username).set({
-            fullName: fullName,
-            username: username,
-            password: password,
-            bio: "",
-            profileImage: "default.png",
-            online: true,
-            lastSeen: new Date().toISOString()
-          }).then(() => {
-            localStorage.setItem("username", username);
-            window.location.href = "chat.html";
-          });
-        }
-      });
+      register(fullName, username, password);
     }
   </script>
 </body>
