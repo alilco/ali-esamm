@@ -1,41 +1,39 @@
-// auth.js
-import { auth, db } from "./firebase-config.js";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-import { ref, set } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+import app from './firebase-config.js';
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-window.signup = async function () {
-  const name = document.getElementById("signupName").value;
-  const email = document.getElementById("signupEmail").value;
-  const password = document.getElementById("signupPassword").value;
+const auth = getAuth(app);
+const db = getDatabase(app);
+const chatBox = document.getElementById("chat-box");
 
-  const userCred = await createUserWithEmailAndPassword(auth, email, password);
-  await updateProfile(userCred.user, { displayName: name });
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    const messagesRef = ref(db, 'messages');
+    onChildAdded(messagesRef, (data) => {
+      const msg = data.val();
+      const msgEl = document.createElement("div");
+      msgEl.textContent = msg.name + ": " + (msg.imageURL || msg.text);
+      chatBox.appendChild(msgEl);
+    });
 
-  await set(ref(db, "users/" + userCred.user.uid), {
-    name,
-    email,
-    uid: userCred.user.uid,
-    lastSeen: new Date().toISOString()
-  });
+    window.sendMessage = function () {
+      const message = document.getElementById("messageInput").value;
+      const fileInput = document.getElementById("imageInput");
 
-  localStorage.setItem("uid", userCred.user.uid);
-  window.location.href = "chat.html";
-};
-
-window.login = async function () {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-
-  const userCred = await signInWithEmailAndPassword(auth, email, password);
-  localStorage.setItem("uid", userCred.user.uid);
-  window.location.href = "chat.html";
-};
-
-window.logout = function () {
-  localStorage.removeItem("uid");
-  window.location.href = "index.html";
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          push(messagesRef, { name: user.email, imageURL: reader.result });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        push(messagesRef, { name: user.email, text: message });
+      }
+      document.getElementById("messageInput").value = "";
+      fileInput.value = "";
+    };
+  } else {
+    window.location.href = "index.html";
+  }
 };
