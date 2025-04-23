@@ -1,43 +1,26 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>إنشاء حساب | rengeM</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل حساب جديد</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js"></script>
 </head>
 <body>
-  <div class="container login-box">
-    <h1>إنشاء حساب جديد</h1>
-    
-    <input type="text" id="signup-fullname" placeholder="الاسم الكامل" required>
-    <input type="text" id="signup-username" placeholder="اسم المستخدم" required>
-    <input type="password" id="signup-password" placeholder="كلمة السر" required>
-    
-    <button onclick="signupHandler()">إنشاء الحساب</button>
-    <p>هل لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
-  </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <div class="container">
+        <h2>تسجيل حساب جديد</h2>
+        <form id="signup-form">
+            <input type="text" id="full-name" placeholder="الاسم الكامل" required>
+            <input type="text" id="username" placeholder="اسم المستخدم" required>
+            <input type="password" id="password" placeholder="كلمة المرور" required>
+            <button type="submit">تسجيل</button>
+        </form>
+    </div>
 
-  <!-- سكربتات المشروع -->
-  <script src="firebase-config.js"></script>
-  <script src="script.js"></script>
-
-  <script>
-    function signupHandler() {
-      const fullName = document.getElementById("signup-fullname").value.trim();
-      const username = document.getElementById("signup-username").value.trim();
-      const password = document.getElementById("signup-password").value.trim();
-
-      if (!fullName || !username || !password) {
-        alert("يرجى تعبئة كل الحقول");
-        return;
-      }
-
-      register(fullName, username, password);
-    }
-  </script>
+    <script src="app.js"></script>
 </body>
 </html>
