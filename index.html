@@ -1,15 +1,21 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>تطبيق المراسلة</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>تسجيل الدخول - ماسنجر</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="center-box">
-    <h1>مرحبا بك في تطبيق المراسلة</h1>
-    <a href="login.html" class="btn">تسجيل الدخول</a>
-    <a href="signup.html" class="btn">إنشاء حساب</a>
+<body class="login-body">
+  <div class="login-container">
+    <h2>تسجيل الدخول</h2>
+    <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
+    <input type="password" id="loginPassword" placeholder="كلمة المرور">
+    <button onclick="login()">دخول</button>
+    <p>ليس لديك حساب؟ <a href="signup.html">سجل الآن</a></p>
   </div>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="auth.js"></script>
 </body>
 </html>
