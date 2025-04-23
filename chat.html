@@ -1,24 +1,93 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>الدردشة - ماسنجر</title>
+  <title>الدردشة - rengeM</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .chat-box {
+      height: 400px;
+      overflow-y: auto;
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .message {
+      padding: 8px 12px;
+      background: #e1f0ff;
+      border-radius: 12px;
+      margin: 6px 0;
+      max-width: 75%;
+    }
+    .from-me {
+      background: #cce5ff;
+      align-self: flex-end;
+      text-align: left;
+    }
+    .from-other {
+      background: #f1f1f1;
+      text-align: right;
+    }
+  </style>
 </head>
 <body>
-  <div class="chat-container">
-    <div class="header">
-      <h3>محادثة مع <span id="chatWith"></span></h3>
-      <span id="lastSeen">آخر ظهور: جاري التحميل...</span>
-    </div>
-    <div id="messages"></div>
-    <input type="file" id="imageInput" style="display:none" accept="image/*" onchange="sendImage(event)">
-    <div class="chat-input">
-      <input type="text" id="messageInput" placeholder="اكتب رسالة...">
-      <button onclick="sendMessage()">إرسال</button>
-      <button onclick="document.getElementById('imageInput').click()">صورة</button>
-    </div>
+  <div class="container">
+    <h2 id="chatWith">الدردشة</h2>
+    <div class="chat-box" id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
+    <button onclick="sendMessage()">إرسال</button>
   </div>
-  <script src="script.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+  <script src="firebase.js"></script>
+  <script>
+    const db = firebase.database();
+    const username = localStorage.getItem("username");
+    const urlParams = new URLSearchParams(window.location.search);
+    const friend = urlParams.get("user");
+
+    if (!username || !friend) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("chatWith").textContent = `الدردشة مع ${friend}`;
+
+    const chatId = [username, friend].sort().join("_");
+    const chatRef = db.ref("chats/" + chatId);
+
+    function encrypt(msg) {
+      return btoa(msg); // تشفير بسيط Base64
+    }
+
+    function decrypt(msg) {
+      return atob(msg);
+    }
+
+    function sendMessage() {
+      const msg = document.getElementById("messageInput").value.trim();
+      if (msg === "") return;
+
+      const encrypted = encrypt(msg);
+      chatRef.push({
+        sender: username,
+        message: encrypted,
+        timestamp: Date.now()
+      });
+      document.getElementById("messageInput").value = "";
+    }
+
+    chatRef.on("child_added", snapshot => {
+      const data = snapshot.val();
+      const msg = decrypt(data.message);
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message");
+      msgDiv.classList.add(data.sender === username ? "from-me" : "from-other");
+      msgDiv.textContent = msg;
+      document.getElementById("chatBox").appendChild(msgDiv);
+      document.getElementById("chatBox").scrollTop = document.getElementById("chatBox").scrollHeight;
+    });
+  </script>
 </body>
 </html>
