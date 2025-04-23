@@ -1,16 +1,26 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>المحادثة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الدردشة</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="chatBox"></div>
-  <input type="text" id="messageInput" placeholder="اكتب رسالتك">
-  <input type="file" id="imageInput" accept="image/*">
-  <button onclick="sendMessage()">إرسال</button>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2>المحادثة</h2>
+      <button onclick="logout()">خروج</button>
+    </div>
+    <div id="messages" class="messages-box"></div>
+    <div class="message-input">
+      <input type="text" id="messageInput" placeholder="اكتب رسالة...">
+      <input type="file" id="imageInput" accept="image/*">
+      <button onclick="sendMessage()">إرسال</button>
+    </div>
+  </div>
 
-  <script src="script.js" type="module"></script>
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="chat.js"></script>
 </body>
 </html>
