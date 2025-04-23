@@ -2,25 +2,37 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>الملف الشخصي | rengeM</title>
+  <title>الملف الشخصي - rengeM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="profile-page">
   <div class="container">
-    <h1 class="logo">rengeM</h1>
-    <img id="profileImage" src="" alt="الصورة الشخصية" width="100" height="100">
-    <h2 id="profileName"></h2>
-    <p id="profileUsername"></p>
-    <p id="profileBio"></p>
-    <a href="settings.html">الإعدادات</a>
+    <h1 class="page-title">ملفي الشخصي</h1>
+
+    <div class="profile-box">
+      <img src="images/default-profile.png" alt="الصورة الشخصية" class="profile-image">
+      <h2 id="displayName">الاسم الكامل</h2>
+      <p><strong>اسم المستخدم:</strong> <span id="username">username</span></p>
+      <p><strong>السيرة الذاتية:</strong> <span id="bio">نبذة عنك...</span></p>
+      <p><strong>الحالة:</strong> <span id="status">نشط الآن</span></p>
+    </div>
+
+    <div class="actions">
+      <a href="edit-profile.html" class="btn">تعديل الملف</a>
+      <button onclick="goBack()" class="btn secondary">رجوع</button>
+    </div>
   </div>
 
   <script>
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    document.getElementById("profileImage").src = user.profileImage || "https://via.placeholder.com/100";
-    document.getElementById("profileName").textContent = user.fullName;
-    document.getElementById("profileUsername").textContent = `@${user.username}`;
-    document.getElementById("profileBio").textContent = user.bio || "لا توجد سيرة ذاتية بعد";
+    function goBack() {
+      window.history.back();
+    }
+
+    // هنا يمكن ربط البيانات الحقيقية من Firebase
+    // مثال:
+    // document.getElementById("displayName").textContent = user.fullName;
+    // document.getElementById("username").textContent = user.username;
   </script>
 </body>
 </html>
