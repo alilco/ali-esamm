@@ -1,17 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Edit Profile | Messenger</title>
+  <title>ملفي الشخصي</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>Edit Profile</h2>
-    <input type="text" id="newDisplayName" placeholder="New Display Name">
-    <button onclick="updateProfileName()">Update</button>
-    <button onclick="logout()">Logout</button>
+  <div class="profile-container">
+    <img src="default-avatar.png" id="profileImage" alt="صورة المستخدم">
+    <h2 id="profileFullname">الاسم الكامل</h2>
+    <p id="profileUsername">@username</p>
+    <p id="profileBio">نبذة عني...</p>
+    <button onclick="editProfile()">تعديل الملف الشخصي</button>
   </div>
-  <script type="module" src="profile.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
