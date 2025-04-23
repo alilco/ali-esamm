@@ -1,28 +1,33 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>تعديل الملف الشخصي</title>
+  <title>تعديل الملف الشخصي | rengeM</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="center-box">
-    <h2>تعديل الملف الشخصي</h2>
-    <input type="file" id="profileImage" accept="image/*">
-    <button onclick="updateProfile()">حفظ</button>
+  <div class="container">
+    <h1 class="logo">rengeM</h1>
+    <input type="text" id="fullName" placeholder="الاسم الكامل"><br>
+    <input type="text" id="bio" placeholder="السيرة الذاتية"><br>
+    <input type="text" id="profileImage" placeholder="رابط الصورة الشخصية"><br>
+    <button onclick="saveProfile()">حفظ</button>
   </div>
 
   <script>
-    function updateProfile() {
-      const file = document.getElementById("profileImage").files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          localStorage.setItem("profileImage", e.target.result);
-          alert("تم تحديث الصورة!");
-        };
-        reader.readAsDataURL(file);
-      }
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    document.getElementById("fullName").value = user.fullName || "";
+    document.getElementById("bio").value = user.bio || "";
+    document.getElementById("profileImage").value = user.profileImage || "";
+
+    function saveProfile() {
+      user.fullName = document.getElementById("fullName").value;
+      user.bio = document.getElementById("bio").value;
+      user.profileImage = document.getElementById("profileImage").value;
+
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      alert("تم تحديث الملف الشخصي!");
+      window.location.href = "profile.html";
     }
   </script>
 </body>
