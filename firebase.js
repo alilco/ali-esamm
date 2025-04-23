@@ -1,8 +1,10 @@
-// firebase-config.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+// firebase.js
 
+// استيراد الحزمة
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+// إعدادات Firebase الخاصة بك
 const firebaseConfig = {
   apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
   authDomain: "messengerapp-58f7a.firebaseapp.com",
@@ -13,8 +15,13 @@ const firebaseConfig = {
   appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
+// تهيئة Firebase
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
 
-export { db, auth };
+// قاعدة البيانات
+const firebase = {
+  app,
+  database: getDatabase(app)
+};
+
+window.firebase = firebase;
