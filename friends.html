@@ -1,74 +1,49 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>الأصدقاء - rengeM</title>
+  <title>قائمة الأصدقاء | rengeM</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .friend-item {
-      background: #f0f8ff;
-      padding: 10px;
-      border-radius: 10px;
-      margin: 8px 0;
-      cursor: pointer;
-    }
-  </style>
 </head>
 <body>
   <div class="container">
-    <h2>أضف صديق</h2>
-    <input type="text" id="friendUsername" placeholder="اسم المستخدم">
-    <button onclick="addFriend()">إضافة</button>
-
-    <h3>أصدقائي</h3>
+    <h1 class="logo">rengeM</h1>
     <div id="friendsList"></div>
+    <br>
+    <input type="text" id="friendUsername" placeholder="اسم المستخدم لإضافته كصديق">
+    <button onclick="addFriend()">إضافة صديق</button>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-  <script src="firebase.js"></script>
   <script>
-    const db = firebase.database();
-    const username = localStorage.getItem("username");
-    const userRef = db.ref("users/" + username);
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    const friends = user.friends || [];
 
-    if (!username) {
-      window.location.href = "login.html";
+    function showFriends() {
+      const container = document.getElementById("friendsList");
+      container.innerHTML = "";
+      if (friends.length === 0) {
+        container.innerHTML = "لا يوجد أصدقاء بعد.";
+        return;
+      }
+
+      friends.forEach(friend => {
+        const div = document.createElement("div");
+        div.innerHTML = `<a href="chat.html?user=${friend}">${friend}</a>`;
+        container.appendChild(div);
+      });
     }
 
     function addFriend() {
-      const friend = document.getElementById("friendUsername").value.trim();
-      if (friend === "" || friend === username) return;
+      const username = document.getElementById("friendUsername").value.trim();
+      if (!username || friends.includes(username)) return;
 
-      db.ref("users/" + friend).get().then(snapshot => {
-        if (snapshot.exists()) {
-          db.ref("friends/" + username + "/" + friend).set(true);
-          db.ref("friends/" + friend + "/" + username).set(true);
-          loadFriends();
-        } else {
-          alert("المستخدم غير موجود");
-        }
-      });
+      friends.push(username);
+      user.friends = friends;
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      showFriends();
     }
 
-    function loadFriends() {
-      db.ref("friends/" + username).on("value", snapshot => {
-        const list = document.getElementById("friendsList");
-        list.innerHTML = "";
-        snapshot.forEach(child => {
-          const friend = child.key;
-          const div = document.createElement("div");
-          div.className = "friend-item";
-          div.textContent = friend;
-          div.onclick = () => {
-            window.location.href = "chat.html?user=" + friend;
-          };
-          list.appendChild(div);
-        });
-      });
-    }
-
-    loadFriends();
+    showFriends();
   </script>
 </body>
 </html>
