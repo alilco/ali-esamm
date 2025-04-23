@@ -2,92 +2,101 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>الدردشة - rengeM</title>
+  <title>الدردشة | rengeM</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .chat-box {
-      height: 400px;
-      overflow-y: auto;
-      background: #f9f9f9;
-      border-radius: 12px;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    .message {
-      padding: 8px 12px;
-      background: #e1f0ff;
-      border-radius: 12px;
-      margin: 6px 0;
-      max-width: 75%;
-    }
-    .from-me {
-      background: #cce5ff;
-      align-self: flex-end;
-      text-align: left;
-    }
-    .from-other {
-      background: #f1f1f1;
-      text-align: right;
-    }
-  </style>
 </head>
 <body>
-  <div class="container">
-    <h2 id="chatWith">الدردشة</h2>
-    <div class="chat-box" id="chatBox"></div>
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
-    <button onclick="sendMessage()">إرسال</button>
+  <div class="container chat-box">
+    <h1>الدردشة</h1>
+    
+    <div id="friends-list">
+      <h2>الأصدقاء</h2>
+      <!-- سيتم ملء هذه القائمة بواسطة JavaScript -->
+    </div>
+
+    <div id="chat-area">
+      <h2>المحادثة</h2>
+      <div id="messages"></div>
+      <textarea id="message-input" placeholder="اكتب رسالتك هنا"></textarea>
+      <button onclick="sendMessage()">إرسال</button>
+    </div>
+
+    <div class="profile-box">
+      <button onclick="logout()">تسجيل الخروج</button>
+    </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-  <script src="firebase.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <!-- سكربتات المشروع -->
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
+
   <script>
-    const db = firebase.database();
-    const username = localStorage.getItem("username");
-    const urlParams = new URLSearchParams(window.location.search);
-    const friend = urlParams.get("user");
-
-    if (!username || !friend) {
-      window.location.href = "login.html";
-    }
-
-    document.getElementById("chatWith").textContent = `الدردشة مع ${friend}`;
-
-    const chatId = [username, friend].sort().join("_");
-    const chatRef = db.ref("chats/" + chatId);
-
-    function encrypt(msg) {
-      return btoa(msg); // تشفير بسيط Base64
-    }
-
-    function decrypt(msg) {
-      return atob(msg);
-    }
-
-    function sendMessage() {
-      const msg = document.getElementById("messageInput").value.trim();
-      if (msg === "") return;
-
-      const encrypted = encrypt(msg);
-      chatRef.push({
-        sender: username,
-        message: encrypted,
-        timestamp: Date.now()
+    // جلب الأصدقاء من Firebase
+    function loadFriends() {
+      const username = localStorage.getItem("username");
+      db.ref("users/" + username + "/friends").once("value").then(snapshot => {
+        const friends = snapshot.val();
+        const friendsList = document.getElementById("friends-list");
+        friendsList.innerHTML = '';
+        for (let friend in friends) {
+          const friendItem = document.createElement("div");
+          friendItem.innerHTML = `<button onclick="startChat('${friend}')">${friend}</button>`;
+          friendsList.appendChild(friendItem);
+        }
       });
-      document.getElementById("messageInput").value = "";
     }
 
-    chatRef.on("child_added", snapshot => {
-      const data = snapshot.val();
-      const msg = decrypt(data.message);
-      const msgDiv = document.createElement("div");
-      msgDiv.classList.add("message");
-      msgDiv.classList.add(data.sender === username ? "from-me" : "from-other");
-      msgDiv.textContent = msg;
-      document.getElementById("chatBox").appendChild(msgDiv);
-      document.getElementById("chatBox").scrollTop = document.getElementById("chatBox").scrollHeight;
-    });
+    // فتح محادثة مع صديق
+    function startChat(friendUsername) {
+      const username = localStorage.getItem("username");
+      window.location.href = `chat.html?user=${friendUsername}`;
+    }
+
+    // إرسال رسالة
+    function sendMessage() {
+      const message = document.getElementById("message-input").value;
+      const friendUsername = new URLSearchParams(window.location.search).get("user");
+      const myUsername = localStorage.getItem("username");
+
+      if (message) {
+        const encryptedMessage = encryptMessage(message); // تشفير الرسالة
+        db.ref("messages/" + myUsername + "/" + friendUsername).push({
+          sender: myUsername,
+          message: encryptedMessage,
+          timestamp: new Date().toISOString()
+        });
+
+        db.ref("messages/" + friendUsername + "/" + myUsername).push({
+          sender: myUsername,
+          message: encryptedMessage,
+          timestamp: new Date().toISOString()
+        });
+
+        document.getElementById("message-input").value = ''; // مسح مربع النص
+      }
+    }
+
+    // جلب الرسائل
+    function loadMessages() {
+      const friendUsername = new URLSearchParams(window.location.search).get("user");
+      const myUsername = localStorage.getItem("username");
+
+      db.ref("messages/" + myUsername + "/" + friendUsername).on("child_added", snapshot => {
+        const message = snapshot.val();
+        const decryptedMessage = decryptMessage(message.message); // فك تشفير الرسالة
+        const messageElement = document.createElement("div");
+        messageElement.innerText = `${message.sender}: ${decryptedMessage}`;
+        document.getElementById("messages").appendChild(messageElement);
+      });
+    }
+
+    // تنفيذ التحميل للأصدقاء والرسائل
+    loadFriends();
+    loadMessages();
   </script>
 </body>
 </html>
