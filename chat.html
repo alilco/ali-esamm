@@ -2,20 +2,61 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>الدردشة | rengeM</title>
+  <title>الدردشة - rengeM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="container">
-    <h1 class="logo">rengeM</h1>
-    <div id="chatBox" class="chat-box"></div>
-    <input type="text" id="messageInput" placeholder="اكتب رسالة...">
-    <button onclick="sendMessage()">إرسال</button>
-    <br><br>
-    <a href="profile.html">الملف الشخصي</a> | 
-    <a href="settings.html">الإعدادات</a>
+<body class="chat-page">
+  <div class="chat-container">
+    <header class="chat-header">
+      <h2 id="chatWith">الدردشة مع: صديقك</h2>
+      <button onclick="goBack()" class="btn secondary small">رجوع</button>
+    </header>
+
+    <div class="messages" id="messages">
+      <!-- الرسائل تظهر هنا -->
+    </div>
+
+    <form id="messageForm" class="message-form">
+      <input type="text" id="messageInput" placeholder="اكتب رسالة..." required>
+      <input type="file" id="imageInput" accept="image/*" hidden>
+      <button type="submit" class="btn">إرسال</button>
+      <button type="button" class="btn secondary" onclick="document.getElementById('imageInput').click()">صورة</button>
+    </form>
   </div>
 
-  <script type="module" src="chat.js"></script>
+  <script>
+    function goBack() {
+      window.history.back();
+    }
+
+    // إرسال رسالة
+    document.getElementById('messageForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const msg = document.getElementById('messageInput').value.trim();
+      if (msg !== '') {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message sent';
+        msgDiv.textContent = msg;
+        document.getElementById('messages').appendChild(msgDiv);
+        document.getElementById('messageInput').value = '';
+      }
+    });
+
+    // إرسال صورة (عرضها فقط كمثال)
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function() {
+          const img = document.createElement('img');
+          img.src = reader.result;
+          img.className = 'message-image sent';
+          document.getElementById('messages').appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
 </body>
 </html>
