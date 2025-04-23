@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>محادثة خاصة</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff;
+      margin: 0;
+      padding: 0;
+      direction: rtl;
+    }
+    .topbar {
+      background-color: #343a40;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      position: relative;
+    }
+    .back-btn {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background: #ffc107;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: black;
+    }
+    .chat-container {
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">رجوع</button>
+    محادثة مع <span id="chatWith">...</span>
+  </div>
+
+  <div class="chat-container">
+    <p>ابدأ المحادثة مع صديقك الآن!</p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get("user");
+    document.getElementById("chatWith").textContent = user || "صديق";
+  </script>
+
+</body>
+</html>
