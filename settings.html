@@ -1,55 +1,71 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>الإعدادات</title>
+  <title>الإعدادات - rengeM</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body.dark-mode {
+      background-color: #121212;
+      color: white;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+    }
+    button, a {
+      margin: 10px 0;
+      display: block;
+    }
+  </style>
 </head>
 <body>
-  <div class="edit-profile-container">
+  <div class="container">
     <h2>الإعدادات</h2>
-    
-    <div>
-      <label>
-        <input type="checkbox" id="darkModeToggle" />
-        تفعيل الوضع الليلي
-      </label>
-    </div>
-    
-    <div>
-      <label>
-        <input type="checkbox" id="showLastSeenToggle" />
-        إظهار آخر ظهور
-      </label>
-    </div>
 
-    <a href="index.html"><button>العودة للرئيسية</button></a>
+    <button onclick="logout()">تسجيل الخروج</button>
+    <button onclick="goToProfile()">تعديل الملف الشخصي</button>
+
+    <button onclick="toggleTheme()">تبديل الوضع (نهاري/ليلي)</button>
+    <button onclick="toggleActivity()">تبديل حالة النشاط</button>
+
+    <h4>الإبلاغ عن مشكلة</h4>
+    <a href="https://www.instagram.com/5_x_s/" target="_blank">إنستغرام</a>
+    <a href="https://t.me/UUYFU" target="_blank">تيليجرام</a>
   </div>
 
   <script>
-    const darkModeToggle = document.getElementById("darkModeToggle");
-    const showLastSeenToggle = document.getElementById("showLastSeenToggle");
+    const username = localStorage.getItem("username");
+    if (!username) {
+      window.location.href = "login.html";
+    }
 
-    // تحميل الإعدادات من التخزين المحلي
-    darkModeToggle.checked = localStorage.getItem("darkMode") === "true";
-    showLastSeenToggle.checked = localStorage.getItem("showLastSeen") !== "false";
+    function logout() {
+      localStorage.removeItem("username");
+      window.location.href = "login.html";
+    }
 
-    // تفعيل الوضع الليلي
-    darkModeToggle.addEventListener("change", () => {
-      localStorage.setItem("darkMode", darkModeToggle.checked);
-      document.body.classList.toggle("dark", darkModeToggle.checked);
-    });
+    function goToProfile() {
+      window.location.href = "profile.html";
+    }
 
-    // إظهار / إخفاء آخر ظهور
-    showLastSeenToggle.addEventListener("change", () => {
-      localStorage.setItem("showLastSeen", showLastSeenToggle.checked);
-    });
+    function toggleTheme() {
+      document.body.classList.toggle("dark-mode");
+    }
 
-    // تفعيل الوضع الليلي عند الفتح
-    if (localStorage.getItem("darkMode") === "true") {
-      document.body.classList.add("dark");
+    function toggleActivity() {
+      const db = firebase.database();
+      const ref = db.ref("users/" + username + "/active");
+      ref.once("value").then(snapshot => {
+        ref.set(!snapshot.val());
+        alert("تم تغيير حالة النشاط");
+      });
     }
   </script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+  <script src="firebase.js"></script>
 </body>
 </html>
