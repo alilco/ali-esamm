@@ -1,99 +1,66 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  push,
-  onValue
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+// تحقق من تسجيل الدخول
+firebase.auth().onAuthStateChanged((user) => {
+  if (!user) {
+    window.location.href = "login.html";
+  } else {
+    const currentUser = user.displayName || user.email.split('@')[0];
+    document.getElementById("chatWith").innerText = "مرحبًا، " + currentUser;
 
-// إعدادات Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-  authDomain: "messengerapp-58f7a.firebaseapp.com",
-  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-  projectId: "messengerapp-58f7a",
-  storageBucket: "messengerapp-58f7a.appspot.com",
-  messagingSenderId: "46178168523",
-  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-};
+    // جلب المستخدمين
+    fetch('users.json')
+      .then(res => res.json())
+      .then(data => {
+        const usersList = document.getElementById("usersList");
+        for (let username in data) {
+          if (username !== currentUser) {
+            const li = document.createElement("li");
+            li.textContent = data[username].fullName;
+            li.addEventListener("click", () => openChatWith(username, data[username].fullName));
+            usersList.appendChild(li);
+          }
+        }
+      });
+  }
+});
 
-// تشغيل Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+let currentChatUser = null;
 
-// عناصر الصفحة
-const friendsList = document.getElementById("friendsList");
-const messagesDiv = document.getElementById("messages");
-const messageInput = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
-const chatWith = document.getElementById("chatWith");
-const backBtn = document.getElementById("backBtn");
+function openChatWith(username, fullName) {
+  currentChatUser = username;
+  document.getElementById("chatWith").innerText = "الدردشة مع: " + fullName;
+  document.getElementById("messages").innerHTML = "";
 
-let currentUser = JSON.parse(localStorage.getItem("user"));
-let selectedFriend = null;
+  const currentUser = firebase.auth().currentUser.displayName || firebase.auth().currentUser.email.split('@')[0];
+  const chatId = getChatId(currentUser, username);
 
-// تحميل الأصدقاء
-fetch("users.json")
-  .then(res => res.json())
-  .then(users => {
-    users.forEach(user => {
-      if (user.username !== currentUser.username) {
-        const li = document.createElement("li");
-        li.textContent = user.fullname;
-        li.onclick = () => openChat(user);
-        friendsList.appendChild(li);
-      }
-    });
-  });
-
-// فتح محادثة خاصة
-function openChat(friend) {
-  selectedFriend = friend;
-  chatWith.textContent = `الدردشة مع ${friend.fullname}`;
-  messagesDiv.innerHTML = "";
-  const chatId = generateChatId(currentUser.username, friend.username);
-  const messagesRef = ref(db, `messages/${chatId}`);
-
-  onValue(messagesRef, snapshot => {
+  firebase.database().ref("chats/" + chatId).on("value", (snapshot) => {
+    const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
-    snapshot.forEach(child => {
-      const data = child.val();
-      const msg = decrypt(data.message);
-      const div = document.createElement("div");
-      div.className = data.sender === currentUser.username ? "my-msg" : "their-msg";
-      div.textContent = msg;
-      messagesDiv.appendChild(div);
+    snapshot.forEach((msg) => {
+      const p = document.createElement("p");
+      p.textContent = atob(msg.val().text);
+      messagesDiv.appendChild(p);
     });
   });
 }
 
-// إرسال رسالة
-sendBtn.onclick = () => {
-  if (!selectedFriend || messageInput.value.trim() === "") return;
-  const chatId = generateChatId(currentUser.username, selectedFriend.username);
-  const msgRef = push(ref(db, `messages/${chatId}`));
-  set(msgRef, {
-    sender: currentUser.username,
-    message: encrypt(messageInput.value.trim())
-  });
-  messageInput.value = "";
-};
+// إرسال الرسائل
+document.getElementById("sendBtn").addEventListener("click", () => {
+  const text = document.getElementById("messageInput").value.trim();
+  if (text && currentChatUser) {
+    const currentUser = firebase.auth().currentUser.displayName || firebase.auth().currentUser.email.split('@')[0];
+    const chatId = getChatId(currentUser, currentChatUser);
+    const newMsg = {
+      sender: currentUser,
+      text: btoa(text),
+      time: Date.now()
+    };
+    firebase.database().ref("chats/" + chatId).push(newMsg);
+    document.getElementById("messageInput").value = "";
+  }
+});
 
-// زر الرجوع
-backBtn.onclick = () => {
-  location.href = "index.html";
-};
-
-// توليد معرف المحادثة
-function generateChatId(user1, user2) {
+// توليد معرف فريد للمحادثة بين المستخدمين
+function getChatId(user1, user2) {
   return [user1, user2].sort().join("_");
-}
-
-// تشفير بسيط (يمكن تغييره بخوارزمية أقوى)
-function encrypt(msg) {
-  return btoa(unescape(encodeURIComponent(msg)));
-}
-function decrypt(enc) {
-  return decodeURIComponent(escape(atob(enc)));
 }
