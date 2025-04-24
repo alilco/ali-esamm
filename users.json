@@ -1,14 +1,1 @@
-[
-  {
-    "username": "ahmed",
-    "password": "123",
-    "displayName": "أحمد الجبوري",
-    "profileImage": "img/ahmed.jpg"
-  },
-  {
-    "username": "sara",
-    "password": "456",
-    "displayName": "سارة العراقي",
-    "profileImage": "img/sara.jpg"
-  }
-]
+[]
