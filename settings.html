@@ -1,39 +1,24 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>الإعدادات</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div class="header">
-    <span>الإعدادات</span>
+  <header>
+    <h2>الإعدادات</h2>
     <button onclick="goBack()">رجوع</button>
-  </div>
+  </header>
 
-  <div class="settings">
-    <button onclick="toggleMode()">الوضع الليلي / النهاري</button>
-    <br><br>
-    <a href="https://www.instagram.com/5_x_s/" target="_blank">الإبلاغ عبر إنستغرام</a><br>
-    <a href="https://t.me/UUYFU" target="_blank">الإبلاغ عبر تيليجرام</a><br><br>
-    <button onclick="logout()">تسجيل الخروج</button>
-  </div>
-
-  <script>
-    function goBack() {
-      window.location.href = "chat.html";
-    }
-
-    function toggleMode() {
-      document.body.classList.toggle("dark-mode");
-    }
-
-    function logout() {
-      localStorage.removeItem("currentUser");
-      window.location.href = "login.html";
-    }
-  </script>
-
+  <main>
+    <ul>
+      <li><a href="edit-profile.html">تعديل الملف الشخصي</a></li>
+      <li><a href="javascript:void(0)" onclick="logout()">تسجيل الخروج</a></li>
+      <li><a href="https://www.instagram.com/5_x_s" target="_blank">إبلاغ عبر إنستغرام</a></li>
+      <li><a href="https://t.me/UUYFU" target="_blank">إبلاغ عبر تيليجرام</a></li>
+    </ul>
+  </main>
 </body>
 </html>
