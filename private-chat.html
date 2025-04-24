@@ -2,51 +2,24 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>دردشة خاصة</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>محادثة خاصة</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div class="header">
-    <span>الدردشة مع <span id="chatWithUser"></span></span>
+  <header>
     <button onclick="goBack()">رجوع</button>
-  </div>
+    <h2 id="chatWith"></h2>
+  </header>
 
-  <div class="chat-box" id="privateChatBox"></div>
+  <main id="messagesContainer"></main>
 
-  <div class="chat-input">
-    <input type="text" id="privateMessage" placeholder="اكتب رسالتك...">
-    <button onclick="sendPrivateMessage()">إرسال</button>
-  </div>
+  <footer>
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
+    <button onclick="sendMessage()">إرسال</button>
+  </footer>
 
-  <script>
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    const chatWith = localStorage.getItem("chatWith");
-    document.getElementById("chatWithUser").innerText = chatWith;
-
-    const privateChatBox = document.getElementById("privateChatBox");
-    const privateMessage = document.getElementById("privateMessage");
-
-    function renderPrivateMessage(message, sender) {
-      const msgDiv = document.createElement("div");
-      msgDiv.className = sender === currentUser.username ? "my-message" : "their-message";
-      msgDiv.innerText = message;
-      privateChatBox.appendChild(msgDiv);
-      privateChatBox.scrollTop = privateChatBox.scrollHeight;
-    }
-
-    function sendPrivateMessage() {
-      const text = privateMessage.value.trim();
-      if (text !== "") {
-        renderPrivateMessage(text, currentUser.username);
-        privateMessage.value = "";
-      }
-    }
-
-    function goBack() {
-      window.location.href = "friends.html";
-    }
-  </script>
-
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
