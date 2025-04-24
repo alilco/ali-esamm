@@ -3,36 +3,98 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>دردشة - rengeM</title>
+  <title>الدردشة - rengeM</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="app-header">
-    <h2>rengeM</h2>
+  <div class="header">
+    <h2>مرحبا بك، <span id="displayUser"></span></h2>
     <button onclick="logout()">تسجيل الخروج</button>
-  </header>
-
-  <div class="main-container">
-    <aside class="friends-list">
-      <h3>الأصدقاء</h3>
-      <ul id="friends"></ul>
-      <input type="text" id="searchInput" placeholder="ابحث عن مستخدم...">
-      <button onclick="searchUser()">إضافة صديق</button>
-    </aside>
-
-    <section class="chat-box">
-      <div class="chat-header" id="chatHeader">اختر صديقًا للمحادثة</div>
-      <div class="chat-messages" id="messagesBox"></div>
-      <div class="chat-input">
-        <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
-        <button onclick="sendMessage()">إرسال</button>
-      </div>
-    </section>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="app.js"></script>
-  <script src="chat.js"></script>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="ابحث عن مستخدم" />
+    <button onclick="searchUser()">بحث</button>
+  </div>
+
+  <div class="friends-list" id="friendsList">
+    <h3>الأصدقاء</h3>
+    <!-- يتم عرض الأصدقاء هنا -->
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getDatabase, ref, get, set, update
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const currentUser = localStorage.getItem("username");
+    if (!currentUser) window.location.href = "login.html";
+    document.getElementById("displayUser").innerText = currentUser;
+
+    function logout() {
+      localStorage.removeItem("username");
+      window.location.href = "login.html";
+    }
+
+    function searchUser() {
+      const searchValue = document.getElementById("searchInput").value.trim();
+      if (!searchValue || searchValue === currentUser) return;
+
+      const userRef = ref(db, "users/" + searchValue);
+      get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          // أضف المستخدم إلى قائمة الأصدقاء
+          const friendRef = ref(db, `friends/${currentUser}/${searchValue}`);
+          set(friendRef, true).then(() => {
+            alert("تمت إضافة الصديق بنجاح!");
+            loadFriends();
+          });
+        } else {
+          alert("المستخدم غير موجود");
+        }
+      });
+    }
+
+    function loadFriends() {
+      const list = document.getElementById("friendsList");
+      list.innerHTML = "<h3>الأصدقاء</h3>";
+      const friendsRef = ref(db, "friends/" + currentUser);
+      get(friendsRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const friends = snapshot.val();
+          Object.keys(friends).forEach((friendName) => {
+            const item = document.createElement("div");
+            item.className = "friend-item";
+            item.innerHTML = `
+              <p><strong>${friendName}</strong></p>
+              <button onclick="openChat('${friendName}')">مراسلة</button>
+            `;
+            list.appendChild(item);
+          });
+        }
+      });
+    }
+
+    function openChat(friendName) {
+      localStorage.setItem("chatWith", friendName);
+      window.location.href = "private-chat.html";
+    }
+
+    loadFriends();
+  </script>
 </body>
 </html>
