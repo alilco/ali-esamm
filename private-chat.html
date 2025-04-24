@@ -1,25 +1,84 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>محادثة خاصة</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>الدردشة الخاصة</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <button onclick="goBack()">رجوع</button>
-    <h2 id="chatWith"></h2>
-  </header>
+  <div class="chat-container">
+    <header>
+      <button onclick="goBack()">الرجوع</button>
+      <h2 id="chatWithName">الدردشة</h2>
+    </header>
 
-  <main id="messagesContainer"></main>
+    <div id="chatBox" class="chat-box"></div>
 
-  <footer>
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
-    <button onclick="sendMessage()">إرسال</button>
-  </footer>
+    <form id="messageForm" class="chat-form">
+      <input type="text" id="messageInput" placeholder="اكتب رسالة..." required />
+      <button type="submit">إرسال</button>
+    </form>
+  </div>
 
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="firebase.js"></script>
-  <script src="script.js"></script>
+  <script>
+    const chatBox = document.getElementById("chatBox");
+    const messageForm = document.getElementById("messageForm");
+    const messageInput = document.getElementById("messageInput");
+    const chatWith = localStorage.getItem("chatWith");
+    let currentUserId = null;
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) return (window.location.href = "login.html");
+      currentUserId = user.uid;
+      loadMessages();
+      loadReceiverName();
+    });
+
+    function loadMessages() {
+      const chatPath = `privateMessages/${currentUserId}/${chatWith}`;
+      firebase.database().ref(chatPath).on("value", snapshot => {
+        chatBox.innerHTML = "";
+        const messages = snapshot.val() || {};
+        Object.values(messages).forEach(msg => {
+          const msgDiv = document.createElement("div");
+          msgDiv.className = msg.sender === currentUserId ? "my-msg" : "friend-msg";
+          msgDiv.textContent = msg.text;
+          chatBox.appendChild(msgDiv);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    }
+
+    function loadReceiverName() {
+      firebase.database().ref("users/" + chatWith).once("value", snapshot => {
+        const user = snapshot.val();
+        document.getElementById("chatWithName").textContent = user.displayName || user.username;
+      });
+    }
+
+    messageForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const text = messageInput.value;
+      const timestamp = Date.now();
+      const message = {
+        sender: currentUserId,
+        text,
+        time: timestamp
+      };
+
+      firebase.database().ref(`privateMessages/${currentUserId}/${chatWith}`).push(message);
+      firebase.database().ref(`privateMessages/${chatWith}/${currentUserId}`).push(message);
+      messageInput.value = "";
+    });
+
+    function goBack() {
+      window.location.href = "chat.html";
+    }
+  </script>
 </body>
 </html>
