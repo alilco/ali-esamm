@@ -1,8 +1,7 @@
-// firebase.js
-
-// استيراد الحزمة
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+// firebase-config.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // إعدادات Firebase الخاصة بك
 const firebaseConfig = {
@@ -17,11 +16,7 @@ const firebaseConfig = {
 
 // تهيئة Firebase
 const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const auth = getAuth(app);
 
-// قاعدة البيانات
-const firebase = {
-  app,
-  database: getDatabase(app)
-};
-
-window.firebase = firebase;
+export { app, database, auth };
