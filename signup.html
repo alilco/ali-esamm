@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>إنشاء حساب | rengeM</title>
+  <title>إنشاء حساب | رينجم</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="login-page">
-  <div class="login-container">
-    <h1 class="app-title">rengeM</h1>
-    <h2>إنشاء حساب</h2>
-    <form id="signupForm">
-      <input type="text" id="signupUsername" placeholder="اسم المستخدم" required />
-      <input type="text" id="signupFullName" placeholder="الاسم الكامل" required />
-      <input type="password" id="signupPassword" placeholder="كلمة المرور" required />
-      <button type="submit" id="signupBtn">إنشاء حساب</button>
+<body class="signup-page">
+  <div class="signup-container">
+    <h1>إنشاء حساب جديد</h1>
+    <form onsubmit="signup(event)">
+      <input type="text" id="fullname" placeholder="الاسم الكامل" required />
+      <input type="text" id="username" placeholder="اسم المستخدم" required />
+      <input type="password" id="password" placeholder="كلمة المرور" required />
+      <button type="submit">إنشاء حساب</button>
     </form>
-    <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+    <p>لديك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a></p>
   </div>
 
   <script type="module" src="firebase-config.js"></script>
