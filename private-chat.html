@@ -1,84 +1,52 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>محادثة خاصة</title>
+  <meta charset="UTF-8">
+  <title>دردشة خاصة</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <div class="header">
+    <span>الدردشة مع <span id="chatWithUser"></span></span>
     <button onclick="goBack()">رجوع</button>
-    <h2 id="chatWithTitle">مراسلة</h2>
   </div>
 
-  <div class="chat-box" id="chatBox">
-    <!-- الرسائل تظهر هنا -->
-  </div>
+  <div class="chat-box" id="privateChatBox"></div>
 
   <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك..." />
-    <button onclick="sendMessage()">إرسال</button>
+    <input type="text" id="privateMessage" placeholder="اكتب رسالتك...">
+    <button onclick="sendPrivateMessage()">إرسال</button>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import {
-      getDatabase, ref, push, onChildAdded, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-      authDomain: "messengerapp-58f7a.firebaseapp.com",
-      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-      projectId: "messengerapp-58f7a",
-      storageBucket: "messengerapp-58f7a.appspot.com",
-      messagingSenderId: "46178168523",
-      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const currentUser = localStorage.getItem("username");
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
     const chatWith = localStorage.getItem("chatWith");
-    if (!currentUser || !chatWith) window.location.href = "chat.html";
+    document.getElementById("chatWithUser").innerText = chatWith;
 
-    document.getElementById("chatWithTitle").innerText = "مراسلة: " + chatWith;
+    const privateChatBox = document.getElementById("privateChatBox");
+    const privateMessage = document.getElementById("privateMessage");
 
-    const messagesRef = ref(db, `messages/${getChatId(currentUser, chatWith)}`);
-
-    function getChatId(user1, user2) {
-      return [user1, user2].sort().join("_");
+    function renderPrivateMessage(message, sender) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = sender === currentUser.username ? "my-message" : "their-message";
+      msgDiv.innerText = message;
+      privateChatBox.appendChild(msgDiv);
+      privateChatBox.scrollTop = privateChatBox.scrollHeight;
     }
 
-    function sendMessage() {
-      const input = document.getElementById("messageInput");
-      const message = input.value.trim();
-      if (!message) return;
-
-      push(messagesRef, {
-        from: currentUser,
-        text: message,
-        timestamp: Date.now()
-      });
-
-      input.value = "";
+    function sendPrivateMessage() {
+      const text = privateMessage.value.trim();
+      if (text !== "") {
+        renderPrivateMessage(text, currentUser.username);
+        privateMessage.value = "";
+      }
     }
-
-    const chatBox = document.getElementById("chatBox");
-    onChildAdded(messagesRef, (snapshot) => {
-      const msg = snapshot.val();
-      const messageElement = document.createElement("div");
-      messageElement.className = msg.from === currentUser ? "my-message" : "their-message";
-      messageElement.innerText = msg.text;
-      chatBox.appendChild(messageElement);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
 
     function goBack() {
-      window.location.href = "chat.html";
+      window.location.href = "friends.html";
     }
   </script>
+
 </body>
 </html>
