@@ -1,171 +1,56 @@
-/* إعدادات عامة */
 body {
-  font-family: 'Tahoma', sans-serif;
-  background: #f0f2f5;
+  font-family: "Arial", sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
   margin: 0;
   padding: 0;
-  direction: rtl;
 }
 
-h2 {
-  margin: 10px 0;
-  color: #333;
-  text-align: center;
-}
-
-/* ترويسة */
-.header {
-  background-color: #1877f2;
+header {
+  background-color: #0066cc;
   color: white;
   padding: 15px;
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.header button {
-  background: white;
-  color: #1877f2;
+header button {
+  background-color: white;
+  color: #0066cc;
   border: none;
-  padding: 5px 10px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: 5px;
   cursor: pointer;
-  font-weight: bold;
 }
 
-/* صفحة تسجيل الدخول والتسجيل */
-.auth-container {
-  width: 90%;
-  max-width: 400px;
-  margin: 60px auto;
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+main {
+  padding: 20px;
 }
 
-.auth-container input {
+input, textarea {
   width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 6px;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 5px;
   border: 1px solid #ccc;
 }
 
-.auth-container button {
-  width: 100%;
-  padding: 12px;
-  background-color: #1877f2;
+button {
+  background-color: #0066cc;
   color: white;
   border: none;
-  border-radius: 6px;
+  padding: 10px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
-  margin-top: 10px;
 }
 
-.auth-container a {
-  display: block;
+footer {
+  margin-top: 20px;
   text-align: center;
-  margin-top: 15px;
-  color: #1877f2;
+}
+
+a {
+  color: #0066cc;
   text-decoration: none;
 }
-
-/* قائمة الأصدقاء */
-.friends-list {
-  padding: 15px;
-}
-
-.friend {
-  background: white;
-  margin-bottom: 10px;
-  padding: 10px 15px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.friend:hover {
-  background: #e6f0ff;
-}
-
-.friend .username {
-  font-weight: bold;
-}
-
-.friend .status {
-  font-size: 12px;
-  color: gray;
-}
-
-/* صندوق الدردشة */
-.chat-box {
-  height: 70vh;
-  overflow-y: auto;
-  padding: 15px;
-  background: #e9eff6;
-}
-
-.chat-input {
-  display: flex;
-  padding: 10px;
-  background: white;
-  border-top: 1px solid #ccc;
-}
-
-.chat-input input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  margin-left: 10px;
-}
-
-.chat-input button {
-  padding: 10px 20px;
-  background-color: #1877f2;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-/* رسائل */
-.my-message {
-  background: #d1ffd6;
-  padding: 10px 15px;
-  margin: 5px 0;
-  border-radius: 10px 0 10px 10px;
-  text-align: right;
-  max-width: 70%;
-  margin-right: auto;
-}
-
-.their-message {
-  background: #ffffff;
-  padding: 10px 15px;
-  margin: 5px 0;
-  border-radius: 0 10px 10px 10px;
-  text-align: right;
-  max-width: 70%;
-  margin-left: auto;
-}
-
-/* زر إضافة صديق */
-#addFriendBtn {
-  background-color: #42b72a;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  }
