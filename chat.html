@@ -1,57 +1,31 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>الدردشة</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>rengeM - الدردشة</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div class="header">
-    <span>تطبيق ماسنجر</span>
+  <header>
+    <h1>rengeM</h1>
     <button onclick="logout()">تسجيل الخروج</button>
-  </div>
+  </header>
 
-  <div class="chat-box" id="chatBox">
-    <!-- الرسائل ستظهر هنا -->
-  </div>
+  <main>
+    <input type="text" id="searchInput" placeholder="ابحث عن مستخدم...">
+    <button onclick="searchUser()">بحث</button>
+    <div id="searchResult"></div>
 
-  <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك..." />
-    <button onclick="sendMessage()">إرسال</button>
-  </div>
+    <h2>أصدقائي</h2>
+    <ul id="friendsList"></ul>
+  </main>
 
-  <script>
-    // بيانات المستخدم النشط
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (!currentUser) window.location.href = "login.html";
+  <footer>
+    <a href="settings.html">الإعدادات</a>
+  </footer>
 
-    const chatBox = document.getElementById("chatBox");
-    const messageInput = document.getElementById("messageInput");
-
-    function renderMessage(message, sender) {
-      const msgDiv = document.createElement("div");
-      msgDiv.className = sender === currentUser.username ? "my-message" : "their-message";
-      msgDiv.innerText = message;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function sendMessage() {
-      const text = messageInput.value.trim();
-      if (text !== "") {
-        renderMessage(text, currentUser.username);
-        // هنا يمكن إضافة تخزين الرسائل في قاعدة البيانات
-        messageInput.value = "";
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem("currentUser");
-      window.location.href = "login.html";
-    }
-  </script>
-
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
