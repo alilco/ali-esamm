@@ -1,22 +1,18 @@
-{
-  "users": {
-    "user1id": {
-      "username": "ahmed123",
-      "password": "123456",
-      "displayName": "أحمد",
-      "profileImage": "https://i.imgur.com/abc123.png",
-      "bio": "أهلاً! أنا أستخدم التطبيق",
-      "status": "متصل",
-      "lastSeen": "2025-04-23T20:00:00Z"
-    },
-    "user2id": {
-      "username": "sara456",
-      "password": "654321",
-      "displayName": "سارة",
-      "profileImage": "https://i.imgur.com/xyz456.png",
-      "bio": "مرحباً بالجميع",
-      "status": "غير متصل",
-      "lastSeen": "2025-04-23T18:45:00Z"
-    }
+[
+  {
+    "username": "ahmed",
+    "password": "123456",
+    "fullName": "أحمد خالد",
+    "profileImage": "https://i.ibb.co/tY5Wk68/user1.png",
+    "lastSeen": "2025-04-23T18:00:00Z",
+    "online": true
+  },
+  {
+    "username": "noor",
+    "password": "654321",
+    "fullName": "نور علي",
+    "profileImage": "https://i.ibb.co/1Jk1v8s/user2.png",
+    "lastSeen": "2025-04-23T17:45:00Z",
+    "online": false
   }
-}
+]
