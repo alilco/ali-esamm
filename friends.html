@@ -1,23 +1,57 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>الأصدقاء | رينجم</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>قائمة الأصدقاء</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="friends-page">
-  <header>
-    <h2>الأصدقاء</h2>
-    <a href="chat.html">رجوع</a>
-  </header>
+<body>
 
-  <main>
-    <input type="text" id="search-user" placeholder="بحث عن مستخدم..." oninput="searchUsers(this.value)">
-    <div id="search-results"></div>
-  </main>
+  <div class="header">
+    <span>أصدقائي</span>
+    <button onclick="goBack()">رجوع</button>
+  </div>
 
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="app.js"></script>
+  <div class="friend-search">
+    <input type="text" id="searchInput" placeholder="ابحث باسم المستخدم...">
+    <button onclick="searchUser()">بحث</button>
+  </div>
+
+  <div id="friendsList"></div>
+
+  <script>
+    const users = JSON.parse(localStorage.getItem("allUsers")) || [];
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const friendsList = document.getElementById("friendsList");
+
+    function searchUser() {
+      const username = document.getElementById("searchInput").value.trim();
+      const user = users.find(u => u.username === username && u.username !== currentUser.username);
+
+      if (user) {
+        const friendDiv = document.createElement("div");
+        friendDiv.className = "friend-item";
+        friendDiv.innerHTML = `
+          <span>${user.username}</span>
+          <button onclick="startChat('${user.username}')">مراسلة</button>
+        `;
+        friendsList.innerHTML = "";
+        friendsList.appendChild(friendDiv);
+      } else {
+        friendsList.innerHTML = "<p>لا يوجد مستخدم بهذا الاسم</p>";
+      }
+    }
+
+    function startChat(friendUsername) {
+      localStorage.setItem("chatWith", friendUsername);
+      window.location.href = "private-chat.html";
+    }
+
+    function goBack() {
+      window.location.href = "chat.html";
+    }
+  </script>
+
 </body>
 </html>
