@@ -1,89 +1,39 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>الإعدادات - rengeM</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .settings-container {
-      max-width: 500px;
-      margin: 40px auto;
-      padding: 20px;
-      background: var(--card-bg);
-      border-radius: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    .setting-item {
-      margin: 15px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .setting-item label {
-      font-weight: bold;
-    }
-    .report-links a {
-      display: block;
-      margin-top: 10px;
-      color: #007bff;
-      font-weight: bold;
-    }
-    .report-links a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>الإعدادات</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="settings-container">
-    <h2>الإعدادات</h2>
 
-    <div class="setting-item">
-      <label for="darkModeToggle">الوضع الليلي</label>
-      <input type="checkbox" id="darkModeToggle">
-    </div>
+  <div class="header">
+    <span>الإعدادات</span>
+    <button onclick="goBack()">رجوع</button>
+  </div>
 
-    <div class="setting-item">
-      <label for="activeStatusToggle">حالة النشاط</label>
-      <input type="checkbox" id="activeStatusToggle" checked>
-    </div>
-
-    <div class="setting-item">
-      <button onclick="logout()" class="btn danger">تسجيل الخروج</button>
-    </div>
-
-    <div class="setting-item report-links">
-      <label>الإبلاغ عن مشكلة:</label>
-      <a href="https://www.instagram.com/5_x_s/" target="_blank">Instagram</a>
-      <a href="https://t.me/UUYFU" target="_blank">Telegram</a>
-    </div>
-
-    <div class="setting-item">
-      <button onclick="goBack()" class="btn secondary">رجوع</button>
-    </div>
+  <div class="settings">
+    <button onclick="toggleMode()">الوضع الليلي / النهاري</button>
+    <br><br>
+    <a href="https://www.instagram.com/5_x_s/" target="_blank">الإبلاغ عبر إنستغرام</a><br>
+    <a href="https://t.me/UUYFU" target="_blank">الإبلاغ عبر تيليجرام</a><br><br>
+    <button onclick="logout()">تسجيل الخروج</button>
   </div>
 
   <script>
-    const darkToggle = document.getElementById("darkModeToggle");
-    darkToggle.addEventListener("change", function () {
-      document.body.classList.toggle("dark", this.checked);
-      localStorage.setItem("darkMode", this.checked);
-    });
+    function goBack() {
+      window.location.href = "chat.html";
+    }
 
-    const savedMode = localStorage.getItem("darkMode") === "true";
-    darkToggle.checked = savedMode;
-    if (savedMode) document.body.classList.add("dark");
+    function toggleMode() {
+      document.body.classList.toggle("dark-mode");
+    }
 
     function logout() {
-      // مسح الجلسة مثلاً:
-      localStorage.clear();
-      alert("تم تسجيل الخروج!");
+      localStorage.removeItem("currentUser");
       window.location.href = "login.html";
     }
-
-    function goBack() {
-      window.history.back();
-    }
   </script>
+
 </body>
 </html>
