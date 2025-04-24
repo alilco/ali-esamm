@@ -2,22 +2,26 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>تسجيل الدخول | رينجم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="login-page">
-  <div class="login-container">
-    <h1>تسجيل الدخول</h1>
-    <form onsubmit="login(event)">
-      <input type="text" id="login-username" placeholder="اسم المستخدم" required />
-      <input type="password" id="login-password" placeholder="كلمة المرور" required />
-      <button type="submit">تسجيل الدخول</button>
-    </form>
+<body>
+  <div class="container">
+    <h2>تسجيل الدخول</h2>
+    <input type="text" id="login-username" placeholder="اسم المستخدم" />
+    <input type="password" id="login-password" placeholder="كلمة المرور" />
+    <button onclick="loginUser()">دخول</button>
     <p>ليس لديك حساب؟ <a href="signup.html">إنشاء حساب</a></p>
   </div>
 
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="app.js"></script>
+  <script src="app.js"></script>
+  <script>
+    function loginUser() {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+      login(username, password);
+    }
+  </script>
 </body>
 </html>
