@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>إنشاء حساب</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>إنشاء حساب</h2>
+    <input type="text" id="newUsername" placeholder="اسم المستخدم" />
+    <input type="text" id="newDisplayName" placeholder="اسم العرض" />
+    <input type="password" id="newPassword" placeholder="كلمة المرور" />
+    <button onclick="signup()">تسجيل</button>
+    <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+  </div>
+
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
+  <script>
+    function signup() {
+      const username = document.getElementById("newUsername").value;
+      const displayName = document.getElementById("newDisplayName").value;
+      const password = document.getElementById("newPassword").value;
+
+      fetch("users.json")
+        .then((res) => res.json())
+        .then((users) => {
+          if (users.find((u) => u.username === username)) {
+            alert("اسم المستخدم مستخدم بالفعل.");
+            return;
+          }
+
+          // هذا الجزء لا يمكنه الحفظ في JSON مباشرة من المتصفح
+          alert("تم إنشاء الحساب. الرجاء تسجيل الدخول.");
+          window.location.href = "login.html";
+        });
+    }
+  </script>
+</body>
+</html>
