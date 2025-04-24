@@ -2,23 +2,28 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>إنشاء حساب | رينجم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إنشاء حساب</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="signup-page">
-  <div class="signup-container">
-    <h1>إنشاء حساب جديد</h1>
-    <form onsubmit="signup(event)">
-      <input type="text" id="fullname" placeholder="الاسم الكامل" required />
-      <input type="text" id="username" placeholder="اسم المستخدم" required />
-      <input type="password" id="password" placeholder="كلمة المرور" required />
-      <button type="submit">إنشاء حساب</button>
-    </form>
-    <p>لديك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a></p>
+<body>
+  <div class="container">
+    <h2>إنشاء حساب جديد</h2>
+    <input type="text" id="full-name" placeholder="الاسم الكامل" />
+    <input type="text" id="signup-username" placeholder="اسم المستخدم" />
+    <input type="password" id="signup-password" placeholder="كلمة المرور" />
+    <button onclick="signupUser()">تسجيل</button>
+    <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
   </div>
 
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="app.js"></script>
+  <script src="app.js"></script>
+  <script>
+    function signupUser() {
+      const fullName = document.getElementById("full-name").value;
+      const username = document.getElementById("signup-username").value;
+      const password = document.getElementById("signup-password").value;
+      signup(fullName, username, password);
+    }
+  </script>
 </body>
 </html>
