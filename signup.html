@@ -2,20 +2,42 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>إنشاء حساب | rengeM</title>
+  <title>إنشاء حساب</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>إنشاء حساب</h2>
+  <div class="form-container">
+    <h2>إنشاء حساب جديد</h2>
     <input type="text" id="signupUsername" placeholder="اسم المستخدم">
-    <input type="text" id="signupDisplayName" placeholder="الاسم الكامل">
     <input type="password" id="signupPassword" placeholder="كلمة المرور">
-    <button onclick="signupUser()">تسجيل</button>
+    <button onclick="signup()">إنشاء</button>
+    <p id="signupMessage" class="message"></p>
     <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
-    <p id="signupError" class="error"></p>
   </div>
-  <script src="firebase.js"></script>
-  <script src="script.js"></script>
+
+  <script>
+    function signup() {
+      const username = document.getElementById("signupUsername").value.trim();
+      const password = document.getElementById("signupPassword").value;
+      const message = document.getElementById("signupMessage");
+
+      if (!username || !password) {
+        message.innerText = "الرجاء ملء جميع الحقول.";
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+      if (users.find(u => u.username === username)) {
+        message.innerText = "اسم المستخدم مستخدم بالفعل.";
+        return;
+      }
+
+      const newUser = { username, password };
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
+      message.innerText = "تم إنشاء الحساب بنجاح. يمكنك تسجيل الدخول الآن.";
+    }
+  </script>
 </body>
 </html>
