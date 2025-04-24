@@ -1,22 +1,31 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>دردشة خاصة</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>محادثة خاصة</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>الدردشة مع: <span id="chatWith"></span></h2>
-  <div class="chat-container">
-    <div id="chatMessages"></div>
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
-    <button id="sendBtn">إرسال</button>
+  <div class="header">
+    <button onclick="goBack()">رجوع</button>
+    <h2 id="chatWithTitle">مراسلة</h2>
   </div>
 
-  <!-- Firebase & Script -->
+  <div class="chat-box" id="chatBox">
+    <!-- الرسائل تظهر هنا -->
+  </div>
+
+  <div class="chat-input">
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك..." />
+    <button onclick="sendMessage()">إرسال</button>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+    import {
+      getDatabase, ref, push, onChildAdded, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
@@ -31,32 +40,45 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const params = new URLSearchParams(window.location.search);
-    const username = localStorage.getItem("username") || "مستخدم";
-    const chatUser = params.get("user");
-    const chatRef = ref(db, "privateMessages/" + [username, chatUser].sort().join("_"));
+    const currentUser = localStorage.getItem("username");
+    const chatWith = localStorage.getItem("chatWith");
+    if (!currentUser || !chatWith) window.location.href = "chat.html";
 
-    document.getElementById("chatWith").textContent = chatUser;
+    document.getElementById("chatWithTitle").innerText = "مراسلة: " + chatWith;
 
-    document.getElementById("sendBtn").addEventListener("click", () => {
-      const msg = document.getElementById("messageInput").value.trim();
-      if (msg) {
-        push(chatRef, {
-          from: username,
-          text: msg,
-          time: Date.now()
-        });
-        document.getElementById("messageInput").value = "";
-      }
+    const messagesRef = ref(db, `messages/${getChatId(currentUser, chatWith)}`);
+
+    function getChatId(user1, user2) {
+      return [user1, user2].sort().join("_");
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const message = input.value.trim();
+      if (!message) return;
+
+      push(messagesRef, {
+        from: currentUser,
+        text: message,
+        timestamp: Date.now()
+      });
+
+      input.value = "";
+    }
+
+    const chatBox = document.getElementById("chatBox");
+    onChildAdded(messagesRef, (snapshot) => {
+      const msg = snapshot.val();
+      const messageElement = document.createElement("div");
+      messageElement.className = msg.from === currentUser ? "my-message" : "their-message";
+      messageElement.innerText = msg.text;
+      chatBox.appendChild(messageElement);
+      chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    const chatBox = document.getElementById("chatMessages");
-    onChildAdded(chatRef, (data) => {
-      const msg = data.val();
-      const p = document.createElement("p");
-      p.textContent = msg.from + ": " + msg.text;
-      chatBox.appendChild(p);
-    });
+    function goBack() {
+      window.location.href = "chat.html";
+    }
   </script>
 </body>
 </html>
