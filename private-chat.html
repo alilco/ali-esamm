@@ -1,21 +1,71 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>دردشة خاصة</title>
+  <title>محادثة خاصة</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-  <script src="firebase.js"></script>
-  <script src="script.js"></script>
 </head>
-<body onload="loadPrivateChat()">
-  <h2 id="chatWithName">مراسلة</h2>
-  <div id="privateMessages"></div>
-  <div class="send-box">
-    <input type="text" id="privateMsg" placeholder="اكتب رسالة...">
-    <button onclick="sendPrivateMessage()">إرسال</button>
+<body>
+  <div class="header">
+    <button onclick="goBack()">رجوع</button>
+    <h2 id="chatTitle">محادثة مع </h2>
   </div>
-  <a href="friends.html">رجوع</a>
+
+  <div id="chatBox" class="chat-box"></div>
+
+  <div class="send-message">
+    <input type="text" id="messageInput" placeholder="اكتب رسالة...">
+    <button onclick="sendMessage()">إرسال</button>
+  </div>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    const friendUsername = localStorage.getItem("chatWith");
+
+    document.getElementById("chatTitle").innerText += friendUsername;
+
+    function getMessages() {
+      const messagesKey = `${currentUser.username}_${friendUsername}_messages`;
+      return JSON.parse(localStorage.getItem(messagesKey) || "[]");
+    }
+
+    function saveMessages(messages) {
+      const messagesKey = `${currentUser.username}_${friendUsername}_messages`;
+      localStorage.setItem(messagesKey, JSON.stringify(messages));
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const messages = getMessages();
+      messages.push({ from: currentUser.username, text, time: new Date().toLocaleTimeString() });
+      saveMessages(messages);
+      input.value = "";
+      displayMessages();
+    }
+
+    function displayMessages() {
+      const box = document.getElementById("chatBox");
+      box.innerHTML = "";
+      const messages = getMessages();
+
+      messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.className = msg.from === currentUser.username ? "message self" : "message other";
+        div.innerText = `${msg.from}: ${msg.text}`;
+        box.appendChild(div);
+      });
+
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function goBack() {
+      window.location.href = "chat.html";
+    }
+
+    window.onload = displayMessages;
+  </script>
 </body>
 </html>
