@@ -1,32 +1,25 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>المحادثة</title>
+  <title>الدردشة</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-  <script src="firebase.js"></script>
-  <script src="script.js"></script>
 </head>
-<body onload="loadUserData()">
-  <header>
-    <img id="profileImage" src="" alt="الصورة الشخصية">
-    <span id="displayName">...</span>
-    <button onclick="logout()">خروج</button>
-  </header>
+<body>
+  <div class="header">
+    <h1>مرحبًا بك في تطبيق المراسلة</h1>
+    <button onclick="logout()">تسجيل الخروج</button>
+  </div>
 
-  <main class="chat-box">
-    <div id="messages"></div>
-    <div class="send-box">
-      <input type="text" id="msg" placeholder="اكتب رسالة...">
-      <button onclick="sendMessage()">إرسال</button>
-    </div>
-  </main>
+  <div class="search-add-friend">
+    <input type="text" id="searchFriendInput" placeholder="ابحث عن مستخدم">
+    <button onclick="searchAndAddFriend()">إضافة</button>
+    <p id="friendMessage" class="message"></p>
+  </div>
 
-  <footer>
-    <a href="friends.html">الأصدقاء</a> | 
-    <a href="settings.html">الإعدادات</a>
-  </footer>
+  <h2>أصدقاؤك</h2>
+  <ul id="friendsList"></ul>
+
+  <script src="script.js"></script>
 </body>
 </html>
