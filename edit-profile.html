@@ -1,43 +1,33 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تعديل الملف الشخصي - rengeM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تعديل الملف الشخصي</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="edit-profile-page">
-  <div class="container">
-    <h1 class="page-title">تعديل الملف الشخصي</h1>
+<body>
+  <header>
+    <h2>تعديل الملف الشخصي</h2>
+    <button onclick="goBack()">رجوع</button>
+  </header>
 
-    <form id="editProfileForm" class="edit-profile-form">
-      <label for="fullName">الاسم الكامل:</label>
-      <input type="text" id="fullName" placeholder="مثال: محمد علي" required>
+  <main>
+    <form id="editProfileForm">
+      <label>الاسم الكامل:</label>
+      <input type="text" id="displayName" required>
 
-      <label for="bio">السيرة الذاتية:</label>
-      <textarea id="bio" placeholder="اكتب شيئًا عنك..."></textarea>
+      <label>نبذة عنك:</label>
+      <textarea id="bio"></textarea>
 
-      <label for="profileImage">الصورة الشخصية:</label>
-      <input type="file" id="profileImage" accept="image/*">
+      <label>رابط صورة الملف:</label>
+      <input type="text" id="profileImage">
 
-      <div class="actions">
-        <button type="submit" class="btn">حفظ التغييرات</button>
-        <button type="button" class="btn secondary" onclick="goBack()">رجوع</button>
-      </div>
+      <button type="submit">حفظ التغييرات</button>
     </form>
-  </div>
+  </main>
 
-  <script>
-    function goBack() {
-      window.history.back();
-    }
-
-    document.getElementById('editProfileForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      // هنا يتم حفظ التعديلات في Firebase أو localStorage
-      alert("تم حفظ التغييرات!");
-      goBack();
-    });
-  </script>
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
