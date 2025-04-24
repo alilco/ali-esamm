@@ -4,21 +4,19 @@
   <meta charset="UTF-8">
   <title>الدردشة</title>
   <link rel="stylesheet" href="style.css">
+  <script src="firebase.js"></script>
 </head>
 <body>
-  <div class="header">
-    <h1>مرحبًا بك في تطبيق المراسلة</h1>
+  <div class="form-container">
+    <h2>الدردشة مع الأصدقاء</h2>
+    <input type="text" id="searchUser" placeholder="ابحث عن صديق بإسم المستخدم">
+    <button onclick="searchFriend()">بحث</button>
+
+    <div id="friendsList"></div>
+
     <button onclick="logout()">تسجيل الخروج</button>
+    <button onclick="goToSettings()">الإعدادات</button>
   </div>
-
-  <div class="search-add-friend">
-    <input type="text" id="searchFriendInput" placeholder="ابحث عن مستخدم">
-    <button onclick="searchAndAddFriend()">إضافة</button>
-    <p id="friendMessage" class="message"></p>
-  </div>
-
-  <h2>أصدقاؤك</h2>
-  <ul id="friendsList"></ul>
 
   <script src="script.js"></script>
 </body>
