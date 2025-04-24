@@ -1,57 +1,11 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>تطبيق المراسلة</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; direction: rtl; }
-    .section { margin-bottom: 20px; padding: 15px; background: white; border-radius: 10px; }
-    .hidden { display: none; }
-    input, button { margin: 5px 0; padding: 10px; width: 100%; }
-    .online { color: green; }
-    .offline { color: red; }
-  </style>
-</head>
-<body>
-  <h2>تطبيق مراسلة</h2>
-
-  <div id="authSection" class="section">
-    <h3>تسجيل الدخول / إنشاء حساب</h3>
-    <input type="text" id="username" placeholder="اسم المستخدم" />
-    <input type="password" id="password" placeholder="كلمة المرور" />
-    <button onclick="signup()">تسجيل حساب</button>
-    <button onclick="login()">تسجيل دخول</button>
-  </div>
-
-  <div id="chatSection" class="section hidden">
-    <h3>مرحباً، <span id="currentUser"></span></h3>
-
-    <div>
-      <input type="text" id="friendUsername" placeholder="إضافة صديق باسم المستخدم" />
-      <button onclick="addFriend()">إضافة</button>
-    </div>
-
-    <h4>قائمة الأصدقاء:</h4>
-    <ul id="friendList"></ul>
-
-    <div class="section">
-      <h4>دردشة مع <span id="chatWith"></span></h4>
-      <div id="messages" style="max-height:200px;overflow-y:auto;"></div>
-      <input type="text" id="messageInput" placeholder="اكتب رسالة" />
-      <button onclick="sendMessage()">إرسال</button>
-    </div>
-
-    <div class="section">
-      <h4>الإعدادات</h4>
-      <button onclick="logout()">تسجيل خروج</button>
-      <a href="https://t.me/UUYFU" target="_blank">الإبلاغ عن مشكلة</a>
-    </div>
-  </div>
-
+  <meta charset="UTF-8">
+  <title>تطبيق مراسلة</title>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, push, update } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child, onValue, update } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
@@ -64,103 +18,181 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const db = getDatabase();
 
     let currentUser = null;
-    let currentFriend = null;
 
-    function signup() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      set(ref(db, "users/" + username), {
-        password: password,
-        lastSeen: new Date().toLocaleString(),
-        status: "online",
-        friends: {}
-      }).then(() => alert("تم إنشاء الحساب!"));
-    }
+    window.signup = function() {
+      const username = document.getElementById("signup-username").value;
+      const password = document.getElementById("signup-password").value;
 
-    function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      get(ref(db, "users/" + username)).then(snapshot => {
-        if (snapshot.exists() && snapshot.val().password === password) {
-          currentUser = username;
-          document.getElementById("currentUser").innerText = username;
-          document.getElementById("authSection").classList.add("hidden");
-          document.getElementById("chatSection").classList.remove("hidden");
-          update(ref(db, "users/" + username), { status: "online" });
-          loadFriends();
-        } else alert("بيانات الدخول خاطئة!");
-      });
-    }
-
-    function logout() {
-      if (currentUser) {
-        update(ref(db, "users/" + currentUser), { status: "offline", lastSeen: new Date().toLocaleString() });
-        location.reload();
-      }
-    }
-
-    function addFriend() {
-      const friend = document.getElementById("friendUsername").value;
-      if (friend && friend !== currentUser) {
-        get(ref(db, "users/" + friend)).then(snapshot => {
+      if (username && password) {
+        const userRef = ref(db, 'users/' + username);
+        get(userRef).then(snapshot => {
           if (snapshot.exists()) {
-            update(ref(db, "users/" + currentUser + "/friends"), { [friend]: true });
-            update(ref(db, "users/" + friend + "/friends"), { [currentUser]: true });
-            loadFriends();
-          } else alert("المستخدم غير موجود");
+            alert("اسم المستخدم مسجل بالفعل");
+          } else {
+            set(userRef, {
+              username,
+              password,
+              status: "online",
+              lastSeen: new Date().toISOString(),
+              friends: []
+            }).then(() => {
+              alert("تم إنشاء الحساب. قم بتسجيل الدخول الآن.");
+            });
+          }
         });
       }
     }
 
-    function loadFriends() {
-      const list = document.getElementById("friendList");
-      list.innerHTML = "";
-      get(ref(db, "users/" + currentUser + "/friends")).then(snapshot => {
+    window.login = function() {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+
+      const userRef = ref(db, 'users/' + username);
+      get(userRef).then(snapshot => {
         if (snapshot.exists()) {
-          const friends = Object.keys(snapshot.val());
-          friends.forEach(friend => {
-            get(ref(db, "users/" + friend)).then(fSnap => {
-              const status = fSnap.val().status === "online" ? "online" : "offline";
-              const li = document.createElement("li");
-              li.innerHTML = `<span class="${status}">${friend}</span> 
-                <button onclick="openChat('${friend}')">دردشة</button>`;
-              list.appendChild(li);
-            });
-          });
+          const user = snapshot.val();
+          if (user.password === password) {
+            currentUser = username;
+            update(userRef, { status: "online" });
+            document.getElementById("auth").style.display = "none";
+            document.getElementById("chat").style.display = "block";
+            loadFriends();
+          } else {
+            alert("كلمة مرور غير صحيحة");
+          }
+        } else {
+          alert("لا يوجد مستخدم بهذا الاسم");
         }
       });
     }
 
-    function openChat(friend) {
-      currentFriend = friend;
-      document.getElementById("chatWith").innerText = friend;
-      const messagesDiv = document.getElementById("messages");
-      onValue(ref(db, `messages/${currentUser}_${friend}`), snapshot => {
-        messagesDiv.innerHTML = "";
-        snapshot.forEach(msg => {
-          const p = document.createElement("p");
-          p.innerText = msg.val().sender + ": " + msg.val().text;
-          messagesDiv.appendChild(p);
+    window.logout = function() {
+      if (currentUser) {
+        update(ref(db, 'users/' + currentUser), {
+          status: "offline",
+          lastSeen: new Date().toISOString()
+        });
+        currentUser = null;
+        document.getElementById("chat").style.display = "none";
+        document.getElementById("auth").style.display = "block";
+      }
+    }
+
+    window.addFriend = function() {
+      const friendName = document.getElementById("friend-username").value;
+      const userRef = ref(db, 'users/' + friendName);
+
+      if (friendName === currentUser) {
+        alert("لا يمكنك إضافة نفسك");
+        return;
+      }
+
+      get(userRef).then(snapshot => {
+        if (snapshot.exists()) {
+          const currentUserRef = ref(db, 'users/' + currentUser + '/friends');
+          get(currentUserRef).then(friendsSnapshot => {
+            let friends = friendsSnapshot.val() || [];
+            if (!friends.includes(friendName)) {
+              friends.push(friendName);
+              set(currentUserRef, friends);
+              // إضافة عكسية
+              const friendRef = ref(db, 'users/' + friendName + '/friends');
+              get(friendRef).then(fr => {
+                let f = fr.val() || [];
+                if (!f.includes(currentUser)) {
+                  f.push(currentUser);
+                  set(friendRef, f);
+                }
+              });
+              loadFriends();
+            } else {
+              alert("تمت إضافته مسبقًا");
+            }
+          });
+        } else {
+          alert("لا يوجد مستخدم بهذا الاسم");
+        }
+      });
+    }
+
+    function loadFriends() {
+      const friendList = document.getElementById("friend-list");
+      friendList.innerHTML = "";
+      const userFriendsRef = ref(db, 'users/' + currentUser + '/friends');
+      get(userFriendsRef).then(snapshot => {
+        let friends = snapshot.val() || [];
+        friends.forEach(friend => {
+          const friendRef = ref(db, 'users/' + friend);
+          get(friendRef).then(fs => {
+            const f = fs.val();
+            const li = document.createElement("li");
+            li.textContent = `${friend} - ${f.status} - آخر ظهور: ${new Date(f.lastSeen).toLocaleString()}`;
+            li.onclick = () => loadChat(friend);
+            friendList.appendChild(li);
+          });
         });
       });
     }
 
-    function sendMessage() {
-      const text = document.getElementById("messageInput").value;
-      const msg = {
-        sender: currentUser,
-        text: text,
-        timestamp: new Date().toISOString()
-      };
-      const chatId = `${currentUser}_${currentFriend}`;
-      const reverseChatId = `${currentFriend}_${currentUser}`;
-      push(ref(db, `messages/${chatId}`), msg);
-      push(ref(db, `messages/${reverseChatId}`), msg);
-      document.getElementById("messageInput").value = "";
+    function loadChat(friend) {
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML = "";
+      const chatRef = ref(db, `chats/${[currentUser, friend].sort().join("_")}`);
+      onValue(chatRef, snapshot => {
+        chatBox.innerHTML = "";
+        const messages = snapshot.val();
+        for (let key in messages) {
+          const msg = messages[key];
+          const div = document.createElement("div");
+          div.textContent = `${msg.sender}: ${msg.text}`;
+          chatBox.appendChild(div);
+        }
+      });
+
+      document.getElementById("send-btn").onclick = function () {
+        const msg = document.getElementById("message").value;
+        if (msg) {
+          const newMsgRef = ref(db, `chats/${[currentUser, friend].sort().join("_")}/${Date.now()}`);
+          set(newMsgRef, {
+            sender: currentUser,
+            text: msg
+          });
+          document.getElementById("message").value = "";
+        }
+      }
     }
+
   </script>
+</head>
+<body>
+  <div id="auth">
+    <h2>تسجيل دخول</h2>
+    <input id="login-username" placeholder="اسم المستخدم">
+    <input id="login-password" placeholder="كلمة المرور" type="password">
+    <button onclick="login()">دخول</button>
+
+    <h2>إنشاء حساب</h2>
+    <input id="signup-username" placeholder="اسم المستخدم">
+    <input id="signup-password" placeholder="كلمة المرور" type="password">
+    <button onclick="signup()">تسجيل</button>
+  </div>
+
+  <div id="chat" style="display:none">
+    <h2>مرحبًا بك</h2>
+    <input id="friend-username" placeholder="اسم صديق لإضافته">
+    <button onclick="addFriend()">إضافة صديق</button>
+    <ul id="friend-list"></ul>
+
+    <div id="chat-box" style="border:1px solid #ccc; height:200px; overflow:auto;"></div>
+    <input id="message" placeholder="اكتب رسالتك">
+    <button id="send-btn">إرسال</button>
+
+    <h3>الإعدادات</h3>
+    <button onclick="logout()">تسجيل خروج</button>
+    <a href="https://t.me/UUYFU" target="_blank">الإبلاغ عن مشكلة</a>
+  </div>
 </body>
 </html>
