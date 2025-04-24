@@ -1,31 +1,33 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>محادثة - rengeM</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الدردشة | رينجم</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <header>rengeM - محادثة</header>
+<body class="chat-page">
+  <header>
+    <h2>الدردشة</h2>
+    <button onclick="logout()">تسجيل الخروج</button>
+  </header>
 
-  <div class="container">
-    <div class="chat-header" id="chatWith">اختر مستخدمًا لبدء المحادثة</div>
-
-    <ul class="users-list" id="usersList"></ul>
-
-    <div id="messages"></div>
-
-    <div class="input-bar">
-      <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." />
-      <button id="sendBtn">إرسال</button>
+  <main id="chat-main">
+    <div id="friends-list">
+      <!-- قائمة الأصدقاء -->
     </div>
-  </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="chat.js"></script>
+    <div id="chat-section">
+      <div id="chat-header"></div>
+      <div id="chat-messages"></div>
+      <form onsubmit="sendMessage(event)">
+        <input type="text" id="message-input" placeholder="اكتب رسالة...">
+        <button type="submit">إرسال</button>
+      </form>
+    </div>
+  </main>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
-</html>
+      </html>
