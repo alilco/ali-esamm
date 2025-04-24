@@ -1,98 +1,81 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static("public"));
 app.use(express.json());
+app.use(express.static('public'));
 
-// تحميل المستخدمين
-function loadUsers() {
-  const data = fs.readFileSync("users.json", "utf8");
-  return JSON.parse(data);
-}
+// المسار الكامل إلى users.json
+const usersFile = path.join(__dirname, 'public', 'users.json');
 
-// حفظ المستخدمين
-function saveUsers(users) {
-  fs.writeFileSync("users.json", JSON.stringify(users, null, 2));
-}
-
-// تسجيل الدخول
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  const users = loadUsers();
-  const user = users.find(u => u.username === username && u.password === password);
-  if (user) {
-    user.lastSeen = "نشط الآن";
-    saveUsers(users);
-    res.json({ success: true });
-  } else {
-    res.json({ success: false, message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
-  }
+// جلب كل المستخدمين
+app.get('/users', (req, res) => {
+  fs.readFile(usersFile, 'utf8', (err, data) => {
+    if (err) return res.status(500).json({ error: 'فشل في قراءة المستخدمين' });
+    res.json(JSON.parse(data));
+  });
 });
 
-// تسجيل مستخدم جديد
-app.post("/register", (req, res) => {
+// إنشاء مستخدم جديد (تسجيل حساب)
+app.post('/signup', (req, res) => {
   const { username, password } = req.body;
-  const users = loadUsers();
-  const existing = users.find(u => u.username === username);
-  if (existing) {
-    res.json({ success: false, message: "اسم المستخدم موجود بالفعل" });
-  } else {
-    users.push({
+  fs.readFile(usersFile, 'utf8', (err, data) => {
+    let users = [];
+    if (!err) users = JSON.parse(data);
+
+    const exists = users.find(u => u.username === username);
+    if (exists) return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
+
+    const newUser = {
       username,
       password,
+      displayName: username,
+      image: '',
+      bio: '',
       friends: [],
-      lastSeen: "نشط الآن"
+      lastSeen: new Date().toISOString(),
+      active: true
+    };
+
+    users.push(newUser);
+    fs.writeFile(usersFile, JSON.stringify(users, null, 2), err => {
+      if (err) return res.status(500).json({ error: 'فشل في حفظ المستخدم' });
+      res.json({ success: true });
     });
-    saveUsers(users);
+  });
+});
+
+// تسجيل الدخول
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  fs.readFile(usersFile, 'utf8', (err, data) => {
+    if (err) return res.status(500).json({ error: 'خطأ في الخادم' });
+
+    const users = JSON.parse(data);
+    const user = users.find(u => u.username === username && u.password === password);
+    if (!user) return res.status(401).json({ error: 'بيانات غير صحيحة' });
+
+    user.active = true;
+    user.lastSeen = new Date().toISOString();
+
+    fs.writeFile(usersFile, JSON.stringify(users, null, 2), err => {
+      if (err) return res.status(500).json({ error: 'فشل في التحديث' });
+      res.json({ success: true });
+    });
+  });
+});
+
+// تحديث بيانات المستخدم
+app.post('/update-user', (req, res) => {
+  const updatedUsers = req.body;
+  fs.writeFile(usersFile, JSON.stringify(updatedUsers, null, 2), err => {
+    if (err) return res.status(500).json({ error: 'فشل في التحديث' });
     res.json({ success: true });
-  }
-});
-
-// إضافة صديق
-app.post("/add-friend", (req, res) => {
-  const { username, friendUsername } = req.body;
-  const users = loadUsers();
-  const user = users.find(u => u.username === username);
-  const friend = users.find(u => u.username === friendUsername);
-
-  if (!user || !friend) {
-    return res.json({ success: false, message: "المستخدم غير موجود" });
-  }
-
-  if (!user.friends.includes(friendUsername)) {
-    user.friends.push(friendUsername);
-  }
-
-  saveUsers(users);
-  res.json({ success: true });
-});
-
-// البحث عن مستخدمين
-app.get("/search", (req, res) => {
-  const q = req.query.q;
-  const users = loadUsers();
-  const results = users.filter(u => u.username.includes(q));
-  res.json(results.map(u => ({ username: u.username })));
-});
-
-// الحصول على بيانات مستخدم
-app.get("/user/:username", (req, res) => {
-  const users = loadUsers();
-  const user = users.find(u => u.username === req.params.username);
-  if (user) {
-    res.json({
-      username: user.username,
-      lastSeen: user.lastSeen,
-      friends: user.friends
-    });
-  } else {
-    res.status(404).json({ error: "المستخدم غير موجود" });
-  }
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
