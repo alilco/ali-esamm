@@ -2,30 +2,31 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>rengeM - الدردشة</title>
+  <title>المحادثة</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
 </head>
-<body>
+<body onload="loadUserData()">
   <header>
-    <h1>rengeM</h1>
-    <button onclick="logout()">تسجيل الخروج</button>
+    <img id="profileImage" src="" alt="الصورة الشخصية">
+    <span id="displayName">...</span>
+    <button onclick="logout()">خروج</button>
   </header>
 
-  <main>
-    <input type="text" id="searchInput" placeholder="ابحث عن مستخدم...">
-    <button onclick="searchUser()">بحث</button>
-    <div id="searchResult"></div>
-
-    <h2>أصدقائي</h2>
-    <ul id="friendsList"></ul>
+  <main class="chat-box">
+    <div id="messages"></div>
+    <div class="send-box">
+      <input type="text" id="msg" placeholder="اكتب رسالة...">
+      <button onclick="sendMessage()">إرسال</button>
+    </div>
   </main>
 
   <footer>
+    <a href="friends.html">الأصدقاء</a> | 
     <a href="settings.html">الإعدادات</a>
   </footer>
-
-  <script src="firebase.js"></script>
-  <script src="script.js"></script>
 </body>
 </html>
