@@ -1,11 +1,14 @@
-{
-  "admin": {
-    "username": "admin",
-    "password": "123456",
-    "displayName": "المشرف",
-    "bio": "مدير النظام",
-    "profileImage": "default.png",
-    "status": "نشط",
-    "lastSeen": 0
+[
+  {
+    "username": "ahmed",
+    "password": "123",
+    "displayName": "أحمد الجبوري",
+    "profileImage": "img/ahmed.jpg"
+  },
+  {
+    "username": "sara",
+    "password": "456",
+    "displayName": "سارة العراقي",
+    "profileImage": "img/sara.jpg"
   }
-}
+]
