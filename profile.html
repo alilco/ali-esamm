@@ -2,26 +2,29 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>الملف الشخصي | رينجم</title>
+  <title>الملف الشخصي</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="profile-page">
-  <header>
-    <h2>الملف الشخصي</h2>
-    <a href="chat.html">رجوع</a>
-  </header>
+<body>
+  <header>الملف الشخصي</header>
+  <div class="container">
+    <img id="profileImage" src="default.png" alt="الصورة الشخصية" width="100">
+    <p><strong>اسم المستخدم:</strong> <span id="username"></span></p>
+    <p><strong>الاسم الظاهر:</strong> <span id="displayName"></span></p>
+    <p><strong>نبذة:</strong> <span id="bio"></span></p>
+    <p><strong>الحالة:</strong> <span id="status"></span></p>
+    <button onclick="window.location.href='edit-profile.html'">تعديل الملف</button>
+  </div>
 
-  <main>
-    <div id="profile-info">
-      <img id="profile-image" src="default.jpg" alt="صورة المستخدم">
-      <h3 id="profile-name"></h3>
-      <p id="profile-username"></p>
-      <p id="last-seen"></p>
-    </div>
-  </main>
+  <script>
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (!user) window.location.href = "login.html";
 
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="app.js"></script>
+    document.getElementById("username").textContent = user.username;
+    document.getElementById("displayName").textContent = user.displayName;
+    document.getElementById("bio").textContent = user.bio;
+    document.getElementById("status").textContent = "نشط";
+    document.getElementById("profileImage").src = user.profileImage || "default.png";
+  </script>
 </body>
 </html>
