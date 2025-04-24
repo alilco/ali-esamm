@@ -1,42 +1,21 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>إنشاء حساب</title>
+  <title>إنشاء حساب | rengeM</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-  <script src="firebase.js"></script>
 </head>
 <body>
-  <div class="signup-container">
-    <h2>إنشاء حساب جديد</h2>
-    <input type="text" id="newUsername" placeholder="اسم المستخدم">
-    <input type="password" id="newPassword" placeholder="كلمة المرور">
-    <input type="text" id="displayName" placeholder="الاسم المعروض">
-    <input type="text" id="profileImage" placeholder="رابط صورة الملف الشخصي">
-    <button onclick="register()">تسجيل</button>
+  <div class="container">
+    <h2>إنشاء حساب</h2>
+    <input type="text" id="signupUsername" placeholder="اسم المستخدم">
+    <input type="text" id="signupDisplayName" placeholder="الاسم الكامل">
+    <input type="password" id="signupPassword" placeholder="كلمة المرور">
+    <button onclick="signupUser()">تسجيل</button>
     <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+    <p id="signupError" class="error"></p>
   </div>
-  <script>
-    function register() {
-      const username = document.getElementById("newUsername").value.trim();
-      const password = document.getElementById("newPassword").value.trim();
-      const displayName = document.getElementById("displayName").value.trim();
-      const profileImage = document.getElementById("profileImage").value.trim();
-
-      firebase.database().ref("users").push({
-        username,
-        password,
-        displayName,
-        profileImage,
-        status: "offline",
-        lastSeen: ""
-      }).then(() => {
-        alert("تم التسجيل بنجاح!");
-        window.location.href = "login.html";
-      });
-    }
-  </script>
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
