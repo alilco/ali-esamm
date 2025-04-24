@@ -1,18 +1,11 @@
-[
-  {
-    "username": "ahmed",
-    "password": "1234",
-    "displayName": "أحمد",
-    "profileImage": "https://i.ibb.co/4pDNDk1/avatar.png",
-    "status": "online",
-    "lastSeen": ""
-  },
-  {
-    "username": "sara",
-    "password": "5678",
-    "displayName": "سارة",
-    "profileImage": "https://i.ibb.co/rGzK1Yx/avatar2.png",
-    "status": "offline",
-    "lastSeen": "2025-04-23 10:30"
+{
+  "admin": {
+    "username": "admin",
+    "password": "123456",
+    "displayName": "المشرف",
+    "bio": "مدير النظام",
+    "profileImage": "default.png",
+    "status": "نشط",
+    "lastSeen": 0
   }
-]
+}
