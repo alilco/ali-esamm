@@ -1,52 +1,64 @@
-// تسجيل دخول
-function loginUser() {
-  const username = document.getElementById("loginUsername").value;
-  const password = document.getElementById("loginPassword").value;
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
 
-  if (!username || !password) {
-    document.getElementById("loginError").innerText = "يرجى ملء جميع الحقول.";
-    return;
-  }
+function searchAndAddFriend() {
+  const input = document.getElementById("searchFriendInput").value.trim();
+  const message = document.getElementById("friendMessage");
+  message.innerText = "";
 
   const users = JSON.parse(localStorage.getItem("users") || "[]");
-  const user = users.find(u => u.username === username && u.password === password);
+  const currentUser = JSON.parse(localStorage.getItem("loggedInUser"));
+  let friends = JSON.parse(localStorage.getItem(`${currentUser.username}_friends`) || "[]");
 
-  if (user) {
-    localStorage.setItem("loggedInUser", JSON.stringify(user));
-    window.location.href = "chat.html";
-  } else {
-    document.getElementById("loginError").innerText = "بيانات الدخول غير صحيحة.";
-  }
-}
-
-// إنشاء حساب
-function signupUser() {
-  const username = document.getElementById("signupUsername").value;
-  const displayName = document.getElementById("signupDisplayName").value;
-  const password = document.getElementById("signupPassword").value;
-
-  if (!username || !password || !displayName) {
-    document.getElementById("signupError").innerText = "يرجى ملء جميع الحقول.";
+  if (!input) {
+    message.innerText = "يرجى إدخال اسم مستخدم.";
     return;
   }
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-
-  if (users.find(u => u.username === username)) {
-    document.getElementById("signupError").innerText = "اسم المستخدم موجود مسبقًا.";
+  if (input === currentUser.username) {
+    message.innerText = "لا يمكنك إضافة نفسك.";
     return;
   }
 
-  const newUser = {
-    username,
-    displayName,
-    password,
-    lastSeen: new Date().toISOString(),
-    active: true
-  };
+  const foundUser = users.find(u => u.username === input);
 
-  users.push(newUser);
-  localStorage.setItem("users", JSON.stringify(users));
-  localStorage.setItem("loggedInUser", JSON.stringify(newUser));
-  window.location.href = "chat.html";
+  if (!foundUser) {
+    message.innerText = "المستخدم غير موجود.";
+    return;
+  }
+
+  if (friends.includes(input)) {
+    message.innerText = "الصديق موجود مسبقًا.";
+    return;
+  }
+
+  friends.push(input);
+  localStorage.setItem(`${currentUser.username}_friends`, JSON.stringify(friends));
+  message.innerText = "تمت إضافة الصديق بنجاح!";
+  renderFriendsList();
 }
+
+function renderFriendsList() {
+  const list = document.getElementById("friendsList");
+  list.innerHTML = "";
+
+  const currentUser = JSON.parse(localStorage.getItem("loggedInUser"));
+  const friends = JSON.parse(localStorage.getItem(`${currentUser.username}_friends`) || "[]");
+
+  friends.forEach(friendUsername => {
+    const li = document.createElement("li");
+    li.innerHTML = `<button onclick="openPrivateChat('${friendUsername}')">${friendUsername}</button>`;
+    list.appendChild(li);
+  });
+}
+
+function openPrivateChat(friendUsername) {
+  localStorage.setItem("chatWith", friendUsername);
+  window.location.href = "private-chat.html";
+}
+
+window.onload = () => {
+  renderFriendsList();
+};
