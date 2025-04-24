@@ -1,36 +1,19 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>rengeM | الصفحة الرئيسية</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rengeM - الصفحة الرئيسية</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-
-  <header>
-    <span>rengeM - الرئيسية</span>
-    <button onclick="logout()">تسجيل الخروج</button>
-  </header>
-
-  <div id="container">
-    <div id="friendsList">
-      <input type="text" id="searchUser" placeholder="ابحث عن مستخدم..." oninput="searchUsers()">
-      <ul id="usersList"></ul>
-    </div>
-
-    <div id="chatBox">
-      <div id="chatWith">اختر صديقًا لبدء المحادثة</div>
-      <div id="messages"></div>
-      <div id="inputArea">
-        <input type="text" id="messageInput" placeholder="اكتب رسالة...">
-        <button id="sendButton" onclick="sendMessage()">إرسال</button>
-      </div>
+<body class="home">
+  <div class="container">
+    <h1 class="logo">rengeM</h1>
+    <p class="welcome">مرحباً بك في تطبيق rengeM للمراسلة</p>
+    <div class="buttons">
+      <a href="login.html" class="btn">تسجيل الدخول</a>
+      <a href="signup.html" class="btn">إنشاء حساب</a>
     </div>
   </div>
-
-  <script src="firebase.js"></script>
-  <script src="script.js"></script>
-
 </body>
 </html>
