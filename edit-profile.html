@@ -1,33 +1,36 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تعديل الملف الشخصي</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h2>تعديل الملف الشخصي</h2>
-    <button onclick="goBack()">رجوع</button>
-  </header>
+  <header>تعديل الملف</header>
+  <div class="container">
+    <input type="text" id="displayName" placeholder="الاسم الظاهر">
+    <input type="text" id="bio" placeholder="نبذة عنك">
+    <input type="text" id="profileImage" placeholder="رابط صورة">
+    <button onclick="saveProfile()">حفظ</button>
+  </div>
 
-  <main>
-    <form id="editProfileForm">
-      <label>الاسم الكامل:</label>
-      <input type="text" id="displayName" required>
+  <script>
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (!user) window.location.href = "login.html";
 
-      <label>نبذة عنك:</label>
-      <textarea id="bio"></textarea>
+    document.getElementById("displayName").value = user.displayName;
+    document.getElementById("bio").value = user.bio;
+    document.getElementById("profileImage").value = user.profileImage;
 
-      <label>رابط صورة الملف:</label>
-      <input type="text" id="profileImage">
+    function saveProfile() {
+      user.displayName = document.getElementById("displayName").value;
+      user.bio = document.getElementById("bio").value;
+      user.profileImage = document.getElementById("profileImage").value;
 
-      <button type="submit">حفظ التغييرات</button>
-    </form>
-  </main>
-
-  <script src="firebase.js"></script>
-  <script src="script.js"></script>
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      alert("تم حفظ البيانات!");
+      window.location.href = "profile.html";
+    }
+  </script>
 </body>
 </html>
