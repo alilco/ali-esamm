@@ -1,64 +1,65 @@
+// التحقق من حالة تسجيل الدخول
+window.onload = function () {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  if (!currentUser) {
+    window.location.href = "login.html";
+  } else {
+    loadFriends();
+  }
+};
+
+// تحميل الأصدقاء من users.json
+function loadFriends() {
+  fetch("users.json")
+    .then((res) => res.json())
+    .then((users) => {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      const friends = users.filter(user => user.username !== currentUser.username);
+      const list = document.getElementById("friendsList");
+      list.innerHTML = "";
+
+      friends.forEach(friend => {
+        const friendDiv = document.createElement("div");
+        friendDiv.className = "friend";
+        friendDiv.innerHTML = `
+          <p>${friend.displayName}</p>
+          <button onclick="openChat('${friend.username}')">مراسلة</button>
+        `;
+        list.appendChild(friendDiv);
+      });
+    });
+}
+
+// تسجيل الخروج
 function logout() {
-  localStorage.removeItem("loggedInUser");
+  localStorage.removeItem("currentUser");
   window.location.href = "login.html";
 }
 
-function searchAndAddFriend() {
-  const input = document.getElementById("searchFriendInput").value.trim();
-  const message = document.getElementById("friendMessage");
-  message.innerText = "";
-
-  const users = JSON.parse(localStorage.getItem("users") || "[]");
-  const currentUser = JSON.parse(localStorage.getItem("loggedInUser"));
-  let friends = JSON.parse(localStorage.getItem(`${currentUser.username}_friends`) || "[]");
-
-  if (!input) {
-    message.innerText = "يرجى إدخال اسم مستخدم.";
-    return;
-  }
-
-  if (input === currentUser.username) {
-    message.innerText = "لا يمكنك إضافة نفسك.";
-    return;
-  }
-
-  const foundUser = users.find(u => u.username === input);
-
-  if (!foundUser) {
-    message.innerText = "المستخدم غير موجود.";
-    return;
-  }
-
-  if (friends.includes(input)) {
-    message.innerText = "الصديق موجود مسبقًا.";
-    return;
-  }
-
-  friends.push(input);
-  localStorage.setItem(`${currentUser.username}_friends`, JSON.stringify(friends));
-  message.innerText = "تمت إضافة الصديق بنجاح!";
-  renderFriendsList();
+// الذهاب للإعدادات
+function goToSettings() {
+  window.location.href = "settings.html";
 }
 
-function renderFriendsList() {
-  const list = document.getElementById("friendsList");
-  list.innerHTML = "";
+// البحث عن صديق
+function searchFriend() {
+  const username = document.getElementById("searchUser").value.trim();
+  if (!username) return;
 
-  const currentUser = JSON.parse(localStorage.getItem("loggedInUser"));
-  const friends = JSON.parse(localStorage.getItem(`${currentUser.username}_friends`) || "[]");
-
-  friends.forEach(friendUsername => {
-    const li = document.createElement("li");
-    li.innerHTML = `<button onclick="openPrivateChat('${friendUsername}')">${friendUsername}</button>`;
-    list.appendChild(li);
-  });
+  fetch("users.json")
+    .then(res => res.json())
+    .then(users => {
+      const user = users.find(u => u.username === username);
+      if (user) {
+        openChat(user.username);
+      } else {
+        alert("المستخدم غير موجود");
+      }
+    });
 }
 
-function openPrivateChat(friendUsername) {
-  localStorage.setItem("chatWith", friendUsername);
+// فتح صفحة دردشة خاصة
+function openChat(username) {
+  localStorage.setItem("chatWith", username);
   window.location.href = "private-chat.html";
 }
-
-window.onload = () => {
-  renderFriendsList();
-};
