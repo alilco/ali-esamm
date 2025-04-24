@@ -1,127 +1,166 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>تطبيق المراسلة</title>
   <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      direction: rtl;
-      text-align: center;
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 0;
-    }
-    .section {
-      display: none;
-      padding: 20px;
-    }
-    .active {
-      display: block;
-    }
-    nav {
-      background-color: #333;
-      padding: 10px;
-    }
-    nav button {
-      margin: 5px;
-      padding: 10px 20px;
-      background-color: #555;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    nav button:hover {
-      background-color: #777;
-    }
-    input {
-      display: block;
-      margin: 10px auto;
-      padding: 10px;
-      width: 80%;
-      max-width: 300px;
-    }
-    button.action {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      cursor: pointer;
-    }
-    button.action:hover {
-      background-color: #45a049;
-    }
+    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; direction: rtl; }
+    .section { margin-bottom: 20px; padding: 15px; background: white; border-radius: 10px; }
+    .hidden { display: none; }
+    input, button { margin: 5px 0; padding: 10px; width: 100%; }
+    .online { color: green; }
+    .offline { color: red; }
   </style>
 </head>
 <body>
+  <h2>تطبيق مراسلة</h2>
 
-  <nav>
-    <button onclick="showSection('login')">تسجيل الدخول</button>
-    <button onclick="showSection('signup')">إنشاء حساب</button>
-    <button onclick="showSection('chat')">الدردشة</button>
-    <button onclick="showSection('profile')">الملف الشخصي</button>
-    <button onclick="showSection('friends')">الأصدقاء</button>
-    <button onclick="showSection('settings')">الإعدادات</button>
-  </nav>
-
-  <div id="login" class="section active">
-    <h2>تسجيل الدخول</h2>
-    <input type="text" id="login-username" placeholder="اسم المستخدم">
-    <input type="password" id="login-password" placeholder="كلمة المرور">
-    <button class="action" onclick="login()">دخول</button>
+  <div id="authSection" class="section">
+    <h3>تسجيل الدخول / إنشاء حساب</h3>
+    <input type="text" id="username" placeholder="اسم المستخدم" />
+    <input type="password" id="password" placeholder="كلمة المرور" />
+    <button onclick="signup()">تسجيل حساب</button>
+    <button onclick="login()">تسجيل دخول</button>
   </div>
 
-  <div id="signup" class="section">
-    <h2>إنشاء حساب</h2>
-    <input type="text" id="signup-username" placeholder="اسم المستخدم">
-    <input type="password" id="signup-password" placeholder="كلمة المرور">
-    <button class="action" onclick="signup()">تسجيل</button>
+  <div id="chatSection" class="section hidden">
+    <h3>مرحباً، <span id="currentUser"></span></h3>
+
+    <div>
+      <input type="text" id="friendUsername" placeholder="إضافة صديق باسم المستخدم" />
+      <button onclick="addFriend()">إضافة</button>
+    </div>
+
+    <h4>قائمة الأصدقاء:</h4>
+    <ul id="friendList"></ul>
+
+    <div class="section">
+      <h4>دردشة مع <span id="chatWith"></span></h4>
+      <div id="messages" style="max-height:200px;overflow-y:auto;"></div>
+      <input type="text" id="messageInput" placeholder="اكتب رسالة" />
+      <button onclick="sendMessage()">إرسال</button>
+    </div>
+
+    <div class="section">
+      <h4>الإعدادات</h4>
+      <button onclick="logout()">تسجيل خروج</button>
+      <a href="https://t.me/UUYFU" target="_blank">الإبلاغ عن مشكلة</a>
+    </div>
   </div>
 
-  <div id="chat" class="section">
-    <h2>الدردشة</h2>
-    <p>مرحبًا بك في غرفة الدردشة!</p>
-    <!-- يمكن إضافة واجهة الدردشة هنا -->
-  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, push, update } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-  <div id="profile" class="section">
-    <h2>الملف الشخصي</h2>
-    <p>معلومات المستخدم ستظهر هنا.</p>
-  </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
 
-  <div id="friends" class="section">
-    <h2>الأصدقاء</h2>
-    <p>قائمة الأصدقاء ستظهر هنا.</p>
-  </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  <div id="settings" class="section">
-    <h2>الإعدادات</h2>
-    <p>إعدادات الحساب ستظهر هنا.</p>
-  </div>
+    let currentUser = null;
+    let currentFriend = null;
 
-  <script>
-    function showSection(id) {
-      const sections = document.querySelectorAll('.section');
-      sections.forEach(section => {
-        section.classList.remove('active');
-      });
-      document.getElementById(id).classList.add('active');
+    function signup() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      set(ref(db, "users/" + username), {
+        password: password,
+        lastSeen: new Date().toLocaleString(),
+        status: "online",
+        friends: {}
+      }).then(() => alert("تم إنشاء الحساب!"));
     }
 
     function login() {
-      const username = document.getElementById('login-username').value;
-      const password = document.getElementById('login-password').value;
-      alert('تم تسجيل الدخول باسم: ' + username);
-      // يمكن إضافة تحقق من البيانات هنا
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      get(ref(db, "users/" + username)).then(snapshot => {
+        if (snapshot.exists() && snapshot.val().password === password) {
+          currentUser = username;
+          document.getElementById("currentUser").innerText = username;
+          document.getElementById("authSection").classList.add("hidden");
+          document.getElementById("chatSection").classList.remove("hidden");
+          update(ref(db, "users/" + username), { status: "online" });
+          loadFriends();
+        } else alert("بيانات الدخول خاطئة!");
+      });
     }
 
-    function signup() {
-      const username = document.getElementById('signup-username').value;
-      const password = document.getElementById('signup-password').value;
-      alert('تم إنشاء الحساب باسم: ' + username);
-      // يمكن إضافة منطق إنشاء الحساب هنا
+    function logout() {
+      if (currentUser) {
+        update(ref(db, "users/" + currentUser), { status: "offline", lastSeen: new Date().toLocaleString() });
+        location.reload();
+      }
+    }
+
+    function addFriend() {
+      const friend = document.getElementById("friendUsername").value;
+      if (friend && friend !== currentUser) {
+        get(ref(db, "users/" + friend)).then(snapshot => {
+          if (snapshot.exists()) {
+            update(ref(db, "users/" + currentUser + "/friends"), { [friend]: true });
+            update(ref(db, "users/" + friend + "/friends"), { [currentUser]: true });
+            loadFriends();
+          } else alert("المستخدم غير موجود");
+        });
+      }
+    }
+
+    function loadFriends() {
+      const list = document.getElementById("friendList");
+      list.innerHTML = "";
+      get(ref(db, "users/" + currentUser + "/friends")).then(snapshot => {
+        if (snapshot.exists()) {
+          const friends = Object.keys(snapshot.val());
+          friends.forEach(friend => {
+            get(ref(db, "users/" + friend)).then(fSnap => {
+              const status = fSnap.val().status === "online" ? "online" : "offline";
+              const li = document.createElement("li");
+              li.innerHTML = `<span class="${status}">${friend}</span> 
+                <button onclick="openChat('${friend}')">دردشة</button>`;
+              list.appendChild(li);
+            });
+          });
+        }
+      });
+    }
+
+    function openChat(friend) {
+      currentFriend = friend;
+      document.getElementById("chatWith").innerText = friend;
+      const messagesDiv = document.getElementById("messages");
+      onValue(ref(db, `messages/${currentUser}_${friend}`), snapshot => {
+        messagesDiv.innerHTML = "";
+        snapshot.forEach(msg => {
+          const p = document.createElement("p");
+          p.innerText = msg.val().sender + ": " + msg.val().text;
+          messagesDiv.appendChild(p);
+        });
+      });
+    }
+
+    function sendMessage() {
+      const text = document.getElementById("messageInput").value;
+      const msg = {
+        sender: currentUser,
+        text: text,
+        timestamp: new Date().toISOString()
+      };
+      const chatId = `${currentUser}_${currentFriend}`;
+      const reverseChatId = `${currentFriend}_${currentUser}`;
+      push(ref(db, `messages/${chatId}`), msg);
+      push(ref(db, `messages/${reverseChatId}`), msg);
+      document.getElementById("messageInput").value = "";
     }
   </script>
-
 </body>
 </html>
