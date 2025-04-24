@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>محادثة خاصة</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <h2 id="chatWith">الدردشة مع ...</h2>
+    <button onclick="logout()">خروج</button>
+  </div>
+
+  <div id="chatBox" class="chat-box"></div>
+
+  <div class="send-bar">
+    <input type="text" id="messageInput" placeholder="اكتب رسالة..." />
+    <button onclick="sendMessage()">إرسال</button>
+  </div>
+
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
