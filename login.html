@@ -1,21 +1,20 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول</title>
+  <title>تسجيل الدخول | rengeM</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-  <script src="firebase.js"></script>
-  <script src="script.js"></script>
 </head>
 <body>
-  <div class="login-container">
+  <div class="container">
     <h2>تسجيل الدخول</h2>
-    <input type="text" id="username" placeholder="اسم المستخدم">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="login()">دخول</button>
+    <input type="text" id="loginUsername" placeholder="اسم المستخدم">
+    <input type="password" id="loginPassword" placeholder="كلمة المرور">
+    <button onclick="loginUser()">تسجيل الدخول</button>
     <p>ليس لديك حساب؟ <a href="signup.html">إنشاء حساب</a></p>
+    <p id="loginError" class="error"></p>
   </div>
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
