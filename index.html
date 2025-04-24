@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تطبيق المراسلة</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      direction: rtl;
+      text-align: center;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .section {
+      display: none;
+      padding: 20px;
+    }
+    .active {
+      display: block;
+    }
+    nav {
+      background-color: #333;
+      padding: 10px;
+    }
+    nav button {
+      margin: 5px;
+      padding: 10px 20px;
+      background-color: #555;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    nav button:hover {
+      background-color: #777;
+    }
+    input {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      width: 80%;
+      max-width: 300px;
+    }
+    button.action {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    button.action:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <button onclick="showSection('login')">تسجيل الدخول</button>
+    <button onclick="showSection('signup')">إنشاء حساب</button>
+    <button onclick="showSection('chat')">الدردشة</button>
+    <button onclick="showSection('profile')">الملف الشخصي</button>
+    <button onclick="showSection('friends')">الأصدقاء</button>
+    <button onclick="showSection('settings')">الإعدادات</button>
+  </nav>
+
+  <div id="login" class="section active">
+    <h2>تسجيل الدخول</h2>
+    <input type="text" id="login-username" placeholder="اسم المستخدم">
+    <input type="password" id="login-password" placeholder="كلمة المرور">
+    <button class="action" onclick="login()">دخول</button>
+  </div>
+
+  <div id="signup" class="section">
+    <h2>إنشاء حساب</h2>
+    <input type="text" id="signup-username" placeholder="اسم المستخدم">
+    <input type="password" id="signup-password" placeholder="كلمة المرور">
+    <button class="action" onclick="signup()">تسجيل</button>
+  </div>
+
+  <div id="chat" class="section">
+    <h2>الدردشة</h2>
+    <p>مرحبًا بك في غرفة الدردشة!</p>
+    <!-- يمكن إضافة واجهة الدردشة هنا -->
+  </div>
+
+  <div id="profile" class="section">
+    <h2>الملف الشخصي</h2>
+    <p>معلومات المستخدم ستظهر هنا.</p>
+  </div>
+
+  <div id="friends" class="section">
+    <h2>الأصدقاء</h2>
+    <p>قائمة الأصدقاء ستظهر هنا.</p>
+  </div>
+
+  <div id="settings" class="section">
+    <h2>الإعدادات</h2>
+    <p>إعدادات الحساب ستظهر هنا.</p>
+  </div>
+
+  <script>
+    function showSection(id) {
+      const sections = document.querySelectorAll('.section');
+      sections.forEach(section => {
+        section.classList.remove('active');
+      });
+      document.getElementById(id).classList.add('active');
+    }
+
+    function login() {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      alert('تم تسجيل الدخول باسم: ' + username);
+      // يمكن إضافة تحقق من البيانات هنا
+    }
+
+    function signup() {
+      const username = document.getElementById('signup-username').value;
+      const password = document.getElementById('signup-password').value;
+      alert('تم إنشاء الحساب باسم: ' + username);
+      // يمكن إضافة منطق إنشاء الحساب هنا
+    }
+  </script>
+
+</body>
+</html>
