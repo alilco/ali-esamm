@@ -1,29 +1,71 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>إنشاء حساب</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>إنشاء حساب - rengeM</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <h2>إنشاء حساب جديد</h2>
-    <input type="text" id="full-name" placeholder="الاسم الكامل" />
-    <input type="text" id="signup-username" placeholder="اسم المستخدم" />
-    <input type="password" id="signup-password" placeholder="كلمة المرور" />
-    <button onclick="signupUser()">تسجيل</button>
-    <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+    <form id="signupForm">
+      <input type="text" id="fullName" placeholder="الاسم الكامل" required />
+      <input type="text" id="username" placeholder="اسم المستخدم" required />
+      <input type="password" id="password" placeholder="كلمة المرور" required />
+      <button type="submit">إنشاء الحساب</button>
+      <p>هل لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+    </form>
   </div>
 
-  <script src="app.js"></script>
-  <script>
-    function signupUser() {
-      const fullName = document.getElementById("full-name").value;
-      const username = document.getElementById("signup-username").value;
-      const password = document.getElementById("signup-password").value;
-      signup(fullName, username, password);
-    }
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getDatabase, ref, set, get, child
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    document.getElementById("signupForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const fullName = document.getElementById("fullName").value.trim();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!fullName || !username || !password) return alert("يرجى تعبئة جميع الحقول");
+
+      const usersRef = ref(db, "users/" + username);
+
+      get(usersRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          alert("اسم المستخدم موجود بالفعل");
+        } else {
+          set(usersRef, {
+            fullName: fullName,
+            username: username,
+            password: password,
+            profileImage: "default.png",
+            bio: "",
+            lastSeen: Date.now(),
+            online: true
+          }).then(() => {
+            localStorage.setItem("username", username);
+            window.location.href = "chat.html";
+          });
+        }
+      });
+    });
   </script>
 </body>
 </html>
