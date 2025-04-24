@@ -1,18 +1,18 @@
-{
-  "users": {
-    "user1": {
-      "username": "ahmed",
-      "displayName": "أحمد محمد",
-      "bio": "أحب البرمجة",
-      "profileImage": "https://i.imgur.com/example1.jpg",
-      "lastSeen": "2025-04-23T10:00:00Z"
-    },
-    "user2": {
-      "username": "nora",
-      "displayName": "نورا علي",
-      "bio": "مصممة UI/UX",
-      "profileImage": "https://i.imgur.com/example2.jpg",
-      "lastSeen": "2025-04-23T09:30:00Z"
-    }
+[
+  {
+    "username": "ahmed",
+    "password": "1234",
+    "displayName": "أحمد",
+    "profileImage": "https://i.ibb.co/4pDNDk1/avatar.png",
+    "status": "online",
+    "lastSeen": ""
+  },
+  {
+    "username": "sara",
+    "password": "5678",
+    "displayName": "سارة",
+    "profileImage": "https://i.ibb.co/rGzK1Yx/avatar2.png",
+    "status": "offline",
+    "lastSeen": "2025-04-23 10:30"
   }
-}
+]
