@@ -2,99 +2,56 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>الدردشة - rengeM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الدردشة</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <div class="header">
-    <h2>مرحبا بك، <span id="displayUser"></span></h2>
+    <span>تطبيق ماسنجر</span>
     <button onclick="logout()">تسجيل الخروج</button>
   </div>
 
-  <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="ابحث عن مستخدم" />
-    <button onclick="searchUser()">بحث</button>
+  <div class="chat-box" id="chatBox">
+    <!-- الرسائل ستظهر هنا -->
   </div>
 
-  <div class="friends-list" id="friendsList">
-    <h3>الأصدقاء</h3>
-    <!-- يتم عرض الأصدقاء هنا -->
+  <div class="chat-input">
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك..." />
+    <button onclick="sendMessage()">إرسال</button>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import {
-      getDatabase, ref, get, set, update
-    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-      authDomain: "messengerapp-58f7a.firebaseapp.com",
-      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-      projectId: "messengerapp-58f7a",
-      storageBucket: "messengerapp-58f7a.appspot.com",
-      messagingSenderId: "46178168523",
-      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const currentUser = localStorage.getItem("username");
+  <script>
+    // بيانات المستخدم النشط
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
     if (!currentUser) window.location.href = "login.html";
-    document.getElementById("displayUser").innerText = currentUser;
+
+    const chatBox = document.getElementById("chatBox");
+    const messageInput = document.getElementById("messageInput");
+
+    function renderMessage(message, sender) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = sender === currentUser.username ? "my-message" : "their-message";
+      msgDiv.innerText = message;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+      const text = messageInput.value.trim();
+      if (text !== "") {
+        renderMessage(text, currentUser.username);
+        // هنا يمكن إضافة تخزين الرسائل في قاعدة البيانات
+        messageInput.value = "";
+      }
+    }
 
     function logout() {
-      localStorage.removeItem("username");
+      localStorage.removeItem("currentUser");
       window.location.href = "login.html";
     }
-
-    function searchUser() {
-      const searchValue = document.getElementById("searchInput").value.trim();
-      if (!searchValue || searchValue === currentUser) return;
-
-      const userRef = ref(db, "users/" + searchValue);
-      get(userRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          // أضف المستخدم إلى قائمة الأصدقاء
-          const friendRef = ref(db, `friends/${currentUser}/${searchValue}`);
-          set(friendRef, true).then(() => {
-            alert("تمت إضافة الصديق بنجاح!");
-            loadFriends();
-          });
-        } else {
-          alert("المستخدم غير موجود");
-        }
-      });
-    }
-
-    function loadFriends() {
-      const list = document.getElementById("friendsList");
-      list.innerHTML = "<h3>الأصدقاء</h3>";
-      const friendsRef = ref(db, "friends/" + currentUser);
-      get(friendsRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const friends = snapshot.val();
-          Object.keys(friends).forEach((friendName) => {
-            const item = document.createElement("div");
-            item.className = "friend-item";
-            item.innerHTML = `
-              <p><strong>${friendName}</strong></p>
-              <button onclick="openChat('${friendName}')">مراسلة</button>
-            `;
-            list.appendChild(item);
-          });
-        }
-      });
-    }
-
-    function openChat(friendName) {
-      localStorage.setItem("chatWith", friendName);
-      window.location.href = "private-chat.html";
-    }
-
-    loadFriends();
   </script>
+
 </body>
 </html>
