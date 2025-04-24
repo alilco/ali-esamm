@@ -6,30 +6,28 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="form-container">
-    <h2>تسجيل الدخول</h2>
-    <input type="text" id="loginUsername" placeholder="اسم المستخدم">
-    <input type="password" id="loginPassword" placeholder="كلمة المرور">
-    <button onclick="login()">دخول</button>
-    <p id="loginMessage" class="message"></p>
-    <p>ليس لديك حساب؟ <a href="signup.html">إنشاء حساب</a></p>
-  </div>
+  <h2>تسجيل الدخول</h2>
+  <input type="text" id="loginUsername" placeholder="اسم المستخدم">
+  <input type="password" id="loginPassword" placeholder="كلمة المرور">
+  <button onclick="login()">دخول</button>
 
   <script>
     function login() {
-      const username = document.getElementById("loginUsername").value.trim();
+      const username = document.getElementById("loginUsername").value;
       const password = document.getElementById("loginPassword").value;
-      const message = document.getElementById("loginMessage");
 
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const user = users.find(u => u.username === username && u.password === password);
-
-      if (user) {
-        localStorage.setItem("loggedInUser", JSON.stringify(user));
-        window.location.href = "chat.html";
-      } else {
-        message.innerText = "بيانات الدخول غير صحيحة.";
-      }
+      fetch("/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ username, password })
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          localStorage.setItem("username", username);
+          window.location.href = "chat.html";
+        } else {
+          alert(data.message);
+        }
+      });
     }
   </script>
 </body>
