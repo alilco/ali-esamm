@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>الدردشة</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <h2>مرحبا بك في الدردشة</h2>
+    <button onclick="logout()">تسجيل خروج</button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="ابحث عن مستخدم" />
+    <button onclick="searchUsers(document.getElementById('searchInput').value)">بحث</button>
+  </div>
+
+  <div id="searchResults" class="results"></div>
+
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
