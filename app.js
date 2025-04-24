@@ -1,124 +1,79 @@
-// بيانات المستخدمين المخزنة
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
-let messages = JSON.parse(localStorage.getItem("messages")) || {};
+// إعداد Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+  authDomain: "messengerapp-58f7a.firebaseapp.com",
+  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+  projectId: "messengerapp-58f7a",
+  storageBucket: "messengerapp-58f7a.appspot.com",
+  messagingSenderId: "46178168523",
+  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+};
 
-function saveToStorage() {
-  localStorage.setItem("users", JSON.stringify(users));
-  localStorage.setItem("messages", JSON.stringify(messages));
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// حفظ الجلسة
+function saveSession(username) {
+  localStorage.setItem("loggedInUser", username);
+}
+
+// التحقق من الجلسة المحفوظة
+function checkSession() {
+  const user = localStorage.getItem("loggedInUser");
+  if (user) {
+    window.location.href = "chat.html";
+  }
+}
+
+// إنشاء حساب جديد
+function signup(fullName, username, password) {
+  if (!fullName || !username || !password) {
+    alert("يرجى تعبئة جميع الحقول");
+    return;
+  }
+
+  db.ref("users/" + username).once("value", snapshot => {
+    if (snapshot.exists()) {
+      alert("اسم المستخدم مستخدم مسبقًا");
+    } else {
+      db.ref("users/" + username).set({
+        fullName,
+        password,
+        status: "نشط",
+        lastSeen: new Date().toISOString(),
+        messages: {}
+      });
+
+      saveSession(username);
+      window.location.href = "chat.html";
+    }
+  });
 }
 
 // تسجيل الدخول
 function login(username, password) {
-  const user = users.find(u => u.username === username && u.password === password);
-  if (user) {
-    currentUser = user;
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-    location.href = "chat.html";
-  } else {
-    alert("اسم المستخدم أو كلمة المرور غير صحيحة.");
-  }
-}
-
-// إنشاء حساب
-function signup(username, password) {
-  if (users.find(u => u.username === username)) {
-    alert("اسم المستخدم مستخدم بالفعل.");
+  if (!username || !password) {
+    alert("يرجى إدخال اسم المستخدم وكلمة المرور");
     return;
   }
-  const newUser = { username, password, friends: [], lastSeen: new Date().toISOString() };
-  users.push(newUser);
-  saveToStorage();
-  alert("تم إنشاء الحساب! يمكنك تسجيل الدخول الآن.");
-  location.href = "login.html";
+
+  db.ref("users/" + username).once("value", snapshot => {
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      if (userData.password === password) {
+        saveSession(username);
+        window.location.href = "chat.html";
+      } else {
+        alert("كلمة المرور غير صحيحة");
+      }
+    } else {
+      alert("المستخدم غير موجود");
+    }
+  });
 }
 
 // تسجيل الخروج
 function logout() {
-  currentUser = null;
-  localStorage.removeItem("currentUser");
-  location.href = "login.html";
-}
-
-// إضافة صديق
-function addFriend(friendUsername) {
-  const friend = users.find(u => u.username === friendUsername);
-  if (!friend) {
-    alert("المستخدم غير موجود.");
-    return;
-  }
-  if (!currentUser.friends.includes(friendUsername)) {
-    currentUser.friends.push(friendUsername);
-    friend.friends.push(currentUser.username);
-    saveToStorage();
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-    alert("تمت إضافة الصديق.");
-  } else {
-    alert("الصديق موجود مسبقاً.");
-  }
-}
-
-// إرسال رسالة
-function sendMessage(to, text) {
-  const key = [currentUser.username, to].sort().join("_");
-  if (!messages[key]) messages[key] = [];
-  messages[key].push({ from: currentUser.username, text, time: new Date().toLocaleString() });
-  saveToStorage();
-  loadMessages(to);
-}
-
-// تحميل الرسائل
-function loadMessages(withUser) {
-  const key = [currentUser.username, withUser].sort().join("_");
-  const chatBox = document.getElementById("chat-messages");
-  chatBox.innerHTML = "";
-
-  (messages[key] || []).forEach(msg => {
-    const div = document.createElement("div");
-    div.className = "message";
-    div.textContent = `${msg.from === currentUser.username ? "أنت" : withUser}: ${msg.text}`;
-    chatBox.appendChild(div);
-  });
-
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// عرض قائمة الأصدقاء
-function showFriends() {
-  const list = document.getElementById("friends-list");
-  list.innerHTML = "";
-  currentUser.friends.forEach(friendName => {
-    const div = document.createElement("div");
-    div.textContent = friendName;
-    div.className = "user-item";
-    div.onclick = () => openChat(friendName);
-    list.appendChild(div);
-  });
-}
-
-// فتح دردشة مع صديق
-function openChat(friendName) {
-  document.getElementById("chat-header").textContent = `الدردشة مع: ${friendName}`;
-  document.getElementById("send-btn").onclick = () => {
-    const msg = document.getElementById("msg").value;
-    if (msg) {
-      sendMessage(friendName, msg);
-      document.getElementById("msg").value = "";
-    }
-  };
-  loadMessages(friendName);
-}
-
-// البحث عن مستخدم
-function searchUsers(query) {
-  const resultBox = document.getElementById("search-results");
-  resultBox.innerHTML = "";
-  users.filter(u => u.username.includes(query) && u.username !== currentUser.username)
-    .forEach(user => {
-      const div = document.createElement("div");
-      div.textContent = user.username;
-      div.className = "user-item";
-      div.onclick = () => addFriend(user.username);
-      resultBox.appendChild(div);
-    });
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
 }
