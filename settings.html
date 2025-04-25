@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>الإعدادات</title>
+  <style>
+    body {
+      font-family: Arial;
+      background-color: #f2f2f2;
+      padding: 20px;
+      direction: rtl;
+    }
+    .btn {
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      background-color: #0084ff;
+      color: white;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn.danger {
+      background-color: crimson;
+    }
+    .dark-mode {
+      background-color: #111;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h2>الإعدادات</h2>
+  <button class="btn" onclick="toggleTheme()">تغيير المظهر (مظلم/عادي)</button>
+  <button class="btn" onclick="logout()">تسجيل الخروج</button>
+  <button class="btn danger" onclick="deleteAccount()">حذف الحساب نهائياً</button>
+  <a href="https://t.me/UUYFU" class="btn" target="_blank">الإبلاغ عن مشكلة</a>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth, signOut, deleteUser, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.logout = function () {
+      signOut(auth).then(() => {
+        alert("تم تسجيل الخروج");
+        window.location.href = "index.html";
+      });
+    };
+
+    window.deleteAccount = function () {
+      const user = auth.currentUser;
+      if (confirm("هل أنت متأكد أنك تريد حذف الحساب نهائيًا؟")) {
+        deleteUser(user).then(() => {
+          alert("تم حذف الحساب.");
+          window.location.href = "index.html";
+        }).catch((error) => {
+          alert("فشل في حذف الحساب: " + error.message);
+        });
+      }
+    };
+
+    window.toggleTheme = function () {
+      document.body.classList.toggle("dark-mode");
+    };
+  </script>
+</body>
+</html>
