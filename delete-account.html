@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>حذف الحساب</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #fff0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      direction: rtl;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #c00;
+    }
+
+    button {
+      background-color: #c00;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background-color: #a00;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>هل أنت متأكد أنك تريد حذف حسابك؟</h2>
+    <p>لا يمكنك استرجاعه لاحقًا، سيتم حذف جميع بياناتك!</p>
+    <button onclick="deleteAccount()">حذف الحساب نهائياً</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, deleteUser, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.deleteAccount = () => {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          deleteUser(user).then(() => {
+            alert("تم حذف الحساب بنجاح.");
+            window.location.href = "index.html"; // توجيه لصفحة البداية
+          }).catch((error) => {
+            alert("حدث خطأ: " + error.message);
+          });
+        } else {
+          alert("أنت غير مسجل الدخول.");
+        }
+      });
+    };
+  </script>
+
+</body>
+</html>
