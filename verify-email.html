@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>التحقق من البريد الإلكتروني</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #eaf6ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      direction: rtl;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      width: 400px;
+      text-align: center;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      width: 80%;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    p {
+      margin-top: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>التحقق من البريد الإلكتروني</h2>
+    <p>اضغط على الزر أدناه لإرسال رابط التحقق إلى بريدك الإلكتروني.</p>
+    <button onclick="sendVerification()">إرسال رابط التحقق</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.sendVerification = () => {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          if (!user.emailVerified) {
+            sendEmailVerification(user).then(() => {
+              alert("تم إرسال رابط التحقق إلى بريدك الإلكتروني.");
+            }).catch((error) => {
+              alert("حدث خطأ: " + error.message);
+            });
+          } else {
+            alert("بريدك الإلكتروني موثّق مسبقاً.");
+          }
+        } else {
+          alert("يرجى تسجيل الدخول أولاً.");
+        }
+      });
+    };
+  </script>
+
+</body>
+</html>
