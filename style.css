@@ -1,0 +1,58 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+section {
+  display: none;
+  padding: 20px;
+}
+
+.active-section {
+  display: block;
+}
+
+input, button {
+  display: block;
+  width: 80%;
+  max-width: 300px;
+  margin: 10px auto;
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0b7dda;
+}
+
+#chat-box {
+  height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  margin: 10px auto;
+  padding: 10px;
+  width: 80%;
+  background: #fff;
+  text-align: left;
+}
+
+#friends-list, #search-results {
+  margin-top: 10px;
+}
+
+p span {
+  color: #2196F3;
+  cursor: pointer;
+  text-decoration: underline;
+}
