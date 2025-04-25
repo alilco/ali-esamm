@@ -1,98 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>إعدادات الحساب</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f0f0f0;
-      padding: 20px;
-      text-align: center;
-    }
-    h2 {
-      color: #333;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-  </style>
+  <script type="module" src="scripts/settings.js"></script>
 </head>
 <body>
-
   <h2>إعدادات الحساب</h2>
-
-  <button onclick="sendVerificationEmail()">التحقق من البريد الإلكتروني</button><br>
-  <button onclick="deleteAccount()">حذف الحساب نهائيًا</button><br>
-  <button onclick="goBack()">الرجوع للدردشة</button>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, sendEmailVerification, deleteUser, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-      authDomain: "messengerapp-58f7a.firebaseapp.com",
-      projectId: "messengerapp-58f7a",
-      storageBucket: "messengerapp-58f7a.appspot.com",
-      messagingSenderId: "46178168523",
-      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    let currentUser;
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user;
-      } else {
-        alert("يرجى تسجيل الدخول أولاً.");
-        window.location.href = "index.html";
-      }
-    });
-
-    window.sendVerificationEmail = function () {
-      if (currentUser.emailVerified) {
-        alert("تم التحقق بالفعل.");
-        return;
-      }
-
-      sendEmailVerification(currentUser)
-        .then(() => {
-          alert("تم إرسال رابط التحقق لبريدك.");
-        })
-        .catch((error) => {
-          alert("خطأ: " + error.message);
-        });
-    }
-
-    window.deleteAccount = function () {
-      if (confirm("هل أنت متأكد من حذف الحساب نهائيًا؟")) {
-        deleteUser(currentUser)
-          .then(() => {
-            alert("تم حذف الحساب.");
-            window.location.href = "index.html";
-          })
-          .catch((error) => {
-            alert("خطأ أثناء حذف الحساب: " + error.message);
-          });
-      }
-    }
-
-    window.goBack = function () {
-      window.location.href = "chat.html";
-    }
-  </script>
-
+  <button id="logoutBtn">تسجيل الخروج</button>
+  <button id="deleteAccountBtn">حذف الحساب نهائياً</button>
 </body>
 </html>
