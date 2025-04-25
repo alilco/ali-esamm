@@ -1,75 +1,46 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>تطبيق مراسلة</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="firebase-config.js"></script>
-  <script defer src="script.js"></script>
+  <style>
+    body { font-family: Arial; background: #f0f0f0; text-align: center; }
+    #chat-section { display: none; }
+    input, button { padding: 10px; margin: 5px; }
+    img { width: 100px; height: 100px; border-radius: 50%; }
+  </style>
 </head>
 <body>
+  <h2>تطبيق مراسلة</h2>
 
-<!-- شاشة تسجيل الدخول -->
-<section id="login-section" class="active-section">
-  <h2>تسجيل الدخول</h2>
-  <input type="email" id="login-email" placeholder="البريد الإلكتروني">
-  <input type="password" id="login-password" placeholder="كلمة المرور">
-  <button onclick="login()">تسجيل الدخول</button>
-  <p>ليس لديك حساب؟ <span onclick="showSection('signup-section')">إنشاء حساب</span></p>
-  <p><span onclick="showSection('reset-section')">نسيت كلمة المرور؟</span></p>
-</section>
+  <div id="login-section">
+    <h3>تسجيل الدخول أو إنشاء حساب</h3>
+    <input type="text" id="emailInput" placeholder="البريد الإلكتروني"><br>
+    <input type="password" id="passwordInput" placeholder="كلمة المرور"><br>
+    <input type="text" id="usernameInput" placeholder="اسم المستخدم (عند التسجيل)"><br>
+    <button onclick="login()">تسجيل الدخول</button>
+    <button onclick="signup()">إنشاء حساب</button><br>
+    <button onclick="resetPassword()">نسيت كلمة المرور؟</button>
+  </div>
 
-<!-- شاشة التسجيل -->
-<section id="signup-section">
-  <h2>إنشاء حساب</h2>
-  <input type="text" id="signup-username" placeholder="اسم المستخدم">
-  <input type="email" id="signup-email" placeholder="البريد الإلكتروني">
-  <input type="password" id="signup-password" placeholder="كلمة المرور">
-  <button onclick="signup()">تسجيل</button>
-  <p>لديك حساب؟ <span onclick="showSection('login-section')">تسجيل الدخول</span></p>
-</section>
+  <div id="chat-section">
+    <h3>مرحباً، <span id="usernameDisplay"></span></h3>
+    <img id="profilePic" src="default.png"><br>
+    <span id="statusDisplay"></span><br><br>
 
-<!-- استعادة كلمة المرور -->
-<section id="reset-section">
-  <h2>إعادة تعيين كلمة المرور</h2>
-  <input type="email" id="reset-email" placeholder="البريد الإلكتروني">
-  <button onclick="resetPassword()">إرسال رابط</button>
-  <p><span onclick="showSection('login-section')">العودة</span></p>
-</section>
+    <input type="text" id="displayName" placeholder="الاسم الجديد"><br>
+    <input type="text" id="profileImage" placeholder="رابط الصورة"><br>
+    <button onclick="updateProfileInfo()">تعديل الملف الشخصي</button><br><br>
 
-<!-- شاشة الدردشة -->
-<section id="chat-section">
-  <h2>مرحبا <span id="user-name"></span></h2>
-  <input type="text" id="search-user" placeholder="بحث عن أصدقاء">
-  <button onclick="searchUser()">بحث</button>
-  <div id="search-results"></div>
-  <div id="friends-list"></div>
-  <div id="chat-box"></div>
-  <input type="text" id="message-input" placeholder="اكتب رسالتك...">
-  <button onclick="sendMessage()">إرسال</button>
-  <button onclick="showSection('profile-section')">ملفي</button>
-  <button onclick="showSection('settings-section')">الإعدادات</button>
-</section>
+    <button onclick="logout()">تسجيل الخروج</button>
+    <button onclick="deleteAccount()">حذف الحساب</button><br><br>
 
-<!-- الملف الشخصي -->
-<section id="profile-section">
-  <h2>الملف الشخصي</h2>
-  <input type="text" id="profile-name" placeholder="اسم العرض">
-  <input type="text" id="profile-status" placeholder="الحالة">
-  <input type="url" id="profile-image" placeholder="رابط الصورة">
-  <button onclick="updateProfile()">تحديث</button>
-  <p><span onclick="showSection('chat-section')">رجوع</span></p>
-</section>
+    <a href="https://t.me/UUYFU" target="_blank">الإبلاغ عن مشكلة</a>
+  </div>
 
-<!-- الإعدادات -->
-<section id="settings-section">
-  <h2>الإعدادات</h2>
-  <button onclick="logout()">تسجيل الخروج</button>
-  <button onclick="deleteAccount()">حذف الحساب</button>
-  <a href="https://t.me/UUYFU" target="_blank">الإبلاغ عن مشكلة</a>
-  <p><span onclick="showSection('chat-section')">رجوع</span></p>
-</section>
-
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
