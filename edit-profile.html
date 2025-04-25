@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تعديل الملف الشخصي</title>
+  <style>
+    body {
+      font-family: Arial;
+      background-color: #f0f0f0;
+      direction: rtl;
+      text-align: center;
+      padding: 40px;
+    }
+    input, textarea, button {
+      padding: 10px;
+      margin: 10px;
+      width: 80%;
+      max-width: 300px;
+    }
+    button {
+      background-color: #28a745;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>تعديل الملف الشخصي</h2>
+  <img id="profileImage" src="default.png" alt="صورة الملف الشخصي" />
+  <input type="file" id="imageInput" accept="image/*"><br>
+  <input type="text" id="displayName" placeholder="الاسم الكامل"><br>
+  <textarea id="status" placeholder="الحالة..."></textarea><br>
+  <button onclick="saveProfile()">حفظ التعديلات</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+      authDomain: "messengerapp-58f7a.firebaseapp.com",
+      projectId: "messengerapp-58f7a",
+      storageBucket: "messengerapp-58f7a.appspot.com",
+      messagingSenderId: "46178168523",
+      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    let currentUser;
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById("displayName").value = user.displayName || "";
+        document.getElementById("profileImage").src = user.photoURL || "default.png";
+        // لاحقاً يمكن جلب الحالة من قاعدة البيانات
+      } else {
+        alert("يرجى تسجيل الدخول أولاً");
+        window.location.href = "index.html";
+      }
+    });
+
+    async function saveProfile() {
+      const name = document.getElementById("displayName").value;
+      const file = document.getElementById("imageInput").files[0];
+
+      let photoURL = currentUser.photoURL;
+
+      if (file) {
+        const storageRef = ref(storage, "profile_images/" + currentUser.uid + ".jpg");
+        await uploadBytes(storageRef, file);
+        photoURL = await getDownloadURL(storageRef);
+      }
+
+      updateProfile(currentUser, {
+        displayName: name,
+        photoURL: photoURL
+      }).then(() => {
+        alert("تم حفظ التعديلات بنجاح");
+      }).catch((error) => {
+        alert("حدث خطأ: " + error.message);
+      });
+    }
+  </script>
+
+</body>
+</html>
