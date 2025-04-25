@@ -1,167 +1,95 @@
 // script.js
-import { auth, database } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  deleteUser,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+  createUserWithEmailAndPassword, sendEmailVerification,
+  sendPasswordResetEmail, deleteUser
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  ref,
-  set,
-  get,
-  onValue,
-  update,
-  remove
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+  getDatabase, ref, set, get, child, onValue, update, remove
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// حفظ الجلسة
+// إعدادات Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+  authDomain: "messengerapp-58f7a.firebaseapp.com",
+  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+  projectId: "messengerapp-58f7a",
+  storageBucket: "messengerapp-58f7a.appspot.com",
+  messagingSenderId: "46178168523",
+  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+};
+
+// تهيئة التطبيق
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// تسجيل الدخول
+window.loginUser = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      alert("تم تسجيل الدخول");
+    }).catch((error) => {
+      alert("خطأ: " + error.message);
+    });
+}
+
+// إنشاء حساب جديد
+window.registerUser = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const username = document.getElementById("username").value;
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      sendEmailVerification(user);
+      set(ref(db, "users/" + user.uid), {
+        username: username,
+        email: email,
+        status: "نشط",
+        lastSeen: Date.now()
+      });
+      alert("تم إنشاء الحساب، تحقق من بريدك الإلكتروني");
+    }).catch((error) => {
+      alert("خطأ: " + error.message);
+    });
+}
+
+// تحقق الجلسة
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    loadProfile(user);
-    loadFriends(user.uid);
-  } else {
-    // إعادة توجيه لتسجيل الدخول
-    console.log("User not logged in");
+    console.log("مستخدم مسجل الدخول: ", user.email);
   }
 });
 
-// تسجيل حساب جديد
-window.signup = () => {
-  const email = document.getElementById("signupEmail").value;
-  const password = document.getElementById("signupPassword").value;
-  const username = document.getElementById("signupUsername").value;
-
-  createUserWithEmailAndPassword(auth, email, password)
-    .then((cred) => {
-      const user = cred.user;
-      set(ref(database, "users/" + user.uid), {
-        email: email,
-        username: username,
-        status: "نشط",
-        lastSeen: Date.now(),
-        profileImage: "default.png"
-      });
-      alert("تم إنشاء الحساب بنجاح");
-    })
-    .catch((err) => alert(err.message));
-};
-
-// تسجيل دخول
-window.login = () => {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      alert("تم تسجيل الدخول");
-    })
-    .catch((err) => alert(err.message));
-};
-
-// تسجيل خروج
-window.logout = () => {
-  signOut(auth).then(() => alert("تم تسجيل الخروج"));
-};
-
-// تعديل الملف الشخصي
-window.updateProfileData = () => {
-  const user = auth.currentUser;
-  const username = document.getElementById("editUsername").value;
-  const status = document.getElementById("editStatus").value;
-  const image = document.getElementById("editImage").value;
-
-  update(ref(database, "users/" + user.uid), {
-    username: username,
-    status: status,
-    profileImage: image
-  }).then(() => alert("تم تحديث الملف الشخصي"));
-};
-
-// إرسال رسالة
-window.sendMessage = () => {
-  const user = auth.currentUser;
-  const friendId = document.getElementById("chatFriendId").value;
-  const message = document.getElementById("chatMessage").value;
-
-  const messageRef = ref(database, `messages/${user.uid}_${friendId}`);
-  const msgId = Date.now();
-  set(ref(database, `messages/${user.uid}_${friendId}/${msgId}`), {
-    from: user.uid,
-    to: friendId,
-    text: message,
-    time: msgId
-  });
-};
-
-// تحميل الملف الشخصي
-function loadProfile(user) {
-  get(ref(database, "users/" + user.uid)).then((snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      document.getElementById("usernameDisplay").innerText = data.username;
-      document.getElementById("statusDisplay").innerText = data.status;
-      document.getElementById("profileImage").src = data.profileImage;
-    }
-  });
-}
-
-// إضافة صديق
-window.addFriend = () => {
-  const user = auth.currentUser;
-  const friendUsername = document.getElementById("addFriendUsername").value;
-
-  get(ref(database, "users")).then((snapshot) => {
-    let found = false;
-    snapshot.forEach((child) => {
-      if (child.val().username === friendUsername) {
-        const friendId = child.key;
-        set(ref(database, `friends/${user.uid}/${friendId}`), true);
-        set(ref(database, `friends/${friendId}/${user.uid}`), true);
-        alert("تم إضافة الصديق");
-        found = true;
-      }
-    });
-    if (!found) alert("المستخدم غير موجود");
-  });
-};
-
-// تحميل الأصدقاء
-function loadFriends(uid) {
-  const friendsRef = ref(database, "friends/" + uid);
-  onValue(friendsRef, (snapshot) => {
-    const list = document.getElementById("friendsList");
-    list.innerHTML = "";
-    snapshot.forEach((child) => {
-      const friendId = child.key;
-      get(ref(database, "users/" + friendId)).then((snap) => {
-        if (snap.exists()) {
-          const data = snap.val();
-          const li = document.createElement("li");
-          li.innerText = `${data.username} (${data.status})`;
-          list.appendChild(li);
-        }
-      });
-    });
-  });
-}
-
 // إعادة تعيين كلمة المرور
-window.resetPassword = () => {
-  const email = document.getElementById("resetEmail").value;
+window.resetPassword = function () {
+  const email = document.getElementById("email").value;
   sendPasswordResetEmail(auth, email)
-    .then(() => alert("تم إرسال رابط إعادة التعيين إلى بريدك"))
-    .catch((err) => alert(err.message));
-};
+    .then(() => {
+      alert("تم إرسال رابط إعادة التعيين");
+    }).catch((error) => {
+      alert("خطأ: " + error.message);
+    });
+}
 
 // حذف الحساب
-window.deleteAccount = () => {
+window.deleteAccount = function () {
   const user = auth.currentUser;
-  deleteUser(user)
-    .then(() => alert("تم حذف الحساب"))
-    .catch((err) => alert(err.message));
-};
+  deleteUser(user).then(() => {
+    alert("تم حذف الحساب نهائياً");
+  }).catch((error) => {
+    alert("خطأ: " + error.message);
+  });
+}
+
+// تسجيل الخروج
+window.logoutUser = function () {
+  signOut(auth).then(() => {
+    alert("تم تسجيل الخروج");
+  });
+}
