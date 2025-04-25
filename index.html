@@ -1,46 +1,83 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>تطبيق مراسلة</title>
-  <style>
-    body { font-family: Arial; background: #f0f0f0; text-align: center; }
-    #chat-section { display: none; }
-    input, button { padding: 10px; margin: 5px; }
-    img { width: 100px; height: 100px; border-radius: 50%; }
-  </style>
+  <title>تطبيق المراسلة</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>تطبيق مراسلة</h2>
+  <div id="app">
+    <!-- تسجيل الدخول -->
+    <section id="loginSection">
+      <h2>تسجيل الدخول</h2>
+      <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" />
+      <input type="password" id="loginPassword" placeholder="كلمة المرور" />
+      <button onclick="login()">دخول</button>
+      <p>لا تملك حساب؟ <a href="#" onclick="showSection('signupSection')">إنشاء حساب</a></p>
+      <p><a href="#" onclick="showSection('resetSection')">نسيت كلمة المرور؟</a></p>
+    </section>
 
-  <div id="login-section">
-    <h3>تسجيل الدخول أو إنشاء حساب</h3>
-    <input type="text" id="emailInput" placeholder="البريد الإلكتروني"><br>
-    <input type="password" id="passwordInput" placeholder="كلمة المرور"><br>
-    <input type="text" id="usernameInput" placeholder="اسم المستخدم (عند التسجيل)"><br>
-    <button onclick="login()">تسجيل الدخول</button>
-    <button onclick="signup()">إنشاء حساب</button><br>
-    <button onclick="resetPassword()">نسيت كلمة المرور؟</button>
+    <!-- إنشاء حساب -->
+    <section id="signupSection" style="display: none;">
+      <h2>إنشاء حساب</h2>
+      <input type="text" id="signupUsername" placeholder="اسم المستخدم" />
+      <input type="email" id="signupEmail" placeholder="البريد الإلكتروني" />
+      <input type="password" id="signupPassword" placeholder="كلمة المرور" />
+      <button onclick="signup()">تسجيل</button>
+      <p>لديك حساب؟ <a href="#" onclick="showSection('loginSection')">تسجيل الدخول</a></p>
+    </section>
+
+    <!-- إعادة تعيين كلمة المرور -->
+    <section id="resetSection" style="display: none;">
+      <h2>نسيت كلمة المرور؟</h2>
+      <input type="email" id="resetEmail" placeholder="البريد الإلكتروني" />
+      <button onclick="resetPassword()">إعادة التعيين</button>
+      <p><a href="#" onclick="showSection('loginSection')">رجوع</a></p>
+    </section>
+
+    <!-- الملف الشخصي -->
+    <section id="profileSection" style="display: none;">
+      <h2>الملف الشخصي</h2>
+      <img id="profileImage" src="default.png" width="80" />
+      <p>الاسم: <span id="usernameDisplay"></span></p>
+      <p>الحالة: <span id="statusDisplay"></span></p>
+
+      <h3>تعديل</h3>
+      <input type="text" id="editUsername" placeholder="اسم جديد" />
+      <input type="text" id="editStatus" placeholder="الحالة" />
+      <input type="text" id="editImage" placeholder="رابط صورة" />
+      <button onclick="updateProfileData()">تحديث</button>
+      <br /><br />
+      <button onclick="deleteAccount()">حذف الحساب نهائياً</button>
+      <button onclick="logout()">تسجيل خروج</button>
+    </section>
+
+    <!-- الأصدقاء -->
+    <section id="friendsSection" style="display: none;">
+      <h2>قائمة الأصدقاء</h2>
+      <input type="text" id="addFriendUsername" placeholder="اسم المستخدم" />
+      <button onclick="addFriend()">إضافة</button>
+      <ul id="friendsList"></ul>
+      <button onclick="showSection('chatSection')">الدردشة</button>
+    </section>
+
+    <!-- الدردشة -->
+    <section id="chatSection" style="display: none;">
+      <h2>الدردشة</h2>
+      <input type="text" id="chatFriendId" placeholder="ID الصديق" />
+      <input type="text" id="chatMessage" placeholder="اكتب رسالتك" />
+      <button onclick="sendMessage()">إرسال</button>
+      <button onclick="showSection('profileSection')">الملف الشخصي</button>
+    </section>
   </div>
 
-  <div id="chat-section">
-    <h3>مرحباً، <span id="usernameDisplay"></span></h3>
-    <img id="profilePic" src="default.png"><br>
-    <span id="statusDisplay"></span><br><br>
-
-    <input type="text" id="displayName" placeholder="الاسم الجديد"><br>
-    <input type="text" id="profileImage" placeholder="رابط الصورة"><br>
-    <button onclick="updateProfileInfo()">تعديل الملف الشخصي</button><br><br>
-
-    <button onclick="logout()">تسجيل الخروج</button>
-    <button onclick="deleteAccount()">حذف الحساب</button><br><br>
-
-    <a href="https://t.me/UUYFU" target="_blank">الإبلاغ عن مشكلة</a>
-  </div>
-
-  <script type="module" src="firebase-config.js"></script>
+  <script>
+    function showSection(id) {
+      document.querySelectorAll("section").forEach(s => s.style.display = "none");
+      document.getElementById(id).style.display = "block";
+    }
+  </script>
   <script type="module" src="script.js"></script>
 </body>
 </html>
