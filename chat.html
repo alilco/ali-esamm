@@ -1,29 +1,31 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>الدردشة</title>
-  <script type="module" src="chat.js"></script>
-  <style>
-    body { font-family: Arial; background: #f7f7f7; margin: 0; padding: 0; }
-    #chat-box { height: 400px; overflow-y: scroll; padding: 10px; border: 1px solid #ccc; background: #fff; margin: 20px; }
-    .message { margin: 10px 0; padding: 5px 10px; border-radius: 10px; max-width: 70%; }
-    .me { background: #dcf8c6; align-self: flex-end; }
-    .friend { background: #eee; align-self: flex-start; }
-    #send-area { position: fixed; bottom: 0; width: 100%; display: flex; padding: 10px; background: #fff; border-top: 1px solid #ccc; }
-    input { flex: 1; padding: 10px; font-size: 16px; }
-    button { padding: 10px; font-size: 16px; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المحادثة</title>
+  <link rel="stylesheet" href="styles/chat.css" />
 </head>
 <body>
+  <div class="chat-container">
+    <header>
+      <div id="friend-info">
+        <img id="friendImage" src="" alt="الصورة" />
+        <div>
+          <h2 id="friendName">اسم الصديق</h2>
+          <p id="friendStatus">متصل</p>
+        </div>
+      </div>
+    </header>
 
-  <h2 style="text-align: center;">محادثة مع <span id="friendName">صديق</span></h2>
-  <div id="chat-box"></div>
+    <main id="chatBox"></main>
 
-  <div id="send-area">
-    <input id="messageInput" type="text" placeholder="اكتب رسالة...">
-    <button onclick="sendMessage()">إرسال</button>
+    <footer>
+      <input type="text" id="messageInput" placeholder="اكتب رسالة..." />
+      <button id="sendBtn">إرسال</button>
+    </footer>
   </div>
 
+  <script type="module" src="scripts/chat.js"></script>
 </body>
 </html>
