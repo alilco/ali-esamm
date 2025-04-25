@@ -1,50 +1,58 @@
-// chat.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { auth, db } from "./firebase.js";
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  ref,
+  push,
+  onChildAdded,
+  get,
+  child
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// إعداد Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-  authDomain: "messengerapp-58f7a.firebaseapp.com",
-  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-  projectId: "messengerapp-58f7a",
-  storageBucket: "messengerapp-58f7a.appspot.com",
-  messagingSenderId: "46178168523",
-  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// استخرج معرف الصديق من الرابط
+const urlParams = new URLSearchParams(window.location.search);
+const friendId = urlParams.get("id");
 
-// اسم المستخدم الحالي والصديق
-const currentUser = localStorage.getItem("currentUser");
-const friend = localStorage.getItem("chatWith");
-document.getElementById("friendName").textContent = friend;
+onAuthStateChanged(auth, async user => {
+  if (!user) return (window.location.href = "login.html");
 
-// مرجع المحادثة بين المستخدمين
-const chatId = currentUser < friend ? `${currentUser}_${friend}` : `${friend}_${currentUser}`;
-const chatRef = ref(db, "chats/" + chatId);
+  const myId = user.uid;
+  const chatId = myId < friendId ? myId + "_" + friendId : friendId + "_" + myId;
 
-// إرسال رسالة
-window.sendMessage = function () {
-  const input = document.getElementById("messageInput");
-  const text = input.value.trim();
-  if (text !== "") {
-    push(chatRef, {
-      from: currentUser,
-      message: text,
-      timestamp: Date.now()
-    });
-    input.value = "";
+  // جلب معلومات الصديق
+  const friendSnap = await get(child(ref(db), "users/" + friendId));
+  if (friendSnap.exists()) {
+    const data = friendSnap.val();
+    document.getElementById("friendName").textContent = data.displayName;
+    document.getElementById("friendStatus").textContent = data.status || "غير متصل";
+    document.getElementById("friendImage").src = data.profileImage || "assets/default.png";
   }
-};
 
-// استقبال الرسائل وعرضها
-const chatBox = document.getElementById("chat-box");
-onChildAdded(chatRef, (data) => {
-  const msg = data.val();
-  const div = document.createElement("div");
-  div.className = "message " + (msg.from === currentUser ? "me" : "friend");
-  div.textContent = msg.message;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
+  // إرسال رسالة
+  document.getElementById("sendBtn").addEventListener("click", () => {
+    const message = document.getElementById("messageInput").value.trim();
+    if (message === "") return;
+
+    const msgRef = ref(db, "messages/" + chatId);
+    push(msgRef, {
+      sender: myId,
+      text: message,
+      time: new Date().toISOString()
+    });
+
+    document.getElementById("messageInput").value = "";
+  });
+
+  // عرض الرسائل
+  const chatBox = document.getElementById("chatBox");
+  const msgRef = ref(db, "messages/" + chatId);
+  onChildAdded(msgRef, snapshot => {
+    const msg = snapshot.val();
+    const div = document.createElement("div");
+    div.className = msg.sender === myId ? "message sent" : "message received";
+    div.innerHTML = `<p>${msg.text}</p>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
 });
