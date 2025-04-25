@@ -1,75 +1,15 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>الملف الشخصي</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth, onAuthStateChanged, updateProfile
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getDatabase, ref, update
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-      authDomain: "messengerapp-58f7a.firebaseapp.com",
-      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-      projectId: "messengerapp-58f7a",
-      storageBucket: "messengerapp-58f7a.appspot.com",
-      messagingSenderId: "46178168523",
-      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    let currentUser;
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user;
-        document.getElementById("displayName").value = user.displayName || "";
-        document.getElementById("photoURL").value = user.photoURL || "";
-      } else {
-        alert("يرجى تسجيل الدخول أولاً.");
-        window.location.href = "index.html";
-      }
-    });
-
-    window.updateProfileInfo = function () {
-      const name = document.getElementById("displayName").value;
-      const photo = document.getElementById("photoURL").value;
-      const bio = document.getElementById("bio").value;
-
-      updateProfile(currentUser, {
-        displayName: name,
-        photoURL: photo
-      }).then(() => {
-        update(ref(db, "users/" + name), {
-          photo: photo,
-          bio: bio
-        });
-        alert("تم تحديث الملف الشخصي.");
-      }).catch((error) => {
-        alert("خطأ في التحديث: " + error.message);
-      });
-    };
-  </script>
+  <meta charset="UTF-8" />
+  <title>تعديل الملف الشخصي</title>
+  <script type="module" src="scripts/profile.js"></script>
 </head>
 <body>
-  <h2>تعديل الملف الشخصي</h2>
-  <label>الاسم:</label><br>
-  <input type="text" id="displayName"><br><br>
-
-  <label>رابط الصورة الشخصية:</label><br>
-  <input type="text" id="photoURL"><br><br>
-
-  <label>الحالة / النبذة:</label><br>
-  <textarea id="bio" rows="3"></textarea><br><br>
-
-  <button onclick="updateProfileInfo()">حفظ التعديلات</button>
+  <h2>ملفك الشخصي</h2>
+  <input type="text" id="displayName" placeholder="اسم العرض" />
+  <input type="text" id="status" placeholder="الحالة" />
+  <input type="file" id="profileImage" />
+  <button id="saveBtn">حفظ التعديلات</button>
 </body>
 </html>
