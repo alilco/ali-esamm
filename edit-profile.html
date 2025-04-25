@@ -1,61 +1,69 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>تعديل الملف الشخصي</title>
   <style>
     body {
       font-family: sans-serif;
-      background-color: #f0f0ff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background-color: #f2f2f2;
       direction: rtl;
+      text-align: center;
+      padding: 30px;
     }
 
     .container {
-      background-color: white;
-      padding: 30px;
+      background-color: #fff;
+      padding: 25px;
       border-radius: 12px;
+      width: 350px;
+      margin: auto;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      width: 400px;
-      text-align: center;
     }
 
-    input, button {
-      display: block;
-      margin: 10px auto;
-      padding: 10px;
+    input, textarea {
       width: 90%;
+      padding: 10px;
+      margin: 10px 0;
       border: 1px solid #ccc;
       border-radius: 8px;
     }
 
     button {
-      background-color: #007bff;
+      padding: 12px;
+      width: 95%;
+      background-color: #4CAF50;
       color: white;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
+      margin-top: 10px;
     }
 
     button:hover {
-      background-color: #0056b3;
+      background-color: #45a049;
+    }
+
+    img {
+      width: 100px;
+      border-radius: 50%;
+      margin-bottom: 15px;
     }
   </style>
 </head>
 <body>
-
   <div class="container">
     <h2>تعديل الملف الشخصي</h2>
-    <input type="text" id="displayName" placeholder="الاسم الكامل">
-    <input type="text" id="status" placeholder="الحالة (مثلاً: متصل، مشغول)">
-    <input type="text" id="profileImage" placeholder="رابط الصورة الشخصية">
-    <button onclick="saveProfile()">حفظ التعديلات</button>
+    <img id="profileImage" src="default.png" alt="صورة الملف" />
+    <input type="text" id="displayName" placeholder="الاسم الكامل" />
+    <input type="text" id="profilePicture" placeholder="رابط الصورة الشخصية" />
+    <textarea id="status" placeholder="حالتك (مثلاً: مشغول، متاح)"></textarea>
+    <button onclick="updateProfile()">حفظ التغييرات</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -72,31 +80,38 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    window.saveProfile = () => {
-      const name = document.getElementById("displayName").value;
-      const status = document.getElementById("status").value;
-      const image = document.getElementById("profileImage").value;
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById('displayName').value = user.displayName || "";
+        document.getElementById('profilePicture').value = user.photoURL || "";
+        document.getElementById('profileImage').src = user.photoURL || "default.png";
+      }
+    });
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          const userRef = ref(db, "users/" + user.uid);
-          set(userRef, {
+    window.updateProfile = function () {
+      const user = auth.currentUser;
+      const name = document.getElementById('displayName').value;
+      const photo = document.getElementById('profilePicture').value;
+      const status = document.getElementById('status').value;
+
+      if (user) {
+        updateProfile(user, {
+          displayName: name,
+          photoURL: photo
+        }).then(() => {
+          set(ref(db, "users/" + user.uid), {
             uid: user.uid,
-            email: user.email,
-            displayName: name,
+            name: name,
+            photo: photo,
             status: status,
-            profileImage: image
-          }).then(() => {
-            alert("تم حفظ الملف الشخصي بنجاح!");
-          }).catch((error) => {
-            alert("حدث خطأ: " + error.message);
+            email: user.email
           });
-        } else {
-          alert("أنت غير مسجل الدخول.");
-        }
-      });
-    };
+          alert("تم تحديث الملف الشخصي بنجاح.");
+        }).catch((error) => {
+          alert("خطأ أثناء التحديث: " + error.message);
+        });
+      }
+    }
   </script>
-
 </body>
 </html>
