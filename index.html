@@ -2,122 +2,24 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>تطبيق المراسلة</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-      sendPasswordResetEmail, onAuthStateChanged, signOut,
-      updateProfile, sendEmailVerification
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getDatabase, ref, set, update
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-      authDomain: "messengerapp-58f7a.firebaseapp.com",
-      databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-      projectId: "messengerapp-58f7a",
-      storageBucket: "messengerapp-58f7a.appspot.com",
-      messagingSenderId: "46178168523",
-      appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    // تسجيل الدخول
-    window.login = function () {
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          alert("تم تسجيل الدخول");
-        }).catch((e) => alert("فشل تسجيل الدخول: " + e.message));
-    };
-
-    // إنشاء حساب
-    window.signup = function () {
-      const email = document.getElementById("signup-email").value;
-      const password = document.getElementById("signup-password").value;
-      const username = document.getElementById("signup-username").value;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          updateProfile(user, { displayName: username });
-          sendEmailVerification(user);
-          set(ref(db, "users/" + username), {
-            email: email,
-            status: "offline",
-            lastSeen: Date.now(),
-            photo: "default.png",
-            bio: "",
-          });
-          alert("تم إنشاء الحساب. تحقق من بريدك الإلكتروني.");
-        })
-        .catch((e) => alert("خطأ: " + e.message));
-    };
-
-    // إعادة تعيين كلمة المرور
-    window.resetPassword = function () {
-      const email = prompt("أدخل بريدك الإلكتروني:");
-      sendPasswordResetEmail(auth, email)
-        .then(() => alert("تم إرسال رابط إعادة تعيين كلمة المرور"))
-        .catch((e) => alert("خطأ: " + e.message));
-    };
-
-    // حفظ الجلسة
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("auth-section").style.display = "none";
-        document.getElementById("main-section").style.display = "block";
-        document.getElementById("user-name").innerText = user.displayName || user.email;
-      }
-    });
-
-    // تسجيل الخروج
-    window.logout = function () {
-      signOut(auth);
-      document.getElementById("main-section").style.display = "none";
-      document.getElementById("auth-section").style.display = "block";
-    };
-
-    window.toggleSignup = function () {
-      document.getElementById("signup-box").style.display = "block";
-      document.getElementById("login-box").style.display = "none";
-    };
-    window.toggleLogin = function () {
-      document.getElementById("signup-box").style.display = "none";
-      document.getElementById("login-box").style.display = "block";
-    };
-  </script>
+  <title>الدردشة</title>
+  <script type="module" src="./scripts/chat.js"></script>
+  <link rel="stylesheet" href="./styles/chat.css">
 </head>
 <body>
-  <div id="auth-section">
-    <div id="login-box">
-      <h2>تسجيل الدخول</h2>
-      <input type="email" id="login-email" placeholder="البريد الإلكتروني">
-      <input type="password" id="login-password" placeholder="كلمة المرور">
-      <button onclick="login()">دخول</button>
-      <p><a href="#" onclick="resetPassword()">نسيت كلمة المرور؟</a></p>
-      <p>ليس لديك حساب؟ <a href="#" onclick="toggleSignup()">أنشئ حساب</a></p>
+  <div id="chat-container">
+    <div id="friends-list">
+      <h2>الأصدقاء</h2>
+      <ul id="friends"></ul>
     </div>
-
-    <div id="signup-box" style="display:none;">
-      <h2>إنشاء حساب</h2>
-      <input type="text" id="signup-username" placeholder="اسم المستخدم">
-      <input type="email" id="signup-email" placeholder="البريد الإلكتروني">
-      <input type="password" id="signup-password" placeholder="كلمة المرور">
-      <button onclick="signup()">تسجيل</button>
-      <p>لديك حساب؟ <a href="#" onclick="toggleLogin()">سجّل الدخول</a></p>
+    <div id="chat-box">
+      <h3 id="chat-with">اختر صديق</h3>
+      <div id="messages"></div>
+      <div id="send-message">
+        <input type="text" id="messageInput" placeholder="اكتب رسالة...">
+        <button id="sendBtn">إرسال</button>
+      </div>
     </div>
-  </div>
-
-  <div id="main-section" style="display:none;">
-    <h2>مرحبًا <span id="user-name"></span></h2>
-    <button onclick="logout()">تسجيل الخروج</button>
   </div>
 </body>
 </html>
