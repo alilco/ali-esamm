@@ -6,62 +6,57 @@
   <style>
     body {
       font-family: sans-serif;
-      background: #e9f5f5;
-      padding: 20px;
+      background-color: #f0f0ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       direction: rtl;
     }
-    h2 {
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      width: 400px;
       text-align: center;
-      color: #444;
     }
-    form {
-      max-width: 400px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    input, select {
-      width: 100%;
+
+    input, button {
+      display: block;
+      margin: 10px auto;
       padding: 10px;
-      margin: 10px 0;
-      border-radius: 6px;
+      width: 90%;
       border: 1px solid #ccc;
+      border-radius: 8px;
     }
+
     button {
-      background: #007bff;
+      background-color: #007bff;
       color: white;
-      padding: 10px;
-      border: none;
-      width: 100%;
-      border-radius: 6px;
       cursor: pointer;
     }
+
     button:hover {
-      background: #0056b3;
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
 
-  <h2>تعديل الملف الشخصي</h2>
-
-  <form id="editForm">
-    <input type="text" id="name" placeholder="اسمك الكامل" required>
-    <input type="text" id="photoURL" placeholder="رابط الصورة الشخصية">
-    <select id="status">
-      <option value="متصل">متصل</option>
-      <option value="مشغول">مشغول</option>
-      <option value="غير متاح">غير متاح</option>
-    </select>
-    <button type="submit">حفظ التعديلات</button>
-  </form>
+  <div class="container">
+    <h2>تعديل الملف الشخصي</h2>
+    <input type="text" id="displayName" placeholder="الاسم الكامل">
+    <input type="text" id="status" placeholder="الحالة (مثلاً: متصل، مشغول)">
+    <input type="text" id="profileImage" placeholder="رابط الصورة الشخصية">
+    <button onclick="saveProfile()">حفظ التعديلات</button>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
@@ -77,35 +72,30 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("editForm").addEventListener("submit", (e) => {
-          e.preventDefault();
-          const name = document.getElementById("name").value;
-          const photoURL = document.getElementById("photoURL").value;
-          const status = document.getElementById("status").value;
+    window.saveProfile = () => {
+      const name = document.getElementById("displayName").value;
+      const status = document.getElementById("status").value;
+      const image = document.getElementById("profileImage").value;
 
-          updateProfile(user, { displayName: name, photoURL })
-            .then(() => {
-              return update(ref(db, 'users/' + user.uid), {
-                name,
-                photoURL,
-                status
-              });
-            })
-            .then(() => {
-              alert("تم تحديث الملف الشخصي بنجاح");
-              window.location.href = "chat.html";
-            })
-            .catch((error) => {
-              alert("خطأ: " + error.message);
-            });
-        });
-      } else {
-        alert("يرجى تسجيل الدخول");
-        window.location.href = "index.html";
-      }
-    });
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          const userRef = ref(db, "users/" + user.uid);
+          set(userRef, {
+            uid: user.uid,
+            email: user.email,
+            displayName: name,
+            status: status,
+            profileImage: image
+          }).then(() => {
+            alert("تم حفظ الملف الشخصي بنجاح!");
+          }).catch((error) => {
+            alert("حدث خطأ: " + error.message);
+          });
+        } else {
+          alert("أنت غير مسجل الدخول.");
+        }
+      });
+    };
   </script>
 
 </body>
