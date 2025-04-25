@@ -1,137 +1,167 @@
 // script.js
-import { auth, database } from './firebase-config.js';
+import { auth, database } from "./firebase-config.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  onAuthStateChanged,
   signOut,
-  sendEmailVerification,
+  onAuthStateChanged,
   sendPasswordResetEmail,
   deleteUser,
-  updateProfile,
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
 import {
   ref,
   set,
   get,
-  update,
   onValue,
+  update,
   remove
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
 // حفظ الجلسة
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    loadUser(user);
+    loadProfile(user);
+    loadFriends(user.uid);
   } else {
-    showLoginForm();
+    // إعادة توجيه لتسجيل الدخول
+    console.log("User not logged in");
   }
 });
 
-// تسجيل مستخدم جديد
-window.signup = async function () {
-  const email = emailInput.value;
-  const password = passwordInput.value;
-  const username = usernameInput.value;
+// تسجيل حساب جديد
+window.signup = () => {
+  const email = document.getElementById("signupEmail").value;
+  const password = document.getElementById("signupPassword").value;
+  const username = document.getElementById("signupUsername").value;
 
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await set(ref(database, 'users/' + cred.user.uid), {
-      username: username,
-      email: email,
-      profileImage: '',
-      status: 'online',
-      lastSeen: Date.now()
-    });
-    await sendEmailVerification(cred.user);
-    alert("تم إنشاء الحساب. تحقق من بريدك الإلكتروني.");
-  } catch (err) {
-    alert(err.message);
-  }
-}
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((cred) => {
+      const user = cred.user;
+      set(ref(database, "users/" + user.uid), {
+        email: email,
+        username: username,
+        status: "نشط",
+        lastSeen: Date.now(),
+        profileImage: "default.png"
+      });
+      alert("تم إنشاء الحساب بنجاح");
+    })
+    .catch((err) => alert(err.message));
+};
 
-// تسجيل الدخول
-window.login = async function () {
-  const email = emailInput.value;
-  const password = passwordInput.value;
+// تسجيل دخول
+window.login = () => {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
-  try {
-    const userCred = await signInWithEmailAndPassword(auth, email, password);
-    await update(ref(database, 'users/' + userCred.user.uid), {
-      status: 'online'
-    });
-    loadUser(userCred.user);
-  } catch (err) {
-    alert(err.message);
-  }
-}
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      alert("تم تسجيل الدخول");
+    })
+    .catch((err) => alert(err.message));
+};
 
-// تسجيل الخروج
-window.logout = async function () {
-  const user = auth.currentUser;
-  if (user) {
-    await update(ref(database, 'users/' + user.uid), {
-      status: 'offline',
-      lastSeen: Date.now()
-    });
-  }
-  await signOut(auth);
-}
-
-// إرسال إعادة تعيين كلمة المرور
-window.resetPassword = function () {
-  const email = prompt("أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور:");
-  if (email) {
-    sendPasswordResetEmail(auth, email)
-      .then(() => alert("تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني."))
-      .catch(err => alert(err.message));
-  }
-}
-
-// حذف الحساب
-window.deleteAccount = async function () {
-  const user = auth.currentUser;
-  if (confirm("هل أنت متأكد من حذف حسابك؟")) {
-    await remove(ref(database, 'users/' + user.uid));
-    await deleteUser(user);
-    alert("تم حذف الحساب.");
-  }
-}
+// تسجيل خروج
+window.logout = () => {
+  signOut(auth).then(() => alert("تم تسجيل الخروج"));
+};
 
 // تعديل الملف الشخصي
-window.updateProfileInfo = async function () {
+window.updateProfileData = () => {
   const user = auth.currentUser;
-  const displayName = document.getElementById('displayName').value;
-  const profileImage = document.getElementById('profileImage').value;
+  const username = document.getElementById("editUsername").value;
+  const status = document.getElementById("editStatus").value;
+  const image = document.getElementById("editImage").value;
 
-  await update(ref(database, 'users/' + user.uid), {
-    username: displayName,
-    profileImage: profileImage
+  update(ref(database, "users/" + user.uid), {
+    username: username,
+    status: status,
+    profileImage: image
+  }).then(() => alert("تم تحديث الملف الشخصي"));
+};
+
+// إرسال رسالة
+window.sendMessage = () => {
+  const user = auth.currentUser;
+  const friendId = document.getElementById("chatFriendId").value;
+  const message = document.getElementById("chatMessage").value;
+
+  const messageRef = ref(database, `messages/${user.uid}_${friendId}`);
+  const msgId = Date.now();
+  set(ref(database, `messages/${user.uid}_${friendId}/${msgId}`), {
+    from: user.uid,
+    to: friendId,
+    text: message,
+    time: msgId
   });
+};
 
-  await updateProfile(user, {
-    displayName: displayName,
-    photoURL: profileImage
+// تحميل الملف الشخصي
+function loadProfile(user) {
+  get(ref(database, "users/" + user.uid)).then((snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      document.getElementById("usernameDisplay").innerText = data.username;
+      document.getElementById("statusDisplay").innerText = data.status;
+      document.getElementById("profileImage").src = data.profileImage;
+    }
   });
-
-  alert("تم تعديل الملف الشخصي.");
 }
 
-// تحميل بيانات المستخدم
-function loadUser(user) {
-  document.getElementById('login-section').style.display = 'none';
-  document.getElementById('chat-section').style.display = 'block';
-  const userRef = ref(database, 'users/' + user.uid);
-  onValue(userRef, (snapshot) => {
-    const data = snapshot.val();
-    document.getElementById('usernameDisplay').innerText = data.username;
-    document.getElementById('statusDisplay').innerText = data.status;
-    document.getElementById('profilePic').src = data.profileImage || 'default.png';
+// إضافة صديق
+window.addFriend = () => {
+  const user = auth.currentUser;
+  const friendUsername = document.getElementById("addFriendUsername").value;
+
+  get(ref(database, "users")).then((snapshot) => {
+    let found = false;
+    snapshot.forEach((child) => {
+      if (child.val().username === friendUsername) {
+        const friendId = child.key;
+        set(ref(database, `friends/${user.uid}/${friendId}`), true);
+        set(ref(database, `friends/${friendId}/${user.uid}`), true);
+        alert("تم إضافة الصديق");
+        found = true;
+      }
+    });
+    if (!found) alert("المستخدم غير موجود");
+  });
+};
+
+// تحميل الأصدقاء
+function loadFriends(uid) {
+  const friendsRef = ref(database, "friends/" + uid);
+  onValue(friendsRef, (snapshot) => {
+    const list = document.getElementById("friendsList");
+    list.innerHTML = "";
+    snapshot.forEach((child) => {
+      const friendId = child.key;
+      get(ref(database, "users/" + friendId)).then((snap) => {
+        if (snap.exists()) {
+          const data = snap.val();
+          const li = document.createElement("li");
+          li.innerText = `${data.username} (${data.status})`;
+          list.appendChild(li);
+        }
+      });
+    });
   });
 }
 
-// عرض نموذج الدخول
-function showLoginForm() {
-  document.getElementById('login-section').style.display = 'block';
-  document.getElementById('chat-section').style.display = 'none';
-}
+// إعادة تعيين كلمة المرور
+window.resetPassword = () => {
+  const email = document.getElementById("resetEmail").value;
+  sendPasswordResetEmail(auth, email)
+    .then(() => alert("تم إرسال رابط إعادة التعيين إلى بريدك"))
+    .catch((err) => alert(err.message));
+};
+
+// حذف الحساب
+window.deleteAccount = () => {
+  const user = auth.currentUser;
+  deleteUser(user)
+    .then(() => alert("تم حذف الحساب"))
+    .catch((err) => alert(err.message));
+};
