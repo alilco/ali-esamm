@@ -1,73 +1,87 @@
-/* style.css */
 body {
-  font-family: 'Arial', sans-serif;
-  background: #f4f4f4;
-  margin: 0;
-  padding: 0;
-  direction: rtl;
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(180deg, #0f2027, #203a43, #2c5364);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-#app {
-  max-width: 400px;
-  margin: 40px auto;
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.chat-container {
+    width: 90%;
+    max-width: 500px;
+    background-color: #1c1c1c;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-h2, h3 {
-  text-align: center;
-  color: #333;
+.header {
+    background-color: #6a11cb;
+    background-image: linear-gradient(315deg, #6a11cb 0%, #2575fc 74%);
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"] {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+.chat-box {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #121212;
 }
 
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border: none;
-  background-color: #0084ff;
-  color: white;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s;
+.input-area {
+    display: flex;
+    border-top: 1px solid #444;
 }
 
-button:hover {
-  background-color: #005ecb;
+#user-input {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    background-color: #222;
+    color: white;
+    font-size: 16px;
 }
 
-a {
-  color: #0084ff;
-  cursor: pointer;
-  text-decoration: none;
+#send-btn {
+    background-color: #6a11cb;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    cursor: pointer;
+    font-size: 16px;
 }
 
-a:hover {
-  text-decoration: underline;
+#send-btn:hover {
+    background-color: #2575fc;
 }
 
-#friendsList {
-  list-style: none;
-  padding: 0;
-  margin-top: 10px;
+.user-message, .ai-message {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 15px;
 }
 
-#friendsList li {
-  background: #eee;
-  margin-bottom: 5px;
-  padding: 10px;
-  border-radius: 6px;
+.user-message {
+    align-self: flex-end;
+    background-color: #4a4a4a;
+    color: white;
+}
+
+.ai-message {
+    align-self: flex-start;
+    background-color: #6a11cb;
+    background-image: linear-gradient(315deg, #6a11cb 0%, #2575fc 74%);
+    color: white;
 }
