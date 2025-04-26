@@ -2,21 +2,48 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>دردشة ذكاء اصطناعي</title>
-    <link rel="stylesheet" href="style.css">
+    <title>دردشة مع DeepSeek</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
+        #chat { border: 1px solid #ddd; height: 500px; overflow-y: scroll; padding: 10px; }
+        #input { width: 80%; padding: 10px; }
+        button { padding: 10px 15px; background: #0066ff; color: white; border: none; }
+    </style>
 </head>
 <body>
-    <div class="chat-container">
-        <h1>دردشة AI بالعربية</h1>
-        <div id="chat-box"></div>
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="اكتب رسالتك..." disabled>
-            <button id="send-btn" disabled>إرسال</button>
-        </div>
-    </div>
+    <h1>دردشة ذكاء اصطناعي</h1>
+    <div id="chat"></div>
+    <input id="input" placeholder="اكتب سؤالك هنا...">
+    <button onclick="sendToDeepSeek()">إرسال</button>
 
-    <!-- استخدم الإصدار الثابت من transformers.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.4.2/dist/transformers.min.js"></script>
-    <script src="script.js"></script>
+    <script>
+        async function sendToDeepSeek() {
+            const input = document.getElementById('input');
+            const chat = document.getElementById('chat');
+            const message = input.value;
+            
+            if (!message) return;
+            
+            // عرض رسالة المستخدم
+            chat.innerHTML += `<p><strong>أنت:</strong> ${message}</p>`;
+            input.value = '';
+            
+            // محاكاة اتصال بالذكاء الاصطناعي
+            chat.innerHTML += `<p><strong>AI:</strong> <em>...جارٍ التفكير</em></p>`;
+            
+            // هنا يمكنك استخدام أي وسيلة لإرسال الرسالة لي (مثل إنشاء بوابات إلكترونية)
+            // هذه مجرد محاكاة:
+            setTimeout(() => {
+                const responses = [
+                    "أنا DeepSeek-AI، كيف يمكنني مساعدتك؟",
+                    "هذا نموذج توضيحي. في الواقع، سترسل رسالتك إلى واجهة برمجية خاصة بي",
+                    "يمكنك تطوير تطبيق يتصل بي عبر API"
+                ];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                chat.innerHTML += `<p><strong>AI:</strong> ${randomResponse}</p>`;
+                chat.scrollTop = chat.scrollHeight;
+            }, 1500);
+        }
+    </script>
 </body>
 </html>
