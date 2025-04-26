@@ -22,23 +22,23 @@ async function sendMessage() {
     appendMessage(message, 'user');
     userInput.value = '';
     
-    // مؤقت عرض رسالة تحميل
-    appendMessage("... جاري التفكير", 'ai'); 
+    // عرض رسالة انتظار مؤقتة
+    appendMessage("...", 'ai');
 
     try {
-        const response = await fetch('https://free-gpt-4o-mini-api-g70n.onrender.com/chat', {
+        const response = await fetch('https://freegpt.one/api/gpt', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({ prompt: message })
         });
 
         const data = await response.json();
-        const botReply = data.response || "عذراً، لم أستطع فهم طلبك.";
-        
-        // إزالة الرسالة المؤقتة
+        const botReply = data?.text || "عذراً، لم أستطع معالجة سؤالك.";
+
+        // إزالة رسالة ...
         const loadingMessage = chatBox.querySelector('.ai-message:last-child');
         if (loadingMessage) loadingMessage.remove();
-        
+
         appendMessage(botReply, 'ai');
     } catch (error) {
         console.error(error);
