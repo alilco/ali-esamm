@@ -1,33 +1,14 @@
-const fetch = require('node-fetch');
+// netlify/functions/chat.js
+const { pipeline } = require('@xenova/transformers');
 
-exports.handler = async function(event, context) {
-    const { prompt } = JSON.parse(event.body);
-
-    try {
-        const response = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer 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'
-            },
-            body: JSON.stringify({
-                inputs: prompt
-            })
-        });
-
-        const data = await response.json();
-
-        const botReply = data?.[0]?.generated_text || "عذراً، لم أتمكن من معالجة سؤالك حالياً.";
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ reply: botReply })
-        };
-    } catch (error) {
-        console.error('Error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ reply: "حدث خطأ أثناء الاتصال بالخادم." })
-        };
-    }
+exports.handler = async (event) => {
+  const { message } = JSON.parse(event.body);
+  
+  const generator = await pipeline('text-generation', 'Xenova/gpt2');
+  const response = await generator(message, { max_new_tokens: 50 });
+  
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ response: response[0].generated_text })
+  };
 };
