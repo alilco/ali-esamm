@@ -4,20 +4,23 @@ exports.handler = async function(event, context) {
     const { prompt } = JSON.parse(event.body);
 
     try {
-        const response = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
+        const response = await fetch('https://api.aiproxy.io/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                inputs: prompt
+                model: "gpt-3.5-turbo",
+                messages: [
+                    { role: "system", content: "أنت مساعد ذكاء اصطناعي ذكي يسمى Renge." },
+                    { role: "user", content: prompt }
+                ]
             })
         });
 
         const data = await response.json();
 
-        // لأن الرد الحقيقي موجود داخل مصفوفة، نقرأه بالطريقة الصحيحة:
-        const botReply = data?.[0]?.generated_text || "عذراً، لم أتمكن من معالجة سؤالك.";
+        const botReply = data?.choices?.[0]?.message?.content || "عذراً، لم أتمكن من معالجة سؤالك.";
 
         return {
             statusCode: 200,
