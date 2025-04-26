@@ -7,8 +7,7 @@ exports.handler = async function(event, context) {
         const response = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer hf_YOUR_TOKEN_IF_NEEDED'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 inputs: prompt
@@ -17,8 +16,8 @@ exports.handler = async function(event, context) {
 
         const data = await response.json();
 
-        // استخراج الرد
-        const botReply = data?.generated_text || "عذراً، لم أستطع معالجة سؤالك حالياً.";
+        // لأن الرد الحقيقي موجود داخل مصفوفة، نقرأه بالطريقة الصحيحة:
+        const botReply = data?.[0]?.generated_text || "عذراً، لم أتمكن من معالجة سؤالك.";
 
         return {
             statusCode: 200,
