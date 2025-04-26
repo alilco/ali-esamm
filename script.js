@@ -22,20 +22,18 @@ async function sendMessage() {
     appendMessage(message, 'user');
     userInput.value = '';
     
-    // عرض رسالة انتظار مؤقتة
     appendMessage("...", 'ai');
 
     try {
-        const response = await fetch('https://freegpt.one/api/gpt', {
+        const response = await fetch('/.netlify/functions/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: message })
         });
 
         const data = await response.json();
-        const botReply = data?.text || "عذراً، لم أستطع معالجة سؤالك.";
+        const botReply = data?.reply || "عذراً، لم أستطع فهم طلبك.";
 
-        // إزالة رسالة ...
         const loadingMessage = chatBox.querySelector('.ai-message:last-child');
         if (loadingMessage) loadingMessage.remove();
 
