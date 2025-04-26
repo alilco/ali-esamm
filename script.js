@@ -22,21 +22,28 @@ async function sendMessage() {
     appendMessage(message, 'user');
     userInput.value = '';
     
-    // استدعاء الذكاء الاصطناعي عبر API مجاني
-    appendMessage("...", 'ai'); // مؤقت حتى يرد
-    
-    const response = await fetch('https://free-gpt-4o-mini-api.example/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: message })
-    });
+    // مؤقت عرض رسالة تحميل
+    appendMessage("... جاري التفكير", 'ai'); 
 
-    const data = await response.json();
-    const botReply = data.reply || "عذراً، لم أتمكن من فهم سؤالك.";
-    
-    // إزالة علامة ...
-    const loadingMessage = chatBox.querySelector('.ai-message:last-child');
-    if (loadingMessage) loadingMessage.remove();
-    
-    appendMessage(botReply, 'ai');
+    try {
+        const response = await fetch('https://free-gpt-4o-mini-api-g70n.onrender.com/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message })
+        });
+
+        const data = await response.json();
+        const botReply = data.response || "عذراً، لم أستطع فهم طلبك.";
+        
+        // إزالة الرسالة المؤقتة
+        const loadingMessage = chatBox.querySelector('.ai-message:last-child');
+        if (loadingMessage) loadingMessage.remove();
+        
+        appendMessage(botReply, 'ai');
+    } catch (error) {
+        console.error(error);
+        const loadingMessage = chatBox.querySelector('.ai-message:last-child');
+        if (loadingMessage) loadingMessage.remove();
+        appendMessage("حدث خطأ أثناء الاتصال بالخادم!", 'ai');
+    }
 }
