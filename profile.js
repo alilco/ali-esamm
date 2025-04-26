@@ -1,41 +1,62 @@
-import { auth, db, storage } from "./firebase.js";
-import {
-  updateProfile,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  ref as dbRef,
-  update
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+// تأكد من تحميل Firebase
+const auth = firebase.auth();
+const database = firebase.database();
 
-onAuthStateChanged(auth, user => {
-  if (!user) window.location.href = "login.html";
+const displayNameInput = document.getElementById('displayName');
+const statusInput = document.getElementById('status');
+const profileImageInput = document.getElementById('profileImage');
+const saveBtn = document.getElementById('saveBtn');
+const message = document.getElementById('message');
 
-  document.getElementById("saveBtn").addEventListener("click", async () => {
-    const displayName = document.getElementById("displayName").value;
-    const status = document.getElementById("status").value;
-    const imageFile = document.getElementById("profileImage").files[0];
-
-    let imageURL = user.photoURL;
-
-    if (imageFile) {
-      const storagePath = storageRef(storage, "profiles/" + user.uid);
-      await uploadBytes(storagePath, imageFile);
-      imageURL = await getDownloadURL(storagePath);
-    }
-
-    await updateProfile(user, { displayName, photoURL: imageURL });
-    await update(dbRef(db, "users/" + user.uid), {
-      displayName,
-      status,
-      profileImage: imageURL
+// تحميل بيانات المستخدم الحالي وعرضها
+auth.onAuthStateChanged(user => {
+  if (user) {
+    database.ref('users/' + user.uid).once('value').then(snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        displayNameInput.value = data.displayName || '';
+        statusInput.value = data.status || '';
+      }
     });
-
-    alert("تم تحديث الملف الشخصي بنجاح!");
-  });
+  } else {
+    window.location.href = "index.html"; // إعادة توجيه إذا لم يكن مسجل دخول
+  }
 });
+
+// حفظ التعديلات
+saveBtn.addEventListener('click', () => {
+  const user = auth.currentUser;
+  if (user) {
+    const updates = {
+      displayName: displayNameInput.value,
+      status: statusInput.value
+    };
+
+    // رفع صورة جديدة إذا اختار
+    const file = profileImageInput.files[0];
+    if (file) {
+      const storageRef = firebase.storage().ref('profileImages/' + user.uid);
+      storageRef.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          updates.profileImage = url;
+          updateUser(user.uid, updates);
+        });
+      }).catch(error => {
+        message.innerText = 'فشل رفع الصورة: ' + error.message;
+      });
+    } else {
+      updateUser(user.uid, updates);
+    }
+  }
+});
+
+// تحديث بيانات المستخدم
+function updateUser(uid, updates) {
+  database.ref('users/' + uid).update(updates)
+    .then(() => {
+      message.innerText = 'تم حفظ التعديلات بنجاح!';
+    })
+    .catch(error => {
+      message.innerText = 'حدث خطأ أثناء الحفظ: ' + error.message;
+    });
+}
