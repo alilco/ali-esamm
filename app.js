@@ -87,3 +87,51 @@ function displayFriends(friends) {
         friendsList.appendChild(li);
     }
 }
+
+// إضافة صديق جديد
+document.getElementById('add-friend').addEventListener('click', function() {
+    const friendUsername = document.getElementById('friend-username').value;
+    if (friendUsername.trim() !== '') {
+        const userRef = ref(db, 'users/');
+        get(userRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const users = snapshot.val();
+                let friendFound = false;
+                for (let key in users) {
+                    if (users[key].username === friendUsername) {
+                        friendFound = true;
+                        const userId = "UserID"; // ضع معرف المستخدم هنا
+                        const friendId = key;
+                        // إضافة صديق إلى قائمة الأصدقاء
+                        const friendRef = ref(db, 'users/' + userId + '/friends/' + friendId);
+                        set(friendRef, {
+                            name: users[key].username,
+                            profileImage: users[key].profileImage
+                        });
+                        alert('تم إضافة الصديق');
+                        break;
+                    }
+                }
+
+                if (!friendFound) {
+                    alert('لم يتم العثور على هذا المستخدم');
+                }
+            }
+        });
+    }
+});
+
+// تغيير صورة الملف الشخصي
+document.getElementById('change-profile-image').addEventListener('click', function() {
+    const newProfileImage = prompt("أدخل رابط الصورة الجديدة:");
+    if (newProfileImage) {
+        const userId = "UserID"; // ضع هنا معرف المستخدم
+        const userRef = ref(db, 'users/' + userId);
+        set(userRef, {
+            profileImage: newProfileImage,
+            username: document.getElementById('username').textContent
+        });
+        document.getElementById('profile-image').src = newProfileImage;
+        alert('تم تحديث الصورة');
+    }
+});
