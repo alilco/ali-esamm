@@ -7,14 +7,18 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="friends-container">
-        <h2>قائمة الأصدقاء</h2>
-        <input type="text" id="friend-username" placeholder="أدخل اسم المستخدم">
-        <button id="add-friend">إضافة صديق</button>
-        <ul id="friends-list"></ul>
+    <div class="container">
+        <header>
+            <h1>الأصدقاء</h1>
+        </header>
+
+        <div class="friends-list-section">
+            <ul id="friendsList"></ul>
+        </div>
+
+        <button onclick="window.location.href='chat.html'">الدردشة</button>
     </div>
 
-    <script src="firebase-config.js"></script>
-    <script src="friends.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
