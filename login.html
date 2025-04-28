@@ -27,56 +27,10 @@
 
             <p id="error-message" class="error-message"></p>
 
-            <p>ليس لديك حساب؟ <a href="signup.html">سجل هنا</a></p>
+            <p>لا تمتلك حساب؟ <a href="signup.html">إنشاء حساب جديد</a></p>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.5.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.5.0/firebase-auth.js"></script>
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-            authDomain: "messengerapp-58f7a.firebaseapp.com",
-            databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-            projectId: "messengerapp-58f7a",
-            storageBucket: "messengerapp-58f7a.firebasestorage.app",
-            messagingSenderId: "46178168523",
-            appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-        };
-
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        // Get DOM elements
-        const loginForm = document.getElementById('loginForm');
-        const errorMessage = document.getElementById('error-message');
-
-        // Login functionality
-        loginForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    window.location.href = 'chat.html'; // Redirect to the chat page
-                })
-                .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessageText = error.message;
-
-                    if (errorCode === 'auth/invalid-email') {
-                        errorMessage.textContent = "البريد الإلكتروني غير صحيح.";
-                    } else if (errorCode === 'auth/wrong-password') {
-                        errorMessage.textContent = "كلمة المرور غير صحيحة.";
-                    } else {
-                        errorMessage.textContent = "حدث خطأ يرجى المحاولة لاحقاً.";
-                    }
-                });
-        });
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
