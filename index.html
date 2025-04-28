@@ -1,20 +1,30 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Renge - ذكاء اصطناعي للدردشة</title>
+    <title>Messenger App</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div class="container">
-        <h1>مرحباً بك في Renge</h1>
-        <p>ابدأ الدردشة مع الذكاء الاصطناعي عبر الضغط على الأيقونة في الأسفل!</p>
+    <div id="login-section">
+        <h2>Login / Signup</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <button onclick="signup()">Signup</button>
     </div>
 
-    <!-- سكربت Tidio Chat الذي طلبته -->
-    <script src="//code.tidio.co/ruznvyxvqtlaaklrmzdnbcbjqoax0w3f.js" async></script>
+    <div id="chat-section" style="display:none;">
+        <h2>Welcome, <span id="user-email"></span></h2>
+        <button onclick="logout()">Logout</button>
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
