@@ -1,35 +1,26 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دردشة</title>
+    <title>الدردشة - تطبيق المراسلة</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="chat-container">
-        <!-- رأس الدردشة -->
         <header class="chat-header">
-            <h2>دردشة</h2>
-            <button id="logoutButton">تسجيل الخروج</button>
+            <h2>المحادثة</h2>
+            <button id="logoutBtn" class="btn-logout">تسجيل الخروج</button>
         </header>
 
-        <!-- عرض الرسائل -->
-        <div id="messagesContainer" class="messages-container">
-            <!-- الرسائل ستظهر هنا -->
-        </div>
+        <div id="messages" class="messages"></div>
 
-        <!-- إرسال رسالة -->
-        <div class="message-input-container">
-            <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." />
-            <button id="sendMessageButton">إرسال</button>
-        </div>
+        <form id="messageForm" class="message-form">
+            <input type="text" id="messageInput" placeholder="اكتب رسالتك..." autocomplete="off" required>
+            <button type="submit" class="btn">إرسال</button>
+        </form>
     </div>
 
-    <!-- استيراد Firebase والملفات الأخرى -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js"></script>
-    <script src="app.js"></script> <!-- ربط الملف app.js هنا -->
+    <script src="app.js" type="module"></script>
 </body>
 </html>
