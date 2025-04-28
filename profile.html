@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الملف الشخصي</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="profile-container">
+        <h2>الملف الشخصي</h2>
+        <form id="profile-form">
+            <input type="file" id="profile-image" />
+            <button type="submit">رفع الصورة</button>
+        </form>
+        <img id="profile-pic" src="" alt="Profile Picture" />
+        <p id="status"></p>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>
