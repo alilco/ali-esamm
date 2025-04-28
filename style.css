@@ -8,7 +8,7 @@ body {
   margin: 0;
 }
 
-.container {
+.container, .chat-container {
   background: #fff;
   padding: 2rem;
   border-radius: 10px;
@@ -28,6 +28,7 @@ input {
 button {
   width: 95%;
   padding: 10px;
+  margin-top: 10px;
   border: none;
   background-color: #5c6bc0;
   color: white;
@@ -43,4 +44,30 @@ button:hover {
 a {
   color: #5c6bc0;
   text-decoration: none;
+}
+
+.messages {
+  height: 300px;
+  overflow-y: scroll;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background: #f1f1f1;
+  text-align: left;
+}
+
+.message {
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.my-message {
+  background-color: #d1ffd6;
+  text-align: right;
+}
+
+.other-message {
+  background-color: #ffe1e1;
+  text-align: left;
 }
