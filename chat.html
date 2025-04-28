@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الدردشة</title>
+    <title>دردشة</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="profile-section">
-        <img id="profile-image" src="" alt="Profile Image">
-        <h3 id="username"></h3>
+    <div class="chat-container">
+        <!-- رأس الدردشة -->
+        <header class="chat-header">
+            <h2>دردشة</h2>
+            <button id="logoutButton">تسجيل الخروج</button>
+        </header>
+
+        <!-- عرض الرسائل -->
+        <div id="messagesContainer" class="messages-container">
+            <!-- الرسائل ستظهر هنا -->
+        </div>
+
+        <!-- إرسال رسالة -->
+        <div class="message-input-container">
+            <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." />
+            <button id="sendMessageButton">إرسال</button>
+        </div>
     </div>
 
-    <div id="chat-box">
-        <ul id="messages-list">
-            <!-- سيتم إضافة الرسائل هنا باستخدام JavaScript -->
-        </ul>
-        <input type="text" id="message-input" placeholder="اكتب رسالة..." />
-        <button id="send-message">إرسال</button>
-    </div>
-
-    <div id="friends-section">
-        <h3>أصدقائك</h3>
-        <ul id="friends-list">
-            <!-- سيتم إضافة الأصدقاء هنا باستخدام JavaScript -->
-        </ul>
-    </div>
-
-    <!-- ربط ملفات JavaScript -->
-    <script src="firebase-config.js"></script>
-    <script src="app.js"></script>
+    <!-- استيراد Firebase والملفات الأخرى -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js"></script>
+    <script src="app.js"></script> <!-- ربط الملف app.js هنا -->
 </body>
 </html>
