@@ -1,6 +1,7 @@
 // Import the functions you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -16,6 +17,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const database = getDatabase(app);
 
 // Login Function
 window.login = function() {
@@ -26,8 +28,7 @@ window.login = function() {
     .then(userCredential => {
       console.log("Login successful");
       alert("Login successful!");
-      // Redirect to chat page or dashboard
-      // window.location.href = "chat.html"; // Uncomment if you have a chat page
+      window.location.href = "chat.html";
     })
     .catch(error => {
       console.error(error.code, error.message);
@@ -43,6 +44,12 @@ window.signup = function() {
   createUserWithEmailAndPassword(auth, email, password)
     .then(userCredential => {
       console.log("Signup successful");
+      // Save user to Database
+      const user = userCredential.user;
+      set(ref(database, 'users/' + user.uid), {
+        email: user.email,
+        uid: user.uid
+      });
       alert("Signup successful!");
       window.location.href = "index.html";
     })
