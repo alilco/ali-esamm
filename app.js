@@ -1,60 +1,89 @@
-// Import the functions you need
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { db } from './firebase-config.js';
+import { getDatabase, ref, get, push, set } from "firebase/database";
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-  authDomain: "messengerapp-58f7a.firebaseapp.com",
-  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-  projectId: "messengerapp-58f7a",
-  storageBucket: "messengerapp-58f7a.appspot.com",
-  messagingSenderId: "46178168523",
-  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-};
+// تحميل البيانات عند فتح الصفحة
+window.onload = function() {
+    loadUserProfile("UserID"); // ضع هنا معرف المستخدم
+    loadMessages();
+    loadFriends("UserID"); // ضع هنا معرف المستخدم
+}
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
-
-// Login Function
-window.login = function() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then(userCredential => {
-      console.log("Login successful");
-      alert("Login successful!");
-      window.location.href = "chat.html";
-    })
-    .catch(error => {
-      console.error(error.code, error.message);
-      alert(error.message);
+// تحميل البيانات الخاصة بالمستخدم (الصورة والاسم)
+function loadUserProfile(userId) {
+    const userRef = ref(db, 'users/' + userId);
+    get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            document.getElementById('profile-image').src = userData.profileImage;
+            document.getElementById('username').textContent = userData.username;
+        } else {
+            console.log("User data not found");
+        }
     });
 }
 
-// Signup Function
-window.signup = function() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(userCredential => {
-      console.log("Signup successful");
-      // Save user to Database
-      const user = userCredential.user;
-      set(ref(database, 'users/' + user.uid), {
-        email: user.email,
-        uid: user.uid
-      });
-      alert("Signup successful!");
-      window.location.href = "index.html";
-    })
-    .catch(error => {
-      console.error(error.code, error.message);
-      alert(error.message);
+// جلب الرسائل من Firebase وعرضها
+function loadMessages() {
+    const messagesRef = ref(db, 'messages/');
+    get(messagesRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const messages = snapshot.val();
+            displayMessages(messages);
+        } else {
+            console.log("No messages data found");
+        }
     });
+}
+
+// عرض الرسائل
+function displayMessages(messages) {
+    const messagesList = document.getElementById('messages-list');
+    messagesList.innerHTML = ''; // مسح الرسائل القديمة
+
+    for (let key in messages) {
+        const msg = messages[key];
+        const li = document.createElement('li');
+        li.textContent = `${msg.sender}: ${msg.message}`;
+        messagesList.appendChild(li);
+    }
+}
+
+// إرسال رسالة جديدة
+document.getElementById('send-message').addEventListener('click', function() {
+    const messageText = document.getElementById('message-input').value;
+    if (messageText.trim() !== '') {
+        const messageRef = push(ref(db, 'messages/'));
+        set(messageRef, {
+            sender: "UserID", // استخدم معرف المستخدم هنا
+            message: messageText,
+            timestamp: Date.now()
+        });
+        document.getElementById('message-input').value = ''; // مسح المدخل
+    }
+});
+
+// جلب الأصدقاء من Firebase وعرضهم
+function loadFriends(userId) {
+    const userRef = ref(db, 'users/' + userId + '/friends');
+    get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const friends = snapshot.val();
+            displayFriends(friends);
+        } else {
+            console.log("No friends data found");
+        }
+    });
+}
+
+// عرض الأصدقاء
+function displayFriends(friends) {
+    const friendsList = document.getElementById('friends-list');
+    friendsList.innerHTML = ''; // مسح القائمة القديمة
+
+    for (let key in friends) {
+        const friend = friends[key];
+        const li = document.createElement('li');
+        li.textContent = friend.name;
+        friendsList.appendChild(li);
+    }
 }
