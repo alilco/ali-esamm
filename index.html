@@ -1,25 +1,18 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق المراسلة</title>
+    <title>الرئيسية - تطبيق المراسلة</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>تطبيق المراسلة</h1>
-        </header>
-
-        <div class="auth-section">
-            <button onclick="window.location.href='login.html'">تسجيل الدخول</button>
-            <button onclick="window.location.href='signup.html'">إنشاء حساب</button>
-        </div>
+        <h1>مرحباً بك في تطبيق المراسلة</h1>
+        <a href="login.html" class="btn">تسجيل الدخول</a>
+        <a href="signup.html" class="btn">إنشاء حساب جديد</a>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.5.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.5.0/firebase-auth.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js" type="module"></script>
 </body>
 </html>
