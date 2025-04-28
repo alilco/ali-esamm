@@ -1,152 +1,161 @@
-// Firebase Configuration
+// استيراد الوظائف اللازمة من مكتبات Firebase
+import { initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { getDatabase, ref, set, update } from "firebase/database";
+
+// إعدادات Firebase الخاصة بك
 const firebaseConfig = {
-    apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-    authDomain: "messengerapp-58f7a.firebaseapp.com",
-    databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-    projectId: "messengerapp-58f7a",
-    storageBucket: "messengerapp-58f7a.firebasestorage.app",
-    messagingSenderId: "46178168523",
-    appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+  authDomain: "messengerapp-58f7a.firebaseapp.com",
+  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+  projectId: "messengerapp-58f7a",
+  storageBucket: "messengerapp-58f7a.appspot.com",
+  messagingSenderId: "46178168523",
+  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+// تهيئة Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-// تسجيل الدخول
-const loginForm = document.getElementById('loginForm');
-loginForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-            window.location.href = 'friends.html';
+// ربط صفحة تسجيل الدخول `login.html`
+const loginButton = document.getElementById("loginButton");
+loginButton.addEventListener("click", (e) => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            // حفظ بيانات المستخدم عند تسجيل الدخول
+            window.location.href = "chat.html"; // توجيه المستخدم إلى صفحة المحادثة
         })
         .catch((error) => {
+            const errorCode = error.code;
             const errorMessage = error.message;
-            document.getElementById('error-message').textContent = errorMessage;
+            alert("خطأ في تسجيل الدخول: " + errorMessage);
         });
 });
 
-// إنشاء حساب
-const signupForm = document.getElementById('signupForm');
-signupForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if (password !== confirmPassword) {
-        document.getElementById('error-message').textContent = "كلمات المرور غير متطابقة!";
-        return;
-    }
-
-    auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-            window.location.href = 'login.html';
+// ربط صفحة إنشاء الحساب `signup.html`
+const signupButton = document.getElementById("signupButton");
+signupButton.addEventListener("click", (e) => {
+    const email = document.getElementById("signupEmail").value;
+    const password = document.getElementById("signupPassword").value;
+    
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            // حفظ بيانات المستخدم عند إنشاء الحساب
+            window.location.href = "login.html"; // توجيه المستخدم إلى صفحة تسجيل الدخول بعد إنشاء الحساب
         })
         .catch((error) => {
+            const errorCode = error.code;
             const errorMessage = error.message;
-            document.getElementById('error-message').textContent = errorMessage;
+            alert("خطأ في إنشاء الحساب: " + errorMessage);
         });
 });
 
-// عرض الأصدقاء
-const friendsList = document.getElementById('friendsList');
-db.ref('users/').on('value', (snapshot) => {
-    friendsList.innerHTML = '';
-    snapshot.forEach((childSnapshot) => {
-        const friend = childSnapshot.val();
-        const li = document.createElement('li');
-        li.textContent = friend.username;
-        friendsList.appendChild(li);
-    });
-});
-
-// عرض الملف الشخصي
-const profileImage = document.getElementById('profileImage');
-const usernameElement = document.getElementById('username');
-const bioElement = document.getElementById('bio');
-
-auth.onAuthStateChanged((user) => {
+// التحقق من حالة المستخدم وتوجيهه إلى صفحة الدردشة مباشرة إذا كان قد سجل الدخول مسبقاً
+onAuthStateChanged(auth, (user) => {
     if (user) {
-        const userId = user.uid;
-        db.ref('users/' + userId).once('value').then((snapshot) => {
-            const userData = snapshot.val();
-            usernameElement.textContent = userData.username;
-            bioElement.textContent = userData.bio;
-            profileImage.src = userData.profileImage;
-        });
-    } else {
-        window.location.href = 'login.html';
+        // إذا كان المستخدم مسجلاً دخوله، توجيه مباشرة إلى صفحة الدردشة
+        window.location.href = "chat.html";
     }
 });
 
-// الوضع الليلي
-const toggleDarkMode = () => {
-    const body = document.body;
-    body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
-};
-
-const checkDarkMode = () => {
-    const darkMode = localStorage.getItem('darkMode');
-    if (darkMode === 'true') {
-        document.body.classList.add('dark-mode');
+// إضافة ميزة تعديل الملف الشخصي في `profile.html`
+const editProfileButton = document.getElementById("editProfileButton");
+editProfileButton.addEventListener("click", (e) => {
+    const user = auth.currentUser;
+    const username = document.getElementById("username").value;
+    const bio = document.getElementById("bio").value;
+    const profileImage = document.getElementById("profileImage").files[0];
+    
+    if (user) {
+        // تحديث بيانات المستخدم في Firebase
+        const userRef = ref(db, 'users/' + user.uid);
+        update(userRef, {
+            username: username,
+            bio: bio,
+            profileImage: profileImage ? profileImage.name : ''
+        }).then(() => {
+            alert("تم تحديث الملف الشخصي");
+            window.location.href = "profile.html";
+        }).catch((error) => {
+            alert("حدث خطأ أثناء تحديث الملف الشخصي: " + error.message);
+        });
     }
-};
-
-checkDarkMode();
-
-// آخر ظهور
-const updateLastSeen = (userId) => {
-    const lastSeen = new Date().toLocaleString();
-    const lastSeenRef = db.ref('users/' + userId + '/lastSeen');
-    lastSeenRef.set(lastSeen);
-};
-
-const getLastSeen = (userId) => {
-    const lastSeenRef = db.ref('users/' + userId + '/lastSeen');
-    lastSeenRef.on('value', (snapshot) => {
-        document.getElementById('lastSeen').textContent = 'آخر ظهور: ' + snapshot.val();
-    });
-};
-
-// تسجيل الخروج
-const logoutButton = document.getElementById('logoutButton');
-logoutButton.addEventListener('click', () => {
-    auth.signOut().then(() => {
-        window.location.href = 'login.html';
-    });
 });
 
-// تحديث معلومات المستخدم
-const updateProfileButton = document.getElementById('updateProfileButton');
-updateProfileButton.addEventListener('click', () => {
-    const userId = auth.currentUser.uid;
-    const newUsername = document.getElementById('newUsername').value;
-    const newBio = document.getElementById('newBio').value;
-    const newProfileImage = document.getElementById('newProfileImage').files[0];
-
-    const profileUpdate = {
-        username: newUsername,
-        bio: newBio,
-    };
-
-    if (newProfileImage) {
-        const storageRef = firebase.storage().ref('profileImages/' + userId);
-        storageRef.put(newProfileImage).then(() => {
-            storageRef.getDownloadURL().then((url) => {
-                profileUpdate.profileImage = url;
-                db.ref('users/' + userId).update(profileUpdate);
-            });
+// تفعيل الوضع الليلي في `darkmode`
+const darkModeButton = document.getElementById("darkModeButton");
+darkModeButton.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+    // حفظ حالة الوضع في Firebase إذا لزم الأمر
+    const user = auth.currentUser;
+    if (user) {
+        const userRef = ref(db, 'users/' + user.uid);
+        update(userRef, {
+            darkMode: document.body.classList.contains("dark-mode")
         });
-    } else {
-        db.ref('users/' + userId).update(profileUpdate);
     }
+});
 
-    alert("تم تحديث الملف الشخصي بنجاح!");
+// إضافة ميزة آخر ظهور `lastseen`
+const updateLastSeen = () => {
+    const user = auth.currentUser;
+    if (user) {
+        const lastSeenRef = ref(db, 'users/' + user.uid + '/lastSeen');
+        update(lastSeenRef, {
+            lastSeen: new Date().toISOString()
+        });
+    }
+};
+
+// تحديث آخر ظهور عند تحميل الصفحة أو عند التفاعل
+window.addEventListener("load", updateLastSeen);
+window.addEventListener("click", updateLastSeen);
+
+// إضافة ميزة إضافة الأصدقاء في `friends.html`
+const addFriendButton = document.getElementById("addFriendButton");
+addFriendButton.addEventListener("click", (e) => {
+    const friendUsername = document.getElementById("friendUsername").value;
+    const user = auth.currentUser;
+
+    if (user && friendUsername) {
+        // إضافة صديق في Firebase
+        const userRef = ref(db, 'users/' + user.uid + '/friends');
+        set(userRef, {
+            [friendUsername]: true
+        }).then(() => {
+            alert("تم إضافة الصديق");
+            window.location.href = "friends.html"; // توجيه المستخدم إلى صفحة الأصدقاء
+        }).catch((error) => {
+            alert("خطأ في إضافة الصديق: " + error.message);
+        });
+    }
+});
+
+// إرسال الرسائل في `chat.html`
+const sendMessageButton = document.getElementById("sendMessageButton");
+sendMessageButton.addEventListener("click", () => {
+    const message = document.getElementById("messageInput").value;
+    const user = auth.currentUser;
+
+    if (user && message) {
+        const messagesRef = ref(db, 'messages/');
+        const newMessageRef = messagesRef.push();
+        set(newMessageRef, {
+            sender: user.uid,
+            message: message,
+            timestamp: new Date().toISOString()
+        }).then(() => {
+            alert("تم إرسال الرسالة");
+            document.getElementById("messageInput").value = ""; // مسح النص بعد الإرسال
+        }).catch((error) => {
+            alert("حدث خطأ أثناء إرسال الرسالة: " + error.message);
+        });
+    }
 });
