@@ -1,137 +1,152 @@
-import { db } from './firebase-config.js';
-import { getDatabase, ref, get, push, set } from "firebase/database";
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+    authDomain: "messengerapp-58f7a.firebaseapp.com",
+    databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+    projectId: "messengerapp-58f7a",
+    storageBucket: "messengerapp-58f7a.firebasestorage.app",
+    messagingSenderId: "46178168523",
+    appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+};
 
-// تحميل البيانات عند فتح الصفحة
-window.onload = function() {
-    loadUserProfile("UserID"); // ضع هنا معرف المستخدم
-    loadMessages();
-    loadFriends("UserID"); // ضع هنا معرف المستخدم
-}
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
-// تحميل البيانات الخاصة بالمستخدم (الصورة والاسم)
-function loadUserProfile(userId) {
-    const userRef = ref(db, 'users/' + userId);
-    get(userRef).then((snapshot) => {
-        if (snapshot.exists()) {
-            const userData = snapshot.val();
-            document.getElementById('profile-image').src = userData.profileImage;
-            document.getElementById('username').textContent = userData.username;
-        } else {
-            console.log("User data not found");
-        }
-    });
-}
+// تسجيل الدخول
+const loginForm = document.getElementById('loginForm');
+loginForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-// جلب الرسائل من Firebase وعرضها
-function loadMessages() {
-    const messagesRef = ref(db, 'messages/');
-    get(messagesRef).then((snapshot) => {
-        if (snapshot.exists()) {
-            const messages = snapshot.val();
-            displayMessages(messages);
-        } else {
-            console.log("No messages data found");
-        }
-    });
-}
-
-// عرض الرسائل
-function displayMessages(messages) {
-    const messagesList = document.getElementById('messages-list');
-    messagesList.innerHTML = ''; // مسح الرسائل القديمة
-
-    for (let key in messages) {
-        const msg = messages[key];
-        const li = document.createElement('li');
-        li.textContent = `${msg.sender}: ${msg.message}`;
-        messagesList.appendChild(li);
-    }
-}
-
-// إرسال رسالة جديدة
-document.getElementById('send-message').addEventListener('click', function() {
-    const messageText = document.getElementById('message-input').value;
-    if (messageText.trim() !== '') {
-        const messageRef = push(ref(db, 'messages/'));
-        set(messageRef, {
-            sender: "UserID", // استخدم معرف المستخدم هنا
-            message: messageText,
-            timestamp: Date.now()
+    auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+            window.location.href = 'friends.html';
+        })
+        .catch((error) => {
+            const errorMessage = error.message;
+            document.getElementById('error-message').textContent = errorMessage;
         });
-        document.getElementById('message-input').value = ''; // مسح المدخل
-    }
 });
 
-// جلب الأصدقاء من Firebase وعرضهم
-function loadFriends(userId) {
-    const userRef = ref(db, 'users/' + userId + '/friends');
-    get(userRef).then((snapshot) => {
-        if (snapshot.exists()) {
-            const friends = snapshot.val();
-            displayFriends(friends);
-        } else {
-            console.log("No friends data found");
-        }
-    });
-}
+// إنشاء حساب
+const signupForm = document.getElementById('signupForm');
+signupForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (password !== confirmPassword) {
+        document.getElementById('error-message').textContent = "كلمات المرور غير متطابقة!";
+        return;
+    }
+
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+            window.location.href = 'login.html';
+        })
+        .catch((error) => {
+            const errorMessage = error.message;
+            document.getElementById('error-message').textContent = errorMessage;
+        });
+});
 
 // عرض الأصدقاء
-function displayFriends(friends) {
-    const friendsList = document.getElementById('friends-list');
-    friendsList.innerHTML = ''; // مسح القائمة القديمة
-
-    for (let key in friends) {
-        const friend = friends[key];
+const friendsList = document.getElementById('friendsList');
+db.ref('users/').on('value', (snapshot) => {
+    friendsList.innerHTML = '';
+    snapshot.forEach((childSnapshot) => {
+        const friend = childSnapshot.val();
         const li = document.createElement('li');
-        li.textContent = friend.name;
+        li.textContent = friend.username;
         friendsList.appendChild(li);
-    }
-}
+    });
+});
 
-// إضافة صديق جديد
-document.getElementById('add-friend').addEventListener('click', function() {
-    const friendUsername = document.getElementById('friend-username').value;
-    if (friendUsername.trim() !== '') {
-        const userRef = ref(db, 'users/');
-        get(userRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const users = snapshot.val();
-                let friendFound = false;
-                for (let key in users) {
-                    if (users[key].username === friendUsername) {
-                        friendFound = true;
-                        const userId = "UserID"; // ضع معرف المستخدم هنا
-                        const friendId = key;
-                        // إضافة صديق إلى قائمة الأصدقاء
-                        const friendRef = ref(db, 'users/' + userId + '/friends/' + friendId);
-                        set(friendRef, {
-                            name: users[key].username,
-                            profileImage: users[key].profileImage
-                        });
-                        alert('تم إضافة الصديق');
-                        break;
-                    }
-                }
+// عرض الملف الشخصي
+const profileImage = document.getElementById('profileImage');
+const usernameElement = document.getElementById('username');
+const bioElement = document.getElementById('bio');
 
-                if (!friendFound) {
-                    alert('لم يتم العثور على هذا المستخدم');
-                }
-            }
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        const userId = user.uid;
+        db.ref('users/' + userId).once('value').then((snapshot) => {
+            const userData = snapshot.val();
+            usernameElement.textContent = userData.username;
+            bioElement.textContent = userData.bio;
+            profileImage.src = userData.profileImage;
         });
+    } else {
+        window.location.href = 'login.html';
     }
 });
 
-// تغيير صورة الملف الشخصي
-document.getElementById('change-profile-image').addEventListener('click', function() {
-    const newProfileImage = prompt("أدخل رابط الصورة الجديدة:");
-    if (newProfileImage) {
-        const userId = "UserID"; // ضع هنا معرف المستخدم
-        const userRef = ref(db, 'users/' + userId);
-        set(userRef, {
-            profileImage: newProfileImage,
-            username: document.getElementById('username').textContent
-        });
-        document.getElementById('profile-image').src = newProfileImage;
-        alert('تم تحديث الصورة');
+// الوضع الليلي
+const toggleDarkMode = () => {
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
+};
+
+const checkDarkMode = () => {
+    const darkMode = localStorage.getItem('darkMode');
+    if (darkMode === 'true') {
+        document.body.classList.add('dark-mode');
     }
+};
+
+checkDarkMode();
+
+// آخر ظهور
+const updateLastSeen = (userId) => {
+    const lastSeen = new Date().toLocaleString();
+    const lastSeenRef = db.ref('users/' + userId + '/lastSeen');
+    lastSeenRef.set(lastSeen);
+};
+
+const getLastSeen = (userId) => {
+    const lastSeenRef = db.ref('users/' + userId + '/lastSeen');
+    lastSeenRef.on('value', (snapshot) => {
+        document.getElementById('lastSeen').textContent = 'آخر ظهور: ' + snapshot.val();
+    });
+};
+
+// تسجيل الخروج
+const logoutButton = document.getElementById('logoutButton');
+logoutButton.addEventListener('click', () => {
+    auth.signOut().then(() => {
+        window.location.href = 'login.html';
+    });
+});
+
+// تحديث معلومات المستخدم
+const updateProfileButton = document.getElementById('updateProfileButton');
+updateProfileButton.addEventListener('click', () => {
+    const userId = auth.currentUser.uid;
+    const newUsername = document.getElementById('newUsername').value;
+    const newBio = document.getElementById('newBio').value;
+    const newProfileImage = document.getElementById('newProfileImage').files[0];
+
+    const profileUpdate = {
+        username: newUsername,
+        bio: newBio,
+    };
+
+    if (newProfileImage) {
+        const storageRef = firebase.storage().ref('profileImages/' + userId);
+        storageRef.put(newProfileImage).then(() => {
+            storageRef.getDownloadURL().then((url) => {
+                profileUpdate.profileImage = url;
+                db.ref('users/' + userId).update(profileUpdate);
+            });
+        });
+    } else {
+        db.ref('users/' + userId).update(profileUpdate);
+    }
+
+    alert("تم تحديث الملف الشخصي بنجاح!");
 });
