@@ -1,19 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>Chat</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدردشة</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="chat-container">
-    <h2>Chat Room</h2>
-    <div id="messages" class="messages"></div>
-    <input type="text" id="messageInput" placeholder="Type your message...">
-    <button onclick="sendMessage()">Send</button>
-    <button onclick="logout()">Logout</button>
-  </div>
+    <div id="profile-section">
+        <img id="profile-image" src="" alt="Profile Image">
+        <h3 id="username"></h3>
+    </div>
 
-  <script type="module" src="chat.js"></script>
+    <div id="chat-box">
+        <ul id="messages-list">
+            <!-- سيتم إضافة الرسائل هنا باستخدام JavaScript -->
+        </ul>
+        <input type="text" id="message-input" placeholder="اكتب رسالة..." />
+        <button id="send-message">إرسال</button>
+    </div>
+
+    <div id="friends-section">
+        <h3>أصدقائك</h3>
+        <ul id="friends-list">
+            <!-- سيتم إضافة الأصدقاء هنا باستخدام JavaScript -->
+        </ul>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="chat.js"></script>
+    <script src="profile.js"></script>
+    <script src="friends.js"></script>
 </body>
 </html>
