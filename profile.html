@@ -1,26 +1,28 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الملف الشخصي</title>
+    <title>الملف الشخصي - تطبيق المراسلة</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>الملف الشخصي</h1>
+    <div class="profile-container">
+        <header class="profile-header">
+            <h2>ملفي الشخصي</h2>
+            <button id="logoutBtn" class="btn-logout">تسجيل الخروج</button>
         </header>
 
-        <div class="profile-section">
-            <img id="profileImage" src="" alt="Profile Image">
-            <h2 id="username"></h2>
-            <p id="bio"></p>
+        <div class="profile-info">
+            <img id="profileImage" src="default-avatar.png" alt="الصورة الشخصية">
+            <h3 id="profileUsername">اسم المستخدم</h3>
+            <p id="profileEmail">البريد الإلكتروني</p>
+            <p id="profileBio">نبذة عني</p>
         </div>
 
-        <button onclick="window.location.href='friends.html'">رجوع إلى الأصدقاء</button>
+        <button id="editProfileBtn" class="btn">تعديل الملف الشخصي</button>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js" type="module"></script>
 </body>
 </html>
