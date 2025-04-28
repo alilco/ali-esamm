@@ -1,121 +1,240 @@
-/* Reset some basic styles */
+/* Reset default margin and padding */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Body styles */
+/* General body styling */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f9;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
     color: #333;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Container styles */
-.container {
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+/* Dark mode styling */
+body.dark-mode {
+    background-color: #2f2f2f;
+    color: #eaeaea;
 }
 
-/* Header styles */
-header h1 {
+h1, h2, h3, h4 {
+    margin-bottom: 10px;
+}
+
+/* Header and navigation styles */
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
     text-align: center;
-    margin-bottom: 20px;
-    color: #4CAF50;
+    font-size: 24px;
 }
 
-/* Login & Signup Section */
-.login-section, .signup-section {
-    display: flex;
-    flex-direction: column;
-}
-
-/* Form Group */
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    font-size: 14px;
-    color: #555;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-}
-
-/* Button styles */
 button {
-    width: 100%;
-    padding: 10px;
-    background-color: #4CAF50;
+    padding: 10px 20px;
+    margin: 10px;
+    background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 4px;
-    font-size: 16px;
     cursor: pointer;
+    border-radius: 5px;
     transition: background-color 0.3s ease;
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #0056b3;
 }
 
-/* Error message */
-.error-message {
+/* Form styles */
+form {
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 400px;
+    width: 100%;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+input[type="file"] {
+    border: none;
+    background-color: #f9f9f9;
+}
+
+input[type="submit"] {
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #218838;
+}
+
+/* Error message styling */
+#error-message {
     color: red;
-    font-size: 14px;
     margin-top: 10px;
-    text-align: center;
-}
-
-/* Links */
-a {
-    color: #4CAF50;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-/* Extra space between sections */
-p {
-    text-align: center;
     font-size: 14px;
-    margin-top: 20px;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 600px) {
-    .container {
-        padding: 15px;
-    }
+/* Profile page styles */
+.profile-container {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    margin: 20px auto;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
 
-    header h1 {
-        font-size: 24px;
-    }
+.profile-container img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-right: 20px;
+}
 
-    .form-group input {
-        font-size: 14px;
-    }
+.profile-info {
+    flex-grow: 1;
+}
 
-    button {
-        font-size: 14px;
-    }
+.profile-info h2 {
+    margin-bottom: 10px;
+}
+
+.profile-info p {
+    margin-bottom: 5px;
+}
+
+.profile-info .edit-button {
+    margin-top: 10px;
+    background-color: #ffc107;
+    color: white;
+    cursor: pointer;
+}
+
+.profile-info .edit-button:hover {
+    background-color: #e0a800;
+}
+
+/* Friends list styles */
+ul.friends-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+ul.friends-list li {
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+ul.friends-list li:hover {
+    background-color: #f1f1f1;
+}
+
+/* Chat styles */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 70vh;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.chat-message {
+    padding: 10px;
+    margin: 5px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    max-width: 80%;
+}
+
+.chat-message.self {
+    background-color: #007bff;
+    color: white;
+    align-self: flex-end;
+}
+
+.chat-message.other {
+    background-color: #e9ecef;
+    color: #333;
+    align-self: flex-start;
+}
+
+.chat-input-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.chat-input {
+    width: 85%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.send-button {
+    width: 10%;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.send-button:hover {
+    background-color: #218838;
+}
+
+/* Last seen and status */
+.last-seen {
+    font-size: 14px;
+    color: #888;
+    margin-top: 5px;
+}
+
+.status {
+    font-size: 14px;
+    color: #333;
+    margin-top: 10px;
+}
+
+/* Dark mode toggle button */
+#darkModeToggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+#darkModeToggle:hover {
+    background-color: #0056b3;
 }
