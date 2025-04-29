@@ -35,9 +35,12 @@ body {
   text-align: left;
 }
 
-form input[type="text"] {
-  width: 70%;
+form input[type="text"],
+form input[type="email"],
+form input[type="password"] {
+  width: 100%;
   padding: 10px;
+  margin-bottom: 10px;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
@@ -49,7 +52,6 @@ form button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin-left: 10px;
 }
 
 form button:hover {
