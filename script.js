@@ -1,6 +1,7 @@
 let currentUser = null;
+let currentChatUid = null;
 
-// Auth state check on page load
+// Check auth state on load
 window.addEventListener("load", () => {
   const path = window.location.pathname;
 
@@ -14,8 +15,6 @@ window.addEventListener("load", () => {
       } else {
         currentUser = user;
         await loadUserProfile();
-        setupChatUI();
-        setupMessageListener();
         setupPresence();
         setupThemeToggle();
       }
@@ -100,39 +99,66 @@ async function loadUserProfile() {
   document.getElementById("user-fullname").textContent = profile.fullname || profile.username;
 }
 
-// Setup chat UI
-function setupChatUI() {
-  console.log("Chat UI loaded.");
+// Search and add friend
+async function addFriend() {
+  const username = document.getElementById("search-username").value.trim();
+  if (!username) return alert("Enter a username.");
+
+  const snapshot = await firebase.database().ref("users")
+    .orderByChild("username")
+    .equalTo(username)
+    .once("value");
+
+  if (!snapshot.exists()) {
+    alert("User not found.");
+    return;
+  }
+
+  const friendUid = Object.keys(snapshot.val())[0];
+  const friendProfile = snapshot.val()[friendUid];
+
+  // Show chat UI
+  document.getElementById("chat-with").textContent = `Chatting with ${friendProfile.fullname || friendProfile.username}`;
+  currentChatUid = friendUid;
+  loadPrivateMessages(currentUser.uid, friendUid);
 }
 
-// Listen for messages
-function setupMessageListener() {
+// Load encrypted messages
+function loadPrivateMessages(uid1, uid2) {
+  const chatId = [uid1, uid2].sort().join("_");
   const chatBox = document.getElementById("chat-box");
-  firebase.database().ref("messages").limitToLast(50).on("child_added", snapshot => {
+  chatBox.innerHTML = "";
+
+  firebase.database().ref("private_messages/" + chatId).on("child_added", snapshot => {
     const msg = snapshot.val();
+    const decrypted = decryptMessage(msg.text);
+
     const div = document.createElement("div");
-    div.className = "message";
-    div.innerHTML = `<strong>${msg.username}</strong>: ${decryptMessage(msg.text)}`;
+    div.textContent = `${msg.sender === uid1 ? "You" : "Friend"}: ${decrypted}`;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 }
 
-// Send message
-document.getElementById("message-form")?.addEventListener("submit", e => {
-  e.preventDefault();
+// Send encrypted message
+function sendMessage() {
+  if (!currentUser || !currentChatUid) return;
+
   const input = document.getElementById("message-input");
   const text = input.value.trim();
-  if (!currentUser || !text) return;
+  if (!text) return;
 
-  firebase.database().ref("messages").push({
-    username: currentUser.email.split("@")[0],
-    text: encryptMessage(text),
+  const chatId = [currentUser.uid, currentChatUid].sort().join("_");
+  const encrypted = encryptMessage(text);
+
+  firebase.database().ref("private_messages/" + chatId).push({
+    sender: currentUser.uid,
+    text: encrypted,
     timestamp: Date.now()
   });
 
   input.value = "";
-});
+}
 
 // Presence system
 function setupPresence() {
@@ -174,6 +200,17 @@ function setupThemeToggle() {
   });
 }
 
+// Navigation
+function showRegister() {
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("register-screen").classList.remove("hidden");
+}
+
+function showLogin() {
+  document.getElementById("register-screen").classList.add("hidden");
+  document.getElementById("login-screen").classList.remove("hidden");
+}
+
 // Encryption functions
 function encryptMessage(message) {
   const key = CryptoJS.enc.Utf8.parse('1234567890123456');
@@ -190,15 +227,4 @@ function decryptMessage(cipherText) {
     padding: CryptoJS.pad.Pkcs7
   });
   return bytes.toString(CryptoJS.enc.Utf8);
-}
-
-// Navigation
-function showRegister() {
-  document.getElementById("login-screen").classList.add("hidden");
-  document.getElementById("register-screen").classList.remove("hidden");
-}
-
-function showLogin() {
-  document.getElementById("register-screen").classList.add("hidden");
-  document.getElementById("login-screen").classList.remove("hidden");
 }
