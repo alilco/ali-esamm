@@ -1,17 +1,40 @@
-<h1>💬 Secure Messenger</h1>
-<p>Welcome <span id="user-fullname"></span> | <a href="#" onclick="logout()">Logout</a></p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💬 Your Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="light">
+  <div class="screen chat-screen">
+    <h1>💬 Secure Messenger</h1>
+    <p>Welcome, <span id="user-fullname"></span>
+      | <a href="#" onclick="logout()">Logout</a>
+    </p>
 
-<!-- Theme Toggle -->
-<label><input type="checkbox" id="theme-toggle"> Dark Mode</label>
+    <label><input type="checkbox" id="theme-toggle"> Dark Mode</label>
 
-<!-- Friends List -->
-<div id="friends-list"></div>
-<input type="text" id="add-friend" placeholder="Add friend by username">
-<button onclick="addFriend()">Add</button>
+    <h3>👥 Friends</h3>
+    <input type="text" id="add-friend" placeholder="Add friend by username" />
+    <button onclick="addFriend()">Add Friend</button>
+    <ul id="friends-list"></ul>
 
-<!-- Chat Box -->
-<div id="chat-box"></div>
-<form id="message-form">
-  <input type="text" id="message-input" placeholder="Type message...">
-  <button type="submit">Send</button>
-</form>
+    <div id="chat-box"></div>
+    <form id="message-form">
+      <input type="text" id="message-input" placeholder="Type a message..." required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <!-- Firebase + Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <script src="firebase-config.js"></script>
+  <script src="crypto-lib.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
