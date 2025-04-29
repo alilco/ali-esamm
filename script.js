@@ -1,7 +1,7 @@
 let currentUser = null;
 let currentChatUid = null;
 
-// Check auth state on load
+// Auth state check
 window.addEventListener("load", () => {
   const path = window.location.pathname;
 
@@ -22,37 +22,24 @@ window.addEventListener("load", () => {
   });
 });
 
-// Register new user
+// Register with email
 async function signUp() {
-  const username = document.getElementById("username-register").value.trim();
+  const fullName = document.getElementById("fullname-register").value.trim();
+  const email = document.getElementById("email-register").value.trim();
   const password = document.getElementById("password-register").value.trim();
-  const fullname = document.getElementById("fullname-register").value.trim();
-  const bio = document.getElementById("bio-register").value.trim();
-  const avatarInput = document.getElementById("avatar-register");
 
-  if (!username || !password || !fullname) {
-    alert("Please fill all required fields.");
+  if (!fullName || !email || !password) {
+    alert("Please fill all fields.");
     return;
   }
 
   try {
-    const email = `${username}@example.com`;
     const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
     const uid = result.user.uid;
 
-    let avatarUrl = "";
-    if (avatarInput.files.length > 0) {
-      const file = avatarInput.files[0];
-      const snapshot = await firebase.storage().ref(`avatars/${uid}`).put(file);
-      avatarUrl = await snapshot.ref.getDownloadURL();
-    }
-
     await firebase.database().ref("users/" + uid).set({
-      username,
-      fullname,
-      bio,
-      avatarUrl,
-      friends: {},
+      fullName,
+      email,
       lastActive: Date.now(),
       online: true
     });
@@ -64,17 +51,15 @@ async function signUp() {
   }
 }
 
-// Login existing user
+// Sign in with email
 function signIn() {
-  const username = document.getElementById("username-login").value.trim();
+  const email = document.getElementById("email-login").value.trim();
   const password = document.getElementById("password-login").value.trim();
 
-  if (!username || !password) {
-    alert("Enter both fields.");
+  if (!email || !password) {
+    alert("Enter both email and password.");
     return;
   }
-
-  const email = `${username}@example.com`;
 
   firebase.auth().signInWithEmailAndPassword(email, password)
     .catch(e => alert("Login failed: " + e.message));
@@ -91,22 +76,22 @@ function logout() {
   });
 }
 
-// Load user profile
+// Load profile
 async function loadUserProfile() {
   const uid = currentUser.uid;
   const snapshot = await firebase.database().ref("users/" + uid).once("value");
   const profile = snapshot.val();
-  document.getElementById("user-fullname").textContent = profile.fullname || profile.username;
+  document.getElementById("user-fullname").textContent = profile.fullName || "User";
 }
 
-// Search and add friend
+// Add friend by email
 async function addFriend() {
-  const username = document.getElementById("search-username").value.trim();
-  if (!username) return alert("Enter a username.");
+  const email = document.getElementById("search-email").value.trim();
+  if (!email) return alert("Enter an email.");
 
   const snapshot = await firebase.database().ref("users")
-    .orderByChild("username")
-    .equalTo(username)
+    .orderByChild("email")
+    .equalTo(email)
     .once("value");
 
   if (!snapshot.exists()) {
@@ -117,13 +102,13 @@ async function addFriend() {
   const friendUid = Object.keys(snapshot.val())[0];
   const friendProfile = snapshot.val()[friendUid];
 
-  // Show chat UI
-  document.getElementById("chat-with").textContent = `Chatting with ${friendProfile.fullname || friendProfile.username}`;
+  // Open chat
+  document.getElementById("chat-with").textContent = `Chatting with ${friendProfile.fullName}`;
   currentChatUid = friendUid;
   loadPrivateMessages(currentUser.uid, friendUid);
 }
 
-// Load encrypted messages
+// Load encrypted private messages
 function loadPrivateMessages(uid1, uid2) {
   const chatId = [uid1, uid2].sort().join("_");
   const chatBox = document.getElementById("chat-box");
@@ -160,7 +145,7 @@ function sendMessage() {
   input.value = "";
 }
 
-// Presence system
+// Presence
 function setupPresence() {
   if (!currentUser) return;
 
@@ -200,18 +185,7 @@ function setupThemeToggle() {
   });
 }
 
-// Navigation
-function showRegister() {
-  document.getElementById("login-screen").classList.add("hidden");
-  document.getElementById("register-screen").classList.remove("hidden");
-}
-
-function showLogin() {
-  document.getElementById("register-screen").classList.add("hidden");
-  document.getElementById("login-screen").classList.remove("hidden");
-}
-
-// Encryption functions
+// Encrypt/Decrypt functions
 function encryptMessage(message) {
   const key = CryptoJS.enc.Utf8.parse('1234567890123456');
   return CryptoJS.AES.encrypt(message, key, {
