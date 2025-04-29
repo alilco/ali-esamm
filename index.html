@@ -1,11 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Messenger Clone</title>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Messenger Clone</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="chat-container">
+    <h1>💬 Messenger Clone</h1>
+    <div id="chat-box"></div>
+    <form id="message-form">
+      <input type="text" id="username" placeholder="Your name" required />
+      <input type="text" id="message" placeholder="Type a message..." required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
+</body>
 </html>
