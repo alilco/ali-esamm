@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>💬 Secure Messenger</title>
+  <title>💬 Secure Chat</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="light">
   <div class="screen chat-screen">
     <h1>💬 Secure Messenger</h1>
-    <p>Welcome, <span id="user-fullname"></span>
-      | <a href="#" onclick="logout()">Logout</a>
-    </p>
+    <p>Welcome, <span id="user-fullname"></span> | <a href="#" onclick="logout()">Logout</a></p>
 
     <label><input type="checkbox" id="theme-toggle"> Dark Mode</label>
 
@@ -27,7 +25,7 @@
     </form>
   </div>
 
-  <!-- Firebase + Scripts -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -36,63 +34,8 @@
   <!-- CryptoJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
+  <!-- Scripts -->
   <script src="firebase-config.js"></script>
-  <script src="crypto-lib.js"></script>
   <script src="script.js"></script>
-
-  <script>
-    // Load user profile and setup UI only if logged in
-    window.addEventListener("load", () => {
-      const path = window.location.pathname;
-
-      auth.onAuthStateChanged(async (user) => {
-        if (path.endsWith("home.html")) {
-          if (!user) {
-            // Block unauthorized access
-            alert("You must log in first.");
-            window.location.href = "index.html";
-          } else {
-            currentUser = user;
-            await loadUserProfile();
-            setupChatUI();
-            setupMessageListener();
-            setupPresence();
-          }
-        }
-
-        if (path.endsWith("index.html")) {
-          if (user) {
-            // Already signed in → redirect to home
-            window.location.href = "home.html";
-          }
-        }
-      });
-    });
-
-    async function loadUserProfile() {
-      const uid = currentUser.uid;
-      const snapshot = await db.ref("users/" + uid).once("value");
-      const profile = snapshot.val();
-      document.getElementById("user-fullname").textContent = profile.fullname || profile.username;
-    }
-
-    function setupChatUI() {
-      console.log("Chat UI loaded.");
-    }
-
-    function setupMessageListener() {
-      // Placeholder
-    }
-
-    function setupPresence() {
-      // Placeholder
-    }
-
-    function logout() {
-      auth.signOut().then(() => {
-        window.location.href = "index.html";
-      });
-    }
-  </script>
 </body>
 </html>
