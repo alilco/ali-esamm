@@ -7,22 +7,21 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="light">
+  <!-- Login Screen -->
   <div id="login-screen" class="screen">
     <h2>🔐 Sign In</h2>
-    <input type="text" id="username-login" placeholder="Username" required />
+    <input type="email" id="email-login" placeholder="Email" required />
     <input type="password" id="password-login" placeholder="Password" required />
     <button onclick="signIn()">Login</button>
     <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
   </div>
 
+  <!-- Register Screen -->
   <div id="register-screen" class="screen hidden">
     <h2>📝 Register</h2>
-    <input type="text" id="username-register" placeholder="Username" required />
-    <input type="password" id="password-register" placeholder="Password" required />
     <input type="text" id="fullname-register" placeholder="Full Name" required />
-    <input type="email" id="email-register" placeholder="Email (optional)" />
-    <input type="text" id="bio-register" placeholder="Bio" />
-    <input type="file" id="avatar-register" />
+    <input type="email" id="email-register" placeholder="Email" required />
+    <input type="password" id="password-register" placeholder="Password" required />
     <button onclick="signUp()">Register</button>
     <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
   </div>
@@ -36,7 +35,7 @@
   <!-- CryptoJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-  <!-- Script files -->
+  <!-- Script Files -->
   <script src="firebase-config.js"></script>
   <script src="script.js"></script>
 </body>
