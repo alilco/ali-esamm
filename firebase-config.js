@@ -1,3 +1,4 @@
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
   authDomain: "messengerapp-58f7a.firebaseapp.com",
@@ -8,8 +9,10 @@ const firebaseConfig = {
   appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
+// Initialize Firebase (using compat version)
 firebase.initializeApp(firebaseConfig);
 
+// Firebase services
 window.auth = firebase.auth();
 window.db = firebase.database();
 window.storage = firebase.storage();
