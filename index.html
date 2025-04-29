@@ -1,47 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Secure Messenger</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <!-- Login Screen -->
-  <div id="login-screen" class="screen">
-    <h2>🔐 Sign In</h2>
-    <input type="email" id="login-email" placeholder="Email" required />
-    <input type="password" id="login-password" placeholder="Password" required />
-    <button onclick="signIn()">Sign In</button>
-    <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
-  </div>
+<h2>🔐 Sign In</h2>
+<input type="text" id="username-login" placeholder="Username">
+<input type="password" id="password-login" placeholder="Password">
+<button onclick="signIn()">Login</button>
+<p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
 
-  <!-- Register Screen -->
-  <div id="register-screen" class="screen hidden">
-    <h2>📝 Register</h2>
-    <input type="email" id="register-email" placeholder="Email" required />
-    <input type="password" id="register-password" placeholder="Password" required />
-    <button onclick="signUp()">Register</button>
-    <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
-  </div>
-
-  <!-- Chat Screen -->
-  <div id="chat-screen" class="screen hidden">
-    <h1>💬 Secure Messenger</h1>
-    <p>Welcome, <span id="user-email"></span> | <a href="#" onclick="signOut()">Logout</a></p>
-    <div id="chat-box"></div>
-    <form id="message-form">
-      <input type="text" id="message-input" placeholder="Type a message..." required />
-      <button type="submit">Send</button>
-    </form>
-  </div>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <script src="firebase-config.js"></script>
-  <script src="script.js"></script>
-</body>
-</html>
+<!-- Register Form -->
+<div id="register-form" class="hidden">
+  <input type="text" id="username-register" placeholder="Username">
+  <input type="password" id="password-register" placeholder="Password">
+  <input type="text" id="fullname-register" placeholder="Full Name">
+  <input type="email" id="email-register" placeholder="Email (optional)">
+  <input type="text" id="bio-register" placeholder="Bio">
+  <input type="file" id="avatar-register">
+  <button onclick="signUp()">Register</button>
+</div>
