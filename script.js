@@ -1,94 +1,86 @@
-// DOM Elements
-const loginScreen = document.getElementById("login-screen");
-const registerScreen = document.getElementById("register-screen");
-const chatScreen = document.getElementById("chat-screen");
-const userEmailSpan = document.getElementById("user-email");
-
 let currentUser = null;
 
-// Navigation
-function showLogin() {
-  loginScreen.classList.remove("hidden");
-  registerScreen.classList.add("hidden");
-  chatScreen.classList.add("hidden");
+// Sign Up (with Profile)
+async function signUp() {
+  const username = document.getElementById("username-register").value;
+  const password = document.getElementById("password-register").value;
+  const fullname = document.getElementById("fullname-register").value;
+  const bio = document.getElementById("bio-register").value;
+  const avatarInput = document.getElementById("avatar-register");
+
+  try {
+    // Create user with email/password
+    const result = await auth.createUserWithEmailAndPassword(username + "@example.com", password);
+    const user = result.user;
+
+    // Upload photo
+    let avatarUrl = "";
+    if (avatarInput.files.length > 0) {
+      const file = avatarInput.files[0];
+      const snapshot = await storage.ref(`avatars/${user.uid}`).put(file);
+      avatarUrl = await snapshot.ref.getDownloadURL();
+    }
+
+    // Save user profile
+    await db.ref("users/" + user.uid).set({
+      username,
+      fullname,
+      bio,
+      avatarUrl,
+      lastActive: Date.now(),
+      online: true
+    });
+
+    alert("Registration successful!");
+    window.location.href = "home.html";
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
 }
 
-function showRegister() {
-  registerScreen.classList.remove("hidden");
-  loginScreen.classList.add("hidden");
-  chatScreen.classList.add("hidden");
-}
-
-// Login
+// Sign In
 function signIn() {
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
+  const username = document.getElementById("username-login").value;
+  const password = document.getElementById("password-login").value;
 
-  auth.signInWithEmailAndPassword(email, password)
-    .then(userCredential => {
-      currentUser = userCredential.user;
-      userEmailSpan.textContent = currentUser.email;
-      loadMessages();
-      loginScreen.classList.add("hidden");
-      chatScreen.classList.remove("hidden");
+  auth.signInWithEmailAndPassword(username + "@example.com", password)
+    .then(() => {
+      window.location.href = "home.html";
     })
-    .catch(error => {
-      alert("Login Failed: " + error.message);
-    });
+    .catch(e => alert("Login failed: " + e.message));
 }
 
-// Register
-function signUp() {
-  const email = document.getElementById("register-email").value;
-  const password = document.getElementById("register-password").value;
+// Load Friends
+function loadFriends() {
+  const userId = auth.currentUser.uid;
+  db.ref("users").on("value", snap => {
+    const users = snap.val();
+    const friendsEl = document.getElementById("friends-list");
+    friendsEl.innerHTML = "";
 
-  auth.createUserWithEmailAndPassword(email, password)
-    .then(userCredential => {
-      currentUser = userCredential.user;
-      userEmailSpan.textContent = currentUser.email;
-      loadMessages();
-      registerScreen.classList.add("hidden");
-      chatScreen.classList.remove("hidden");
-    })
-    .catch(error => {
-      alert("Registration Failed: " + error.message);
+    Object.values(users).forEach(profile => {
+      if (profile.username !== auth.currentUser.displayName) {
+        const div = document.createElement("div");
+        div.textContent = `${profile.fullname} (${profile.username})`;
+        friendsEl.appendChild(div);
+      }
     });
-}
-
-// Logout
-function signOut() {
-  auth.signOut().then(() => {
-    currentUser = null;
-    showLogin();
   });
 }
 
-// Load Messages
-function loadMessages() {
-  const chatBox = document.getElementById("chat-box");
-  chatBox.innerHTML = "";
-
-  db.ref("messages").on("child_added", snapshot => {
-    const msg = snapshot.val();
-    const messageEl = document.createElement("div");
-    messageEl.classList.add("message");
-    messageEl.innerHTML = `<strong>${msg.username}</strong>: ${msg.text}`;
-    chatBox.appendChild(messageEl);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
-}
-
-// Send Message
-document.getElementById("message-form").addEventListener("submit", e => {
+// Send Message (Encrypted)
+document.getElementById("message-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const input = document.getElementById("message-input");
   const text = input.value.trim();
+  const friendUsername = "some_friend_username"; // Replace dynamically
 
-  if (!currentUser || !text) return;
+  const chatId = [currentUser.uid, friendUid].sort().join("_");
+  const encryptedText = encryptMessage(text); // From crypto-lib.js
 
-  db.ref("messages").push({
-    username: currentUser.email,
-    text: text,
+  db.ref("messages/" + chatId).push({
+    sender: currentUser.uid,
+    text: encryptedText,
     timestamp: Date.now()
   });
 
