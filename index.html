@@ -1,18 +1,55 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الرئيسية - تطبيق المراسلة</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>AI Chatbot (No API Key)</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+    #chat-box { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; background: white; margin-bottom: 10px; }
+    .message { margin: 5px 0; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>مرحباً بك في تطبيق المراسلة</h1>
-        <a href="login.html" class="btn">تسجيل الدخول</a>
-        <a href="signup.html" class="btn">إنشاء حساب جديد</a>
-    </div>
 
-    <script src="app.js" type="module"></script>
+<h2>🤖 AI Chatbot (No API Key)</h2>
+<div id="chat-box"></div>
+<form id="chat-form">
+  <input type="text" id="user-input" placeholder="Type your message..." required autocomplete="off" style="width: 80%; padding: 10px;" />
+  <button type="submit" style="padding: 10px;">Send</button>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0/dist/transformers.min.js"></script>
+<script type="module">
+  import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0/+esm';
+
+  const chatBox = document.getElementById('chat-box');
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('user-input');
+
+  // Load a conversational model
+  const chatbot = await pipeline('conversational', 'Xenova/gpt-2');
+
+  async function appendMessage(role, text) {
+    const msg = document.createElement('div');
+    msg.className = 'message';
+    msg.innerHTML = `<strong>${role}:</strong> ${text}`;
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userText = input.value.trim();
+    if (!userText) return;
+
+    await appendMessage('You', userText);
+
+    const response = await chatbot(userText);
+    await appendMessage('Bot', response.generated_text);
+
+    input.value = '';
+  });
+</script>
+
 </body>
 </html>
