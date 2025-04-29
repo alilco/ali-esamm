@@ -1,59 +1,18 @@
-body {
-  font-family: Arial, sans-serif;
+body.dark {
+  background: #121212;
+  color: white;
+}
+
+body.light {
   background: #f0f2f5;
-  margin: 0;
-  padding: 0;
+  color: black;
 }
 
-.screen {
-  max-width: 400px;
-  margin: 100px auto;
-  padding: 30px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.hidden {
-  display: none;
-}
-
-#chat-box {
+/* Common */
+.chat-box {
+  border: 1px solid #ccc;
   height: 300px;
   overflow-y: auto;
-  border: 1px solid #ddd;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  padding: 10px;
-  background: #fff;
-  border-radius: 5px;
-}
-
-.message {
-  margin: 5px 0;
-  text-align: left;
-}
-
-form input[type="text"],
-form input[type="email"],
-form input[type="password"] {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-form button {
-  padding: 10px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-form button:hover {
-  background-color: #0056b3;
+  margin-top: 10px;
+  background: var(--bg);
 }
