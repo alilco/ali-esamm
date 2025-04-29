@@ -12,8 +12,9 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Reference to the database
+// Firebase References
 const database = firebase.database();
-const messagesRef = database.ref('messages');
+window.usersRef = database.ref('users');
+window.messagesRef = database.ref('messages');
 
-window.messagesRef = messagesRef; // Expose to script.js
+console.log("Firebase initialized.");
