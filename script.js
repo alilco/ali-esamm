@@ -1,10 +1,44 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("message-form");
-  const chatBox = document.getElementById("chat-box");
-  const usernameInput = document.getElementById("username");
-  const messageInput = document.getElementById("message");
+let currentUser = null;
 
-  // Listen for new messages
+function showScreen(login = true) {
+  document.getElementById("login-screen").classList.toggle("hidden", !login);
+  document.getElementById("chat-screen").classList.toggle("hidden", login);
+}
+
+function addUser() {
+  const username = document.getElementById("username-input").value.trim();
+  if (!username) return alert("Please enter a username.");
+
+  window.usersRef.child(username).once("value", snapshot => {
+    if (snapshot.exists()) {
+      alert("User already exists!");
+    } else {
+      window.usersRef.child(username).set(true);
+      alert("User added successfully!");
+    }
+  });
+}
+
+function login() {
+  const username = document.getElementById("username-input").value.trim();
+  if (!username) return alert("Please enter a username.");
+
+  window.usersRef.child(username).once("value", snapshot => {
+    if (snapshot.exists()) {
+      currentUser = username;
+      document.getElementById("display-username").textContent = username;
+      showScreen(false);
+      loadMessages();
+    } else {
+      alert("User not found. Please add the user first.");
+    }
+  });
+}
+
+function loadMessages() {
+  const chatBox = document.getElementById("chat-box");
+  chatBox.innerHTML = "";
+
   window.messagesRef.on("child_added", snapshot => {
     const msg = snapshot.val();
     const messageElement = document.createElement("div");
@@ -13,20 +47,20 @@ document.addEventListener("DOMContentLoaded", () => {
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
   });
+}
 
-  // Submit message
-  form.addEventListener("submit", e => {
-    e.preventDefault();
-    const username = usernameInput.value.trim();
-    const message = messageInput.value.trim();
+document.getElementById("message-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const messageInput = document.getElementById("message-input");
+  const message = messageInput.value.trim();
 
-    if (username && message) {
-      window.messagesRef.push({
-        username,
-        text: message,
-        timestamp: Date.now()
-      });
-      messageInput.value = "";
-    }
+  if (!currentUser || !message) return;
+
+  window.messagesRef.push({
+    username: currentUser,
+    text: message,
+    timestamp: Date.now()
   });
+
+  messageInput.value = "";
 });
