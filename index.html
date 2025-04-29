@@ -7,13 +7,15 @@
     body { font-family: Arial; padding: 20px; background: #f4f4f4; }
     #chat-box { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; background: white; margin-bottom: 10px; }
     .message { margin: 5px 0; }
+    #status { color: gray; font-size: 0.9em; }
   </style>
 </head>
 <body>
 
 <h2>🤖 AI Chatbot (No API Key)</h2>
 <div id="chat-box"></div>
-<form id="chat-form">
+<div id="status">Loading model... Please wait (may take a minute)</div>
+<form id="chat-form" style="display:none;">
   <input type="text" id="user-input" placeholder="Type your message..." required autocomplete="off" style="width: 80%; padding: 10px;" />
   <button type="submit" style="padding: 10px;">Send</button>
 </form>
@@ -25,9 +27,19 @@
   const chatBox = document.getElementById('chat-box');
   const form = document.getElementById('chat-form');
   const input = document.getElementById('user-input');
+  const status = document.getElementById('status');
 
-  // Load a conversational model
-  const chatbot = await pipeline('conversational', 'Xenova/gpt-2');
+  let chatbot;
+
+  try {
+    status.textContent = "Loading model... (this may take a minute)";
+    chatbot = await pipeline('conversational', 'Xenova/gpt-2');
+    status.style.display = 'none';
+    form.style.display = 'block';
+  } catch (err) {
+    status.innerHTML = "<span style='color:red;'>Error loading model.</span> Try again or use online hosting.";
+    console.error(err);
+  }
 
   async function appendMessage(role, text) {
     const msg = document.createElement('div');
@@ -40,12 +52,16 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userText = input.value.trim();
-    if (!userText) return;
+    if (!userText || !chatbot) return;
 
     await appendMessage('You', userText);
 
-    const response = await chatbot(userText);
-    await appendMessage('Bot', response.generated_text);
+    try {
+      const response = await chatbot(userText);
+      await appendMessage('Bot', response.generated_text);
+    } catch (err) {
+      await appendMessage('Bot', '⚠️ An error occurred: ' + err.message);
+    }
 
     input.value = '';
   });
