@@ -1,6 +1,4 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body.light {
   background: #f0f2f5;
@@ -23,9 +21,7 @@ body.dark {
   text-align: center;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 input[type="text"], input[type="email"], input[type="password"] {
   width: 100%;
