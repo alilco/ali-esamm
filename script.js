@@ -1,66 +1,96 @@
+// DOM Elements
+const loginScreen = document.getElementById("login-screen");
+const registerScreen = document.getElementById("register-screen");
+const chatScreen = document.getElementById("chat-screen");
+const userEmailSpan = document.getElementById("user-email");
+
 let currentUser = null;
 
-function showScreen(login = true) {
-  document.getElementById("login-screen").classList.toggle("hidden", !login);
-  document.getElementById("chat-screen").classList.toggle("hidden", login);
+// Navigation
+function showLogin() {
+  loginScreen.classList.remove("hidden");
+  registerScreen.classList.add("hidden");
+  chatScreen.classList.add("hidden");
 }
 
-function addUser() {
-  const username = document.getElementById("username-input").value.trim();
-  if (!username) return alert("Please enter a username.");
-
-  window.usersRef.child(username).once("value", snapshot => {
-    if (snapshot.exists()) {
-      alert("User already exists!");
-    } else {
-      window.usersRef.child(username).set(true);
-      alert("User added successfully!");
-    }
-  });
+function showRegister() {
+  registerScreen.classList.remove("hidden");
+  loginScreen.classList.add("hidden");
+  chatScreen.classList.add("hidden");
 }
 
-function login() {
-  const username = document.getElementById("username-input").value.trim();
-  if (!username) return alert("Please enter a username.");
+// Login
+function signIn() {
+  const email = document.getElementById("login-email").value;
+  const password = document.getElementById("login-password").value;
 
-  window.usersRef.child(username).once("value", snapshot => {
-    if (snapshot.exists()) {
-      currentUser = username;
-      document.getElementById("display-username").textContent = username;
-      showScreen(false);
+  auth.signInWithEmailAndPassword(email, password)
+    .then(userCredential => {
+      currentUser = userCredential.user;
+      userEmailSpan.textContent = currentUser.email;
       loadMessages();
-    } else {
-      alert("User not found. Please add the user first.");
-    }
+      loginScreen.classList.add("hidden");
+      chatScreen.classList.remove("hidden");
+    })
+    .catch(error => {
+      alert("Login Failed: " + error.message);
+    });
+}
+
+// Register
+function signUp() {
+  const email = document.getElementById("register-email").value;
+  const password = document.getElementById("register-password").value;
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(userCredential => {
+      currentUser = userCredential.user;
+      userEmailSpan.textContent = currentUser.email;
+      loadMessages();
+      registerScreen.classList.add("hidden");
+      chatScreen.classList.remove("hidden");
+    })
+    .catch(error => {
+      alert("Registration Failed: " + error.message);
+    });
+}
+
+// Logout
+function signOut() {
+  auth.signOut().then(() => {
+    currentUser = null;
+    showLogin();
   });
 }
 
+// Load Messages
 function loadMessages() {
   const chatBox = document.getElementById("chat-box");
   chatBox.innerHTML = "";
 
-  window.messagesRef.on("child_added", snapshot => {
+  db.ref("messages").on("child_added", snapshot => {
     const msg = snapshot.val();
-    const messageElement = document.createElement("div");
-    messageElement.classList.add("message");
-    messageElement.innerHTML = `<strong>${msg.username}</strong>: ${msg.text}`;
-    chatBox.appendChild(messageElement);
+    const messageEl = document.createElement("div");
+    messageEl.classList.add("message");
+    messageEl.innerHTML = `<strong>${msg.username}</strong>: ${msg.text}`;
+    chatBox.appendChild(messageEl);
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 }
 
+// Send Message
 document.getElementById("message-form").addEventListener("submit", e => {
   e.preventDefault();
-  const messageInput = document.getElementById("message-input");
-  const message = messageInput.value.trim();
+  const input = document.getElementById("message-input");
+  const text = input.value.trim();
 
-  if (!currentUser || !message) return;
+  if (!currentUser || !text) return;
 
-  window.messagesRef.push({
-    username: currentUser,
-    text: message,
+  db.ref("messages").push({
+    username: currentUser.email,
+    text: text,
     timestamp: Date.now()
   });
 
-  messageInput.value = "";
+  input.value = "";
 });
