@@ -3,22 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Messenger Clone</title>
+  <title>Secure Messenger</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Login Section -->
+  <!-- Login Screen -->
   <div id="login-screen" class="screen">
-    <h2>🔐 Login or Add User</h2>
-    <input type="text" id="username-input" placeholder="Enter your username" required />
-    <button onclick="login()">Login</button>
-    <button onclick="addUser()">Add User</button>
+    <h2>🔐 Sign In</h2>
+    <input type="email" id="login-email" placeholder="Email" required />
+    <input type="password" id="login-password" placeholder="Password" required />
+    <button onclick="signIn()">Sign In</button>
+    <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
   </div>
 
-  <!-- Chat Section -->
+  <!-- Register Screen -->
+  <div id="register-screen" class="screen hidden">
+    <h2>📝 Register</h2>
+    <input type="email" id="register-email" placeholder="Email" required />
+    <input type="password" id="register-password" placeholder="Password" required />
+    <button onclick="signUp()">Register</button>
+    <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+  </div>
+
+  <!-- Chat Screen -->
   <div id="chat-screen" class="screen hidden">
-    <h1>💬 Messenger Clone</h1>
-    <p>Welcome, <span id="display-username"></span></p>
+    <h1>💬 Secure Messenger</h1>
+    <p>Welcome, <span id="user-email"></span> | <a href="#" onclick="signOut()">Logout</a></p>
     <div id="chat-box"></div>
     <form id="message-form">
       <input type="text" id="message-input" placeholder="Type a message..." required />
@@ -28,6 +38,7 @@
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script src="firebase-config.js"></script>
