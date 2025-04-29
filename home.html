@@ -14,15 +14,15 @@
     <label><input type="checkbox" id="theme-toggle"> Dark Mode</label>
 
     <h3>👥 Friends</h3>
-    <input type="text" id="add-friend" placeholder="Add friend by username" />
-    <button onclick="addFriend()">Add Friend</button>
+    <input type="text" id="search-username" placeholder="Search by username" />
+    <button onclick="addFriend()">Add User</button>
     <ul id="friends-list"></ul>
 
+    <h3>💬 Private Chat</h3>
+    <div id="chat-with"></div>
     <div id="chat-box"></div>
-    <form id="message-form">
-      <input type="text" id="message-input" placeholder="Type a message..." required />
-      <button type="submit">Send</button>
-    </form>
+    <input type="text" id="message-input" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
   </div>
 
   <!-- Firebase SDKs -->
