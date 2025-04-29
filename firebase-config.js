@@ -1,6 +1,4 @@
-// firebase-config.js
-
-// Your web app's Firebase configuration
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
   authDomain: "messengerapp-58f7a.firebaseapp.com",
