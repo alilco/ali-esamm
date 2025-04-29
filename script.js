@@ -1,17 +1,13 @@
-// ========================
-// Global Variables
-// ========================
 let currentUser = null;
 
-// ========================
-// Initialize on Load
-// ========================
+// Auth state check on page load
 window.addEventListener("load", () => {
   const path = window.location.pathname;
 
-  // Check auth state to control access
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (path.endsWith("home.html")) {
+  firebase.auth().onAuthStateChanged(async user => {
+    if (path.endsWith("index.html")) {
+      if (user) window.location.href = "home.html";
+    } else if (path.endsWith("home.html")) {
       if (!user) {
         alert("You must log in first.");
         window.location.href = "index.html";
@@ -24,20 +20,10 @@ window.addEventListener("load", () => {
         setupThemeToggle();
       }
     }
-
-    if (path.endsWith("index.html")) {
-      if (user) {
-        window.location.href = "home.html";
-      }
-    }
   });
 });
 
-// ========================
-// Authentication Functions
-// ========================
-
-// Sign Up with Profile
+// Register new user
 async function signUp() {
   const username = document.getElementById("username-register").value.trim();
   const password = document.getElementById("password-register").value.trim();
@@ -46,7 +32,7 @@ async function signUp() {
   const avatarInput = document.getElementById("avatar-register");
 
   if (!username || !password || !fullname) {
-    alert("Please fill in all required fields.");
+    alert("Please fill all required fields.");
     return;
   }
 
@@ -75,17 +61,17 @@ async function signUp() {
     alert("Registration successful!");
     window.location.href = "home.html";
   } catch (e) {
-    alert("Error: " + e.message);
+    alert(e.message);
   }
 }
 
-// Login with Username
+// Login existing user
 function signIn() {
   const username = document.getElementById("username-login").value.trim();
   const password = document.getElementById("password-login").value.trim();
 
   if (!username || !password) {
-    alert("Please enter both username and password.");
+    alert("Enter both fields.");
     return;
   }
 
@@ -99,56 +85,66 @@ function signIn() {
 function logout() {
   if (!currentUser) return;
 
-  // Set user offline before logout
-  firebase.database().ref("users/" + currentUser.uid).update({
-    online: false,
-    lastActive: Date.now()
-  });
+  firebase.database().ref("users/" + currentUser.uid).update({ online: false, lastActive: Date.now() });
 
   firebase.auth().signOut().then(() => {
     window.location.href = "index.html";
   });
 }
 
-// ========================
-// Home Page Setup
-// ========================
-
-// Load user display name
+// Load user profile
 async function loadUserProfile() {
   const uid = currentUser.uid;
   const snapshot = await firebase.database().ref("users/" + uid).once("value");
   const profile = snapshot.val();
-  if (profile) {
-    document.getElementById("user-fullname").textContent = profile.fullname || profile.username;
-  }
+  document.getElementById("user-fullname").textContent = profile.fullname || profile.username;
 }
 
-// Dummy chat UI setup
+// Setup chat UI
 function setupChatUI() {
   console.log("Chat UI loaded.");
 }
 
-// Real-time message listener (Placeholder for now)
+// Listen for messages
 function setupMessageListener() {
-  console.log("Message listener ready.");
+  const chatBox = document.getElementById("chat-box");
+  firebase.database().ref("messages").limitToLast(50).on("child_added", snapshot => {
+    const msg = snapshot.val();
+    const div = document.createElement("div");
+    div.className = "message";
+    div.innerHTML = `<strong>${msg.username}</strong>: ${decryptMessage(msg.text)}`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
 }
 
-// Online presence system
+// Send message
+document.getElementById("message-form")?.addEventListener("submit", e => {
+  e.preventDefault();
+  const input = document.getElementById("message-input");
+  const text = input.value.trim();
+  if (!currentUser || !text) return;
+
+  firebase.database().ref("messages").push({
+    username: currentUser.email.split("@")[0],
+    text: encryptMessage(text),
+    timestamp: Date.now()
+  });
+
+  input.value = "";
+});
+
+// Presence system
 function setupPresence() {
   if (!currentUser) return;
 
   const userRef = firebase.database().ref("users/" + currentUser.uid);
-
-  // Set online when signed in
   userRef.update({ online: true });
 
-  // Update last active every minute
   setInterval(() => {
     userRef.update({ lastActive: Date.now() });
   }, 60000);
 
-  // Optional: On disconnect, mark as offline
   firebase.database().ref(".info/connected").on("value", snap => {
     if (snap.val() === true) {
       userRef.onDisconnect().update({ online: false, lastActive: Date.now() });
@@ -156,11 +152,31 @@ function setupPresence() {
   });
 }
 
-// ========================
-// Chat Encryption (Basic AES)
-// ========================
+// Theme Toggle
+function setupThemeToggle() {
+  const toggle = document.getElementById("theme-toggle");
+  const body = document.body;
+
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark") {
+    body.classList.add("dark");
+    toggle.checked = true;
+  }
+
+  toggle.addEventListener("change", () => {
+    if (toggle.checked) {
+      body.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      body.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  });
+}
+
+// Encryption functions
 function encryptMessage(message) {
-  const key = CryptoJS.enc.Utf8.parse('1234567890123456'); // 16-byte key
+  const key = CryptoJS.enc.Utf8.parse('1234567890123456');
   return CryptoJS.AES.encrypt(message, key, {
     mode: CryptoJS.mode.ECB,
     padding: CryptoJS.pad.Pkcs7
@@ -176,44 +192,13 @@ function decryptMessage(cipherText) {
   return bytes.toString(CryptoJS.enc.Utf8);
 }
 
-// ========================
-// UI Helpers
-// ========================
-
-// Show register screen
+// Navigation
 function showRegister() {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("register-screen").classList.remove("hidden");
 }
 
-// Show login screen
 function showLogin() {
   document.getElementById("register-screen").classList.add("hidden");
   document.getElementById("login-screen").classList.remove("hidden");
-}
-
-// Theme Toggle
-function setupThemeToggle() {
-  const toggle = document.getElementById("theme-toggle");
-  const body = document.body;
-
-  // Check saved preference
-  const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") {
-    body.classList.remove("light");
-    body.classList.add("dark");
-    toggle.checked = true;
-  }
-
-  toggle.addEventListener("change", () => {
-    if (toggle.checked) {
-      body.classList.remove("light");
-      body.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      body.classList.remove("dark");
-      body.classList.add("light");
-      localStorage.setItem("theme", "light");
-    }
-  });
 }
