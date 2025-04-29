@@ -1,32 +1,47 @@
 let currentUser = null;
 
-// Sign Up (with Profile)
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    window.location.href = "home.html";
+  }
+});
+
+function showLogin() {
+  document.getElementById("login-screen").classList.remove("hidden");
+  document.getElementById("register-screen").classList.add("hidden");
+}
+
+function showRegister() {
+  document.getElementById("register-screen").classList.remove("hidden");
+  document.getElementById("login-screen").classList.add("hidden");
+}
+
 async function signUp() {
-  const username = document.getElementById("username-register").value;
-  const password = document.getElementById("password-register").value;
-  const fullname = document.getElementById("fullname-register").value;
-  const bio = document.getElementById("bio-register").value;
+  const username = document.getElementById("username-register").value.trim();
+  const password = document.getElementById("password-register").value.trim();
+  const fullname = document.getElementById("fullname-register").value.trim();
+  const bio = document.getElementById("bio-register").value.trim();
   const avatarInput = document.getElementById("avatar-register");
 
   try {
-    // Create user with email/password
-    const result = await auth.createUserWithEmailAndPassword(username + "@example.com", password);
-    const user = result.user;
+    const email = `${username}@example.com`;
+    const result = await auth.createUserWithEmailAndPassword(email, password);
+    const uid = result.user.uid;
 
-    // Upload photo
     let avatarUrl = "";
     if (avatarInput.files.length > 0) {
       const file = avatarInput.files[0];
-      const snapshot = await storage.ref(`avatars/${user.uid}`).put(file);
+      const snapshot = await storage.ref(`avatars/${uid}`).put(file);
       avatarUrl = await snapshot.ref.getDownloadURL();
     }
 
-    // Save user profile
-    await db.ref("users/" + user.uid).set({
+    await db.ref("users/" + uid).set({
       username,
       fullname,
       bio,
       avatarUrl,
+      friends: {},
       lastActive: Date.now(),
       online: true
     });
@@ -38,51 +53,21 @@ async function signUp() {
   }
 }
 
-// Sign In
 function signIn() {
-  const username = document.getElementById("username-login").value;
-  const password = document.getElementById("password-login").value;
+  const username = document.getElementById("username-login").value.trim();
+  const password = document.getElementById("password-login").value.trim();
 
-  auth.signInWithEmailAndPassword(username + "@example.com", password)
+  const email = `${username}@example.com`;
+
+  auth.signInWithEmailAndPassword(email, password)
     .then(() => {
-      window.location.href = "home.html";
+      console.log("Logged in");
     })
     .catch(e => alert("Login failed: " + e.message));
 }
 
-// Load Friends
-function loadFriends() {
-  const userId = auth.currentUser.uid;
-  db.ref("users").on("value", snap => {
-    const users = snap.val();
-    const friendsEl = document.getElementById("friends-list");
-    friendsEl.innerHTML = "";
-
-    Object.values(users).forEach(profile => {
-      if (profile.username !== auth.currentUser.displayName) {
-        const div = document.createElement("div");
-        div.textContent = `${profile.fullname} (${profile.username})`;
-        friendsEl.appendChild(div);
-      }
-    });
+function logout() {
+  auth.signOut().then(() => {
+    window.location.href = "index.html";
   });
 }
-
-// Send Message (Encrypted)
-document.getElementById("message-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const input = document.getElementById("message-input");
-  const text = input.value.trim();
-  const friendUsername = "some_friend_username"; // Replace dynamically
-
-  const chatId = [currentUser.uid, friendUid].sort().join("_");
-  const encryptedText = encryptMessage(text); // From crypto-lib.js
-
-  db.ref("messages/" + chatId).push({
-    sender: currentUser.uid,
-    text: encryptedText,
-    timestamp: Date.now()
-  });
-
-  input.value = "";
-});
