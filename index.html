@@ -20,7 +20,8 @@
     .message {
       margin: 8px 0;
     }
-    input, button {
+    input,
+    button {
       padding: 10px;
       font-size: 16px;
     }
@@ -28,7 +29,7 @@
 </head>
 <body>
 
-<h2>🤖 Working AI Chatbot (Now with Hugging Face)</h2>
+<h2>🤖 Working AI Chatbot (Reliable Version)</h2>
 <div id="chat-box"></div>
 <form id="chat-form">
   <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off" required style="width: 75%;" />
@@ -58,16 +59,16 @@
     input.disabled = true;
 
     try {
-      const res = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-small', {
+      const res = await fetch('https://free-chatty.vercel.app/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputs: userText }),
+        body: JSON.stringify({ prompt: userText }),
       });
 
-      if (!res.ok) throw new Error('Model not ready or server error.');
+      if (!res.ok) throw new Error('Server responded with error.');
 
       const data = await res.json();
-      const responseText = data.generated_text || '⚠️ No response.';
+      const responseText = data.text || '⚠️ No response.';
       await appendMessage('Bot', responseText);
 
     } catch (err) {
