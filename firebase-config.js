@@ -13,3 +13,4 @@ firebase.initializeApp(firebaseConfig);
 
 window.auth = firebase.auth();
 window.db = firebase.database();
+window.storage = firebase.storage();
