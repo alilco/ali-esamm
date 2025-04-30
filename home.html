@@ -14,7 +14,7 @@
         <span>Welcome, <strong id="chat-user">User</strong></span>
         <label><input type="checkbox" id="theme-toggle"> 🌙 Dark Mode</label>
       </div>
-      <input type="text" id="search-friend" placeholder="🔍 Search Friends..." oninput="searchFriends()" />
+      <input type="text" id="search-friend" placeholder="🔍 Search Friends..." onkeyup="searchFriends()" />
       <ul id="friends-list" class="friend-list"></ul>
     </aside>
 
@@ -28,15 +28,16 @@
     </main>
   </div>
 
-  <!-- Firebase & CryptoJS -->
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
+  <!-- CryptoJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-  <!-- Script Files -->
+  <!-- App Logic -->
   <script src="firebase-config.js"></script>
   <script src="script.js"></script>
 </body>
