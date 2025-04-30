@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Messenger Clone</title>
+  <title>Secure Messenger</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="light">
-
+<body class="light login-body">
   <!-- Login -->
   <div id="login-screen" class="auth-container slide-in">
     <h2>🔐 Sign In</h2>
@@ -33,7 +32,21 @@
   <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
+  <!-- Script Files -->
   <script src="firebase-config.js"></script>
   <script src="script.js"></script>
+
+  <script>
+    // Show screens
+    function showRegister() {
+      document.getElementById("login-screen").classList.add("hidden");
+      document.getElementById("register-screen").classList.remove("hidden");
+    }
+
+    function showLogin() {
+      document.getElementById("register-screen").classList.add("hidden");
+      document.getElementById("login-screen").classList.remove("hidden");
+    }
+  </script>
 </body>
 </html>
