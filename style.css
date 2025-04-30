@@ -1,29 +1,30 @@
 * { box-sizing: border-box; }
 
 body.light {
-  background: #f0f2f5;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f0f2f5;
   color: #111;
 }
 
 body.dark {
-  background: #121212;
-  color: white;
+  background-color: #121212;
+  color: #eee;
 }
 
-.form-container {
+.auth-container {
   max-width: 400px;
   margin: 80px auto;
   padding: 30px;
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  animation: fadeIn 0.4s ease;
+  animation: fadeIn 0.4s ease-in-out;
 }
 
 .hidden { display: none; }
 
 .slide-in {
-  animation: slideIn 0.3s ease forwards;
+  animation: slideIn 0.5s ease-out forwards;
 }
 
 @keyframes fadeIn {
@@ -40,13 +41,12 @@ input[type="text"], input[type="email"], input[type="password"] {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
-  border: none;
+  border: 1px solid #ccc;
   border-radius: 5px;
-  outline: none;
 }
 
 button {
-  background: #007bff;
+  background-color: #007bff;
   color: white;
   padding: 10px 15px;
   border: none;
@@ -54,9 +54,11 @@ button {
   cursor: pointer;
 }
 
-button:hover { background: #0056b3; }
+button:hover {
+  background-color: #0056b3;
+}
 
-/* Chat UI */
+/* Chat App Styles */
 .app {
   display: flex;
   height: 100vh;
@@ -65,7 +67,7 @@ button:hover { background: #0056b3; }
 
 .sidebar {
   width: 250px;
-  background: white;
+  background: #fff;
   border-right: 1px solid #ddd;
   padding: 10px;
 }
@@ -82,30 +84,34 @@ button:hover { background: #0056b3; }
   padding: 10px;
   background: #fafafa;
   border-radius: 10px;
-  height: 80%;
+  min-height: 300px;
   margin-bottom: 10px;
 }
 
 .message-bubble {
-  padding: 10px 15px;
   margin: 10px 0;
+  padding: 10px 15px;
   border-radius: 20px;
   word-wrap: break-word;
-  animation: fadeSlide 0.2s ease;
 }
 
 .sender {
-  align-self: flex-end;
   background: #dcf8c6;
+  align-self: flex-end;
 }
 
 .receiver {
-  align-self: flex-start;
   background: #ececec;
+  align-self: flex-start;
 }
 
-.chat-footer {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+.friend-list li {
+  list-style: none;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.friend-list li:hover {
+  background: #f1f1f1;
 }
