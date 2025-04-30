@@ -1,56 +1,65 @@
+// Global Vars
 let currentUser = null;
 let currentChatUid = null;
 
-// Check auth state
+// Wait for page load
 window.addEventListener("load", () => {
   const path = window.location.pathname;
 
-  auth.onAuthStateChanged(async user => {
+  firebase.auth().onAuthStateChanged(async (user) => {
     if (!user && !path.endsWith("index.html")) {
       alert("You must log in first.");
       window.location.href = "index.html";
     } else if (user && path.endsWith("index.html")) {
+      // Redirect user to home after login
       window.location.href = "home.html";
-    }
-
-    if (user && path.endsWith("home.html")) {
+    } else if (user && path.endsWith("home.html")) {
       currentUser = user;
       await loadUserProfile();
-      setupPresence();
+      setupThemeToggle();
       listenForFriends();
+      setupPresence();
     }
   });
 });
 
-// Login
-function signIn() {
+// Handle Login (Button No Longer Broken)
+function handleLogin() {
   const email = document.getElementById("email-login").value.trim();
   const password = document.getElementById("password-login").value.trim();
 
-  if (!email || !password) return alert("Please enter both fields.");
+  if (!email || !password) {
+    alert("Please enter both email and password.");
+    return;
+  }
 
-  auth.signInWithEmailAndPassword(email, password)
-    .then(() => console.log("Logged in"))
-    .catch(e => alert("Login error: " + e.message));
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then(() => {
+      console.log("Redirecting to home...");
+    })
+    .catch((error) => {
+      alert("Login failed: " + error.message);
+    });
 }
 
-// Register new user
-async function signUp() {
+// Register New User
+async function handleSignUp() {
   const fullName = document.getElementById("fullname-register").value.trim();
   const username = document.getElementById("username-register").value.trim();
   const email = document.getElementById("reg-email").value.trim();
   const password = document.getElementById("reg-password").value.trim();
 
   if (!fullName || !username || !email || !password) {
-    alert("Fill all fields.");
+    alert("Fill all fields before submitting.");
     return;
   }
 
   try {
-    const result = await auth.createUserWithEmailAndPassword(email, password);
+    const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
     const uid = result.user.uid;
 
-    await db.ref("users/" + uid).set({
+    // Save extra info to database
+    await firebase.database().ref("users/" + uid).set({
       fullName,
       username,
       email,
@@ -65,9 +74,12 @@ async function signUp() {
   }
 }
 
-// Load User Info
+// Load User Profile
 async function loadUserProfile() {
-  const snapshot = await db.ref("users/" + auth.currentUser.uid).once("value");
+  const uid = firebase.auth().currentUser?.uid;
+  if (!uid) return;
+
+  const snapshot = await firebase.database().ref("users/" + uid).once("value");
   const profile = snapshot.val();
   document.getElementById("chat-user").textContent = profile.fullName || profile.username;
 }
@@ -77,36 +89,61 @@ async function addFriendByUsername() {
   const input = document.getElementById("search-friend").value.trim();
   if (!input) return alert("Enter a username.");
 
-  const snapshot = await db.ref("users")
+  const snapshot = await firebase.database().ref("users")
     .orderByChild("username")
     .equalTo(input)
     .once("value");
 
-  if (!snapshot.exists()) return alert("User not found.");
+  if (!snapshot.exists()) {
+    return alert("User not found.");
+  }
 
   const friendUid = Object.keys(snapshot.val())[0];
 
-  // Save as friend
-  await db.ref(`users/${currentUser.uid}/friends`).push(friendUid);
-  document.getElementById("search-friend").value = "";
+  // Prevent adding yourself
+  if (friendUid === currentUser.uid) {
+    return alert("You can't add yourself as a friend.");
+  }
 
-  // Open chat
+  // Store in your friends list
+  await firebase.database().ref(`users/${currentUser.uid}/friends`).push(friendUid);
+
+  // Load chat UI
   currentChatUid = friendUid;
-  loadPrivateMessages(currentUser.uid, friendUid);
+  loadPrivateChat(currentUser.uid, friendUid);
 }
 
-// Load Private Messages
-function loadPrivateMessages(uid1, uid2) {
+// Load Private Chat
+function loadPrivateChat(uid1, uid2) {
+  currentChatUid = uid2;
   const chatBox = document.getElementById("chat-box");
   chatBox.innerHTML = "";
 
-  db.ref(`private_messages/${uid1}/${uid2}`).on("child_added", snap => {
+  const chatRef = firebase.database().ref(`private_messages/${uid1}/${uid2}`);
+
+  chatRef.on("child_added", snap => {
     const msg = snap.val();
     const decrypted = decryptMessage(msg.text);
 
     const bubble = document.createElement("div");
     bubble.classList.add("message-bubble");
     bubble.classList.add(msg.sender === uid1 ? "sender" : "receiver");
+
+    bubble.textContent = decrypted;
+    chatBox.appendChild(bubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+
+  // Load reverse direction too
+  const reverseRef = firebase.database().ref(`private_messages/${uid2}/${uid1}`);
+  reverseRef.off(); // Remove duplicate listeners
+  reverseRef.on("child_added", snap => {
+    const msg = snap.val();
+    const decrypted = decryptMessage(msg.text);
+
+    const bubble = document.createElement("div");
+    bubble.classList.add("message-bubble");
+    bubble.classList.add("receiver"); // always received from others
     bubble.textContent = decrypted;
     chatBox.appendChild(bubble);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -115,21 +152,19 @@ function loadPrivateMessages(uid1, uid2) {
 
 // Send Message
 function sendMessage() {
-  if (!currentUser || !currentChatUid) return;
+  if (!currentUser || !currentChatUid) {
+    return alert("Select a friend to start chatting.");
+  }
 
   const input = document.getElementById("message-input");
   const text = input.value.trim();
+
   if (!text) return;
 
   const encrypted = encryptMessage(text);
+  const chatPath = `private_messages/${currentUser.uid}/${currentChatUid}`;
 
-  db.ref(`private_messages/${currentUser.uid}/${currentChatUid}`).push({
-    sender: currentUser.uid,
-    text: encrypted,
-    timestamp: Date.now()
-  });
-
-  db.ref(`private_messages/${currentChatUid}/${currentUser.uid}`).push({
+  firebase.database().ref(chatPath).push({
     sender: currentUser.uid,
     text: encrypted,
     timestamp: Date.now()
@@ -138,7 +173,7 @@ function sendMessage() {
   input.value = "";
 }
 
-// Encrypt/Decrypt
+// Encrypt/Decrypt Messages
 function encryptMessage(message) {
   const key = CryptoJS.enc.Utf8.parse('1234567890123456');
   return CryptoJS.AES.encrypt(message, key, {
@@ -180,14 +215,16 @@ function setupThemeToggle() {
 
 // Presence System
 function setupPresence() {
-  const userRef = db.ref("users/" + currentUser.uid);
+  if (!currentUser) return;
+
+  const userRef = firebase.database().ref("users/" + currentUser.uid);
   userRef.update({ online: true });
 
   setInterval(() => {
     userRef.update({ lastActive: Date.now() });
   }, 60000);
 
-  db.ref(".info/connected").on("value", snap => {
+  firebase.database().ref(".info/connected").on("value", snap => {
     if (snap.val() === true) {
       userRef.onDisconnect().update({ online: false, lastActive: Date.now() });
     }
@@ -198,8 +235,8 @@ function setupPresence() {
 function logout() {
   if (!currentUser) return;
 
-  db.ref("users/" + currentUser.uid).update({ online: false });
-  auth.signOut().then(() => {
+  firebase.database().ref("users/" + currentUser.uid).update({ online: false, lastActive: Date.now() });
+  firebase.auth().signOut().then(() => {
     window.location.href = "index.html";
   });
 }
