@@ -1,16 +1,13 @@
-* {
-  box-sizing: border-box;
-  font-family: 'Segoe UI', sans-serif;
-}
+* { box-sizing: border-box; }
 
 body.light {
-  background-color: #f0f2f5;
+  background: #f0f2f5;
   color: #111;
 }
 
 body.dark {
-  background-color: #121212;
-  color: #eee;
+  background: #121212;
+  color: white;
 }
 
 .form-container {
@@ -20,15 +17,13 @@ body.dark {
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  animation: fadeIn 0.4s ease-in-out;
+  animation: fadeIn 0.4s ease;
 }
 
-.hidden {
-  display: none !important;
-}
+.hidden { display: none; }
 
 .slide-in {
-  animation: slideIn 0.5s ease-out forwards;
+  animation: slideIn 0.3s ease forwards;
 }
 
 @keyframes fadeIn {
@@ -45,25 +40,23 @@ input[type="text"], input[type="email"], input[type="password"] {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
-  border: 1px solid #ccc;
+  border: none;
   border-radius: 5px;
+  outline: none;
 }
 
 button {
-  background-color: #007bff;
+  background: #007bff;
   color: white;
   padding: 10px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background 0.3s;
 }
 
-button:hover {
-  background-color: #0056b3;
-}
+button:hover { background: #0056b3; }
 
-/* --- Chat Layout --- */
+/* Chat UI */
 .app {
   display: flex;
   height: 100vh;
@@ -72,11 +65,9 @@ button:hover {
 
 .sidebar {
   width: 250px;
-  background: #fff;
+  background: white;
   border-right: 1px solid #ddd;
   padding: 10px;
-  margin-right: 20px;
-  overflow-y: auto;
 }
 
 .chat-main {
@@ -100,46 +91,21 @@ button:hover {
   margin: 10px 0;
   border-radius: 20px;
   word-wrap: break-word;
-  animation: fadeSlide 0.2s ease-in-out;
+  animation: fadeSlide 0.2s ease;
 }
 
 .sender {
   align-self: flex-end;
-  background-color: #dcf8c6;
-  margin-left: auto;
+  background: #dcf8c6;
 }
 
 .receiver {
   align-self: flex-start;
-  background-color: #ececec;
-  margin-right: auto;
+  background: #ececec;
 }
 
 .chat-footer {
   display: flex;
   gap: 10px;
   align-items: center;
-}
-
-.friend-list li {
-  text-align: left;
-  padding: 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-  transition: background 0.3s;
-}
-
-.friend-list li:hover {
-  background: #f1f1f1;
-}
-
-/* Theme Switching */
-body.dark .form-container {
-  background: #1e1e1e;
-  color: white;
-}
-
-body.dark .chat-box,
-body.dark .sidebar {
-  background: #2a2a2a;
 }
