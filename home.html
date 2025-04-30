@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Messenger Clone</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -10,17 +9,17 @@
   <div class="app">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="user-header">
+      <div id="user-header">
         <span>Welcome, <strong id="chat-user">User</strong></span>
-        <label><input type="checkbox" id="theme-toggle"> 🌙 Dark Mode</label>
+        | <a href="#" onclick="logout()">Logout</a>
       </div>
       <input type="text" id="search-friend" placeholder="🔍 Search Friends..." onkeyup="searchFriends()" />
-      <ul id="friends-list" class="friend-list"></ul>
+      <ul id="friends-list"></ul>
     </aside>
 
     <!-- Chat Area -->
     <main class="chat-main">
-      <section id="chat-box" class="chat-box"></section>
+      <section id="chat-box"></section>
       <footer class="chat-footer">
         <input type="text" id="message-input" placeholder="Type a message..." />
         <button onclick="sendMessage()">Send</button>
@@ -30,14 +29,14 @@
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
   <!-- CryptoJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-  <!-- App Logic -->
+  <!-- Scripts -->
   <script src="firebase-config.js"></script>
   <script src="script.js"></script>
 </body>
