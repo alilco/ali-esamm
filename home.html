@@ -6,20 +6,21 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="light messenger-ui">
+
   <div class="app">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div id="user-header">
+      <div class="user-header">
         <span>Welcome, <strong id="chat-user">User</strong></span>
         | <a href="#" onclick="logout()">Logout</a>
       </div>
       <input type="text" id="search-friend" placeholder="🔍 Search Friends..." onkeyup="searchFriends()" />
-      <ul id="friends-list"></ul>
+      <ul id="friends-list" class="friend-list"></ul>
     </aside>
 
     <!-- Chat Area -->
     <main class="chat-main">
-      <section id="chat-box"></section>
+      <section id="chat-box" class="chat-box"></section>
       <footer class="chat-footer">
         <input type="text" id="message-input" placeholder="Type a message..." />
         <button onclick="sendMessage()">Send</button>
@@ -27,7 +28,7 @@
     </main>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-database-compat.js"></script>
