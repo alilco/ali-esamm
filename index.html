@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="light login-body">
-  <!-- Login Screen -->
+  <!-- Login -->
   <div id="login-screen" class="form-container slide-in">
     <h2>🔐 Sign In</h2>
     <input type="email" id="email-login" placeholder="Email" required />
@@ -16,22 +16,21 @@
     <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
   </div>
 
-  <!-- Register Screen -->
+  <!-- Register -->
   <div id="register-screen" class="form-container hidden">
-    <h2>📝 Register</h2>
+    <h2>📝 Create Account</h2>
     <input type="text" id="fullname-register" placeholder="Full Name" required />
     <input type="text" id="username-register" placeholder="Username" required />
     <input type="email" id="reg-email" placeholder="Email" required />
     <input type="password" id="reg-password" placeholder="Password" required />
     <button onclick="signUp()">Sign Up</button>
-    <p>Already a member? <a href="#" onclick="showLogin()">Login</a></p>
+    <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
   </div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- CryptoJS for Encryption -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
