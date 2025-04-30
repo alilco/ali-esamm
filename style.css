@@ -1,41 +1,25 @@
 * { box-sizing: border-box; }
 
 body.light {
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #f0f2f5;
-  color: #111;
+  background: #f0f2f5;
+  color: black;
 }
 
 body.dark {
-  background-color: #121212;
-  color: #eee;
+  background: #121212;
+  color: white;
 }
 
 .auth-container {
   max-width: 400px;
-  margin: 80px auto;
+  margin: 100px auto;
   padding: 30px;
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  animation: fadeIn 0.4s ease-in-out;
 }
 
 .hidden { display: none; }
-
-.slide-in {
-  animation: slideIn 0.5s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideIn {
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
 
 input[type="text"], input[type="email"], input[type="password"] {
   width: 100%;
@@ -58,10 +42,11 @@ button:hover {
   background-color: #0056b3;
 }
 
-/* Chat App Styles */
+/* Chat UI */
 .app {
   display: flex;
   height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
   padding: 20px;
 }
 
@@ -76,6 +61,7 @@ button:hover {
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding-left: 20px;
 }
 
 .chat-box {
@@ -89,27 +75,28 @@ button:hover {
 }
 
 .message-bubble {
-  margin: 10px 0;
   padding: 10px 15px;
+  margin: 10px 0;
   border-radius: 20px;
   word-wrap: break-word;
+  max-width: 60%;
 }
 
 .sender {
-  background: #dcf8c6;
   align-self: flex-end;
+  background-color: #dcf8c6;
 }
 
 .receiver {
-  background: #ececec;
   align-self: flex-start;
+  background-color: #ececec;
 }
 
 .friend-list li {
   list-style: none;
   padding: 10px;
-  border-bottom: 1px solid #eee;
   cursor: pointer;
+  border-bottom: 1px solid #eee;
 }
 
 .friend-list li:hover {
