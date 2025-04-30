@@ -1,48 +1,41 @@
-// Global Vars
 let currentUser = null;
 let currentChatUid = null;
 
-// Wait for page load
+// On page load
 window.addEventListener("load", () => {
   const path = window.location.pathname;
 
-  firebase.auth().onAuthStateChanged(async (user) => {
+  firebase.auth().onAuthStateChanged(async user => {
     if (!user && !path.endsWith("index.html")) {
-      alert("You must log in first.");
+      alert("Redirecting to login...");
       window.location.href = "index.html";
     } else if (user && path.endsWith("index.html")) {
-      // Redirect user to home after login
       window.location.href = "home.html";
     } else if (user && path.endsWith("home.html")) {
       currentUser = user;
       await loadUserProfile();
-      setupThemeToggle();
       listenForFriends();
+      setupThemeToggle();
       setupPresence();
     }
   });
 });
 
-// Handle Login (Button No Longer Broken)
+// Handle Login
 function handleLogin() {
   const email = document.getElementById("email-login").value.trim();
   const password = document.getElementById("password-login").value.trim();
 
-  if (!email || !password) {
-    alert("Please enter both email and password.");
-    return;
-  }
-
   firebase.auth().signInWithEmailAndPassword(email, password)
     .then(() => {
-      console.log("Redirecting to home...");
+      console.log("Logged in successfully.");
     })
-    .catch((error) => {
+    .catch(error => {
       alert("Login failed: " + error.message);
     });
 }
 
-// Register New User
+// Handle Registration
 async function handleSignUp() {
   const fullName = document.getElementById("fullname-register").value.trim();
   const username = document.getElementById("username-register").value.trim();
@@ -50,7 +43,7 @@ async function handleSignUp() {
   const password = document.getElementById("reg-password").value.trim();
 
   if (!fullName || !username || !email || !password) {
-    alert("Fill all fields before submitting.");
+    alert("Please fill all fields.");
     return;
   }
 
@@ -58,8 +51,8 @@ async function handleSignUp() {
     const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
     const uid = result.user.uid;
 
-    // Save extra info to database
-    await firebase.database().ref("users/" + uid).set({
+    // Save extra info to DB
+    await firebase.database().ref(`users/${uid}`).set({
       fullName,
       username,
       email,
@@ -100,50 +93,30 @@ async function addFriendByUsername() {
 
   const friendUid = Object.keys(snapshot.val())[0];
 
-  // Prevent adding yourself
   if (friendUid === currentUser.uid) {
-    return alert("You can't add yourself as a friend.");
+    return alert("You cannot add yourself.");
   }
 
-  // Store in your friends list
+  // Save in local friends
   await firebase.database().ref(`users/${currentUser.uid}/friends`).push(friendUid);
 
-  // Load chat UI
-  currentChatUid = friendUid;
+  // Open chat
   loadPrivateChat(currentUser.uid, friendUid);
 }
 
-// Load Private Chat
+// Load Private Message History
 function loadPrivateChat(uid1, uid2) {
   currentChatUid = uid2;
   const chatBox = document.getElementById("chat-box");
   chatBox.innerHTML = "";
 
-  const chatRef = firebase.database().ref(`private_messages/${uid1}/${uid2}`);
-
-  chatRef.on("child_added", snap => {
+  firebase.database().ref(`private_messages/${uid1}/${uid2}`).on("child_added", snap => {
     const msg = snap.val();
     const decrypted = decryptMessage(msg.text);
 
     const bubble = document.createElement("div");
     bubble.classList.add("message-bubble");
     bubble.classList.add(msg.sender === uid1 ? "sender" : "receiver");
-
-    bubble.textContent = decrypted;
-    chatBox.appendChild(bubble);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
-
-  // Load reverse direction too
-  const reverseRef = firebase.database().ref(`private_messages/${uid2}/${uid1}`);
-  reverseRef.off(); // Remove duplicate listeners
-  reverseRef.on("child_added", snap => {
-    const msg = snap.val();
-    const decrypted = decryptMessage(msg.text);
-
-    const bubble = document.createElement("div");
-    bubble.classList.add("message-bubble");
-    bubble.classList.add("receiver"); // always received from others
     bubble.textContent = decrypted;
     chatBox.appendChild(bubble);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -152,28 +125,24 @@ function loadPrivateChat(uid1, uid2) {
 
 // Send Message
 function sendMessage() {
-  if (!currentUser || !currentChatUid) {
-    return alert("Select a friend to start chatting.");
-  }
+  if (!currentUser || !currentChatUid) return alert("Select a friend first.");
 
   const input = document.getElementById("message-input");
   const text = input.value.trim();
-
   if (!text) return;
 
-  const encrypted = encryptMessage(text);
-  const chatPath = `private_messages/${currentUser.uid}/${currentChatUid}`;
+  const encryptedText = encryptMessage(text);
 
-  firebase.database().ref(chatPath).push({
+  firebase.database().ref(`private_messages/${currentUser.uid}/${currentChatUid}`).push({
     sender: currentUser.uid,
-    text: encrypted,
+    text: encryptedText,
     timestamp: Date.now()
   });
 
   input.value = "";
 }
 
-// Encrypt/Decrypt Messages
+// Encryption Functions
 function encryptMessage(message) {
   const key = CryptoJS.enc.Utf8.parse('1234567890123456');
   return CryptoJS.AES.encrypt(message, key, {
@@ -217,16 +186,16 @@ function setupThemeToggle() {
 function setupPresence() {
   if (!currentUser) return;
 
-  const userRef = firebase.database().ref("users/" + currentUser.uid);
-  userRef.update({ online: true });
+  const ref = firebase.database().ref("users/" + currentUser.uid);
+  ref.update({ online: true, lastActive: Date.now() });
 
   setInterval(() => {
-    userRef.update({ lastActive: Date.now() });
+    ref.update({ lastActive: Date.now() });
   }, 60000);
 
   firebase.database().ref(".info/connected").on("value", snap => {
     if (snap.val() === true) {
-      userRef.onDisconnect().update({ online: false, lastActive: Date.now() });
+      ref.onDisconnect().update({ online: false, lastActive: Date.now() });
     }
   });
 }
@@ -235,8 +204,37 @@ function setupPresence() {
 function logout() {
   if (!currentUser) return;
 
-  firebase.database().ref("users/" + currentUser.uid).update({ online: false, lastActive: Date.now() });
+  firebase.database().ref("users/" + currentUser.uid).update({ online: false });
   firebase.auth().signOut().then(() => {
     window.location.href = "index.html";
   });
+}
+
+// Search Friends
+async function searchFriends() {
+  const q = document.getElementById("search-friend").value.trim().toLowerCase();
+  if (!q) return;
+
+  const snapshot = await firebase.database().ref("users")
+    .orderByChild("username")
+    .startAt(q)
+    .endAt(q + "\uf8ff")
+    .once("value");
+
+  const resultsDiv = document.getElementById("friends-list");
+  resultsDiv.innerHTML = "";
+
+  if (snapshot.exists()) {
+    Object.entries(snapshot.val()).forEach(([uid, data]) => {
+      if (uid !== currentUser?.uid) {
+        const el = document.createElement("li");
+        el.textContent = `${data.fullName} (${data.username})`;
+        el.onclick = () => {
+          currentChatUid = uid;
+          loadPrivateChat(currentUser.uid, uid);
+        };
+        resultsDiv.appendChild(el);
+      }
+    });
+  }
 }
