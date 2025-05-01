@@ -1,127 +1,76 @@
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-  authDomain: "messengerapp-58f7a.firebaseapp.com",
-  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-  projectId: "messengerapp-58f7a",
-  storageBucket: "messengerapp-58f7a.firebasestorage.app",
-  messagingSenderId: "46178168523",
-  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-};
-
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-// DOM Elements
-const loginForm = document.getElementById("loginForm");
-const registerForm = document.getElementById("registerForm");
-const chatInterface = document.getElementById("chatInterface");
-const messagesDiv = document.getElementById("messages");
-const newMessageInput = document.getElementById("newMessage");
-const sendMessageButton = document.getElementById("sendMessage");
+import { auth, database, signInWithEmailAndPassword, createUserWithEmailAndPassword, ref, set, push, onValue } from './firebase-config.js';
 
 let currentUser = null;
 
-// Switch between Login and Register forms
-document.getElementById("switchToRegister").addEventListener("click", (e) => {
-  e.preventDefault();
-  loginForm.classList.add("hidden");
-  registerForm.classList.remove("hidden");
+// Elements
+const authContainer = document.getElementById('auth-container');
+const chatContainer = document.getElementById('chat-container');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const loginBtn = document.getElementById('login-btn');
+const registerBtn = document.getElementById('register-btn');
+const messageInput = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
+const messagesDiv = document.getElementById('messages');
+
+// Login
+loginBtn.addEventListener('click', () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      currentUser = userCredential.user;
+      authContainer.style.display = 'none';
+      chatContainer.style.display = 'block';
+      loadMessages();
+    })
+    .catch((error) => {
+      alert("خطأ في تسجيل الدخول: " + error.message);
+    });
 });
 
-document.getElementById("switchToLogin").addEventListener("click", (e) => {
-  e.preventDefault();
-  registerForm.classList.add("hidden");
-  loginForm.classList.remove("hidden");
+// Register
+registerBtn.addEventListener('click', () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      currentUser = userCredential.user;
+      alert("تم إنشاء الحساب بنجاح!");
+    })
+    .catch((error) => {
+      alert("خطأ في إنشاء الحساب: " + error.message);
+    });
 });
 
-// Login Form Submission
-loginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
+// Send Message
+sendBtn.addEventListener('click', () => {
+  const message = messageInput.value.trim();
+  if (!message) return;
 
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    alert("Logged in successfully!");
-  } catch (error) {
-    alert(`Error: ${error.message}`);
-  }
+  const newMessageRef = push(ref(database, 'messages'));
+  set(newMessageRef, {
+    uid: currentUser.uid,
+    email: currentUser.email,
+    message: message,
+    timestamp: Date.now()
+  });
+
+  messageInput.value = '';
 });
 
-// Register Form Submission
-registerForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const username = document.getElementById("registerUsername").value;
-  const email = document.getElementById("registerEmail").value;
-  const password = document.getElementById("registerPassword").value;
-
-  try {
-    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-    const user = userCredential.user;
-
-    // Save user details in Firestore
-    await db.collection("users").doc(user.uid).set({ username, email });
-
-    alert("Registered successfully!");
-  } catch (error) {
-    alert(`Error: ${error.message}`);
-  }
-});
-
-// Show Chat Interface
-function showChat() {
-  loginForm.classList.add("hidden");
-  registerForm.classList.add("hidden");
-  chatInterface.classList.remove("hidden");
-  loadMessages();
-}
-
-// Load Messages from Firestore
+// Load Messages
 function loadMessages() {
-  if (!currentUser) return;
-
-  const q = db.collection("messages").where("participants", "array-contains", currentUser.uid);
-
-  q.onSnapshot((snapshot) => {
-    messagesDiv.innerHTML = "";
-    snapshot.forEach((doc) => {
-      const message = doc.data();
-      const messageElement = document.createElement("div");
-      messageElement.textContent = message.text;
+  const messagesRef = ref(database, 'messages');
+  onValue(messagesRef, (snapshot) => {
+    messagesDiv.innerHTML = '';
+    snapshot.forEach((childSnapshot) => {
+      const messageData = childSnapshot.val();
+      const messageElement = document.createElement('div');
+      messageElement.textContent = `${messageData.email}: ${messageData.message}`;
       messagesDiv.appendChild(messageElement);
     });
   });
 }
-
-// Send Message
-sendMessageButton.addEventListener("click", async () => {
-  const text = newMessageInput.value.trim();
-  if (!text) return;
-
-  try {
-    await db.collection("messages").add({
-      text,
-      participants: [currentUser.uid], // Add more participants later
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    newMessageInput.value = "";
-  } catch (error) {
-    alert(error.message);
-  }
-});
-
-// Listen for Auth State Changes
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    currentUser = user;
-    showChat();
-  } else {
-    currentUser = null;
-    loginForm.classList.remove("hidden");
-    registerForm.classList.add("hidden");
-    chatInterface.classList.add("hidden");
-  }
-});
