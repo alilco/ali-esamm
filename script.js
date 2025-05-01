@@ -46,7 +46,6 @@ loginForm.addEventListener("submit", async (e) => {
   try {
     await auth.signInWithEmailAndPassword(email, password);
     alert("Logged in successfully!");
-    showChat();
   } catch (error) {
     alert(error.message);
   }
@@ -67,7 +66,6 @@ registerForm.addEventListener("submit", async (e) => {
     await db.collection("users").doc(user.uid).set({ username, email });
 
     alert("Registered successfully!");
-    showChat();
   } catch (error) {
     alert(error.message);
   }
