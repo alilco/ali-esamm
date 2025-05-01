@@ -6,117 +6,105 @@ let currentUser = null;
 auth.onAuthStateChanged((user) => {
   if (user) {
     currentUser = user;
-    window.location.href = "chat.html"; // Redirect to chat page
+    // Redirect to chat page if not already there
+    if (!window.location.href.includes("chat.html")) {
+      window.location.href = "chat.html";
+    }
   }
 });
 
-// Elements for Authentication Page
-const authContainer = document.getElementById('auth-container');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const usernameInput = document.getElementById('username');
-const loginBtn = document.getElementById('login-btn');
-const registerBtn = document.getElementById('register-btn');
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("login-btn");
+  const registerBtn = document.getElementById("register-btn");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const usernameInput = document.getElementById("username");
 
-// Login Button
-if (loginBtn) {
-  loginBtn.addEventListener('click', () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+  if (loginBtn) {
+    loginBtn.addEventListener("click", () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
 
-    if (!email || !password) {
-      return alert("يرجى إدخال البريد الإلكتروني وكلمة المرور!");
-    }
+      if (!email || !password) {
+        alert("يرجى إدخال البريد وكلمة المرور");
+        return;
+      }
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        console.log("User logged in successfully");
-      })
-      .catch((error) => {
-        console.error("Error during login:", error.message);
-        alert("خطأ في تسجيل الدخول: " + error.message);
-      });
-  });
-}
-
-// Register Button
-if (registerBtn) {
-  registerBtn.addEventListener('click', () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    const username = usernameInput.value.trim();
-
-    if (!email || !password || !username) {
-      return alert("يرجى إدخال البريد الإلكتروني، كلمة المرور، واسم المستخدم!");
-    }
-
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        currentUser = userCredential.user;
-
-        // Save username to database
-        set(ref(database, `users/${currentUser.uid}`), { username })
-          .then(() => {
-            alert("تم إنشاء الحساب بنجاح!");
-          })
-          .catch((error) => {
-            console.error("Error saving username:", error.message);
-            alert("خطأ أثناء حفظ اسم المستخدم: " + error.message);
-          });
-      })
-      .catch((error) => {
-        console.error("Error during registration:", error.message);
-        alert("خطأ في إنشاء الحساب: " + error.message);
-      });
-  });
-}
-
-// Chat Page Logic
-const chatContainer = document.getElementById('chat-container');
-const messageInput = document.getElementById('message-input');
-const sendBtn = document.getElementById('send-btn');
-const messagesDiv = document.getElementById('messages');
-
-if (chatContainer) {
-  // Load Messages
-  function loadMessages() {
-    const messagesRef = ref(database, 'messages');
-    onValue(messagesRef, (snapshot) => {
-      messagesDiv.innerHTML = '';
-      snapshot.forEach((childSnapshot) => {
-        const messageData = childSnapshot.val();
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-
-        // Fetch username
-        const userRef = ref(database, `users/${messageData.uid}`);
-        onValue(userRef, (userSnapshot) => {
-          const userData = userSnapshot.val();
-          const username = userData?.username || "Unknown";
-          messageElement.innerHTML = `
-            <span class="username">${username}:</span> ${messageData.message}
-          `;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          console.log("تم تسجيل الدخول");
+        })
+        .catch((error) => {
+          alert("خطأ في تسجيل الدخول: " + error.message);
         });
-
-        messagesDiv.appendChild(messageElement);
-      });
     });
   }
 
-  loadMessages();
+  if (registerBtn) {
+    registerBtn.addEventListener("click", () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      const username = usernameInput.value.trim();
 
-  // Send Message
-  sendBtn.addEventListener('click', () => {
-    const message = messageInput.value.trim();
-    if (!message) return;
+      if (!email || !password || !username) {
+        alert("يرجى إدخال جميع البيانات");
+        return;
+      }
 
-    const newMessageRef = push(ref(database, 'messages'));
-    set(newMessageRef, {
-      uid: currentUser.uid,
-      message: message,
-      timestamp: Date.now()
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          currentUser = userCredential.user;
+          // Save username
+          set(ref(database, "users/" + currentUser.uid), { username });
+          alert("تم التسجيل بنجاح!");
+        })
+        .catch((error) => {
+          alert("خطأ في التسجيل: " + error.message);
+        });
+    });
+  }
+
+  // Chat Page Logic
+  const sendBtn = document.getElementById("send-btn");
+  const messageInput = document.getElementById("message-input");
+  const messagesDiv = document.getElementById("messages");
+
+  if (sendBtn && messageInput && messagesDiv) {
+    sendBtn.addEventListener("click", () => {
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      const newMessageRef = push(ref(database, "messages"));
+      set(newMessageRef, {
+        uid: currentUser.uid,
+        message: message,
+        timestamp: Date.now(),
+      });
+
+      messageInput.value = "";
     });
 
-    messageInput.value = '';
-  });
-}
+    function loadMessages() {
+      const messagesRef = ref(database, "messages");
+      onValue(messagesRef, (snapshot) => {
+        messagesDiv.innerHTML = "";
+        snapshot.forEach((childSnapshot) => {
+          const msg = childSnapshot.val();
+          const msgDiv = document.createElement("div");
+          msgDiv.className = "message";
+
+          const userRef = ref(database, "users/" + msg.uid);
+          onValue(userRef, (userSnapshot) => {
+            const userData = userSnapshot.val();
+            const username = userData?.username || "مستخدم";
+            msgDiv.textContent = `${username}: ${msg.message}`;
+          });
+
+          messagesDiv.appendChild(msgDiv);
+        });
+      });
+    }
+
+    loadMessages();
+  }
+});
