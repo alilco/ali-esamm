@@ -6,16 +6,18 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="light login-body">
+  <!-- Login -->
   <div id="login-screen" class="auth-container slide-in">
     <h2>🔐 Sign In</h2>
     <input type="email" id="email-login" placeholder="Email" required oninput="toggleLoginButton()" />
     <input type="password" id="password-login" placeholder="Password" required oninput="toggleLoginButton()" />
     <button id="loginBtn" disabled onclick="handleLogin()">Login</button>
-    <p>Don't have an account? <a href="#" onclick="showRegister()">Sign Up</a></p>
+    <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
   </div>
 
+  <!-- Register -->
   <div id="register-screen" class="auth-container hidden">
-    <h2>📝 Register</h2>
+    <h2>📝 Create Account</h2>
     <input type="text" id="fullname-register" placeholder="Full Name" required />
     <input type="text" id="username-register" placeholder="Username" required />
     <input type="email" id="reg-email" placeholder="Email" required />
@@ -24,14 +26,15 @@
     <p>Already registered? <a href="#" onclick="showLogin()">Login</a></p>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- CryptoJS -->
+  <!-- CryptoJS for Encryption -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
+  <!-- Local Scripts -->
   <script src="firebase-config.js"></script>
   <script src="script.js"></script>
 
