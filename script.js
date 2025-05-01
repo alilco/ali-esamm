@@ -47,7 +47,7 @@ loginForm.addEventListener("submit", async (e) => {
     await auth.signInWithEmailAndPassword(email, password);
     alert("Logged in successfully!");
   } catch (error) {
-    alert(error.message);
+    alert(`Error: ${error.message}`);
   }
 });
 
@@ -67,7 +67,7 @@ registerForm.addEventListener("submit", async (e) => {
 
     alert("Registered successfully!");
   } catch (error) {
-    alert(error.message);
+    alert(`Error: ${error.message}`);
   }
 });
 
