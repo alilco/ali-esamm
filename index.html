@@ -1,60 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Secure Messenger</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messenger App</title>
 </head>
-<body class="light login-body">
-  <!-- Login -->
-  <div id="login-screen" class="auth-container slide-in">
-    <h2>🔐 Sign In</h2>
-    <input type="email" id="email-login" placeholder="Email" required oninput="toggleLoginButton()" />
-    <input type="password" id="password-login" placeholder="Password" required oninput="toggleLoginButton()" />
-    <button id="loginBtn" disabled onclick="handleLogin()">Login</button>
-    <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
-  </div>
-
-  <!-- Register -->
-  <div id="register-screen" class="auth-container hidden">
-    <h2>📝 Create Account</h2>
-    <input type="text" id="fullname-register" placeholder="Full Name" required />
-    <input type="text" id="username-register" placeholder="Username" required />
-    <input type="email" id="reg-email" placeholder="Email" required />
-    <input type="password" id="reg-password" placeholder="Password" required />
-    <button onclick="handleSignUp()">Sign Up</button>
-    <p>Already registered? <a href="#" onclick="showLogin()">Login</a></p>
-  </div>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- CryptoJS for Encryption -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
-  <!-- Local Scripts -->
-  <script src="firebase-config.js"></script>
-  <script src="script.js"></script>
-
-  <script>
-    function showRegister() {
-      document.getElementById("login-screen").classList.add("hidden");
-      document.getElementById("register-screen").classList.remove("hidden");
-    }
-
-    function showLogin() {
-      document.getElementById("register-screen").classList.add("hidden");
-      document.getElementById("login-screen").classList.remove("hidden");
-    }
-
-    function toggleLoginButton() {
-      const email = document.getElementById("email-login").value.trim();
-      const password = document.getElementById("password-login").value.trim();
-      const btn = document.getElementById("loginBtn");
-      btn.disabled = !(email && password);
-    }
-  </script>
+<body>
+  <div id="root"></div>
 </body>
 </html>
