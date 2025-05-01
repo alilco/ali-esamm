@@ -47,3 +47,15 @@ button:hover {
   margin-bottom: 10px;
   padding: 10px;
 }
+
+.message {
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  background: #f9f9f9;
+}
+
+.message .username {
+  font-weight: bold;
+  color: #007bff;
+}
