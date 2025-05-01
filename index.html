@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat App</title>
+  <title>تسجيل الدخول</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Authentication Section -->
   <div id="auth-container">
     <h2>تسجيل الدخول</h2>
     <input type="email" id="email" placeholder="البريد الإلكتروني">
@@ -15,14 +14,6 @@
     <input type="text" id="username" placeholder="اسم المستخدم (للتسجيل فقط)">
     <button id="login-btn">تسجيل الدخول</button>
     <button id="register-btn">إنشاء حساب</button>
-  </div>
-
-  <!-- Chat Section -->
-  <div id="chat-container" style="display: none;">
-    <h2>الدردشة</h2>
-    <div id="messages"></div>
-    <input type="text" id="message-input" placeholder="اكتب رسالة...">
-    <button id="send-btn">إرسال</button>
   </div>
 
   <script src="firebase-config.js" type="module"></script>
