@@ -7,16 +7,17 @@ window.addEventListener("load", () => {
 
   firebase.auth().onAuthStateChanged(async user => {
     if (!user && !path.endsWith("index.html")) {
-      alert("Redirecting to login...");
+      alert("You must log in first.");
       window.location.href = "index.html";
     } else if (user && path.endsWith("index.html")) {
       window.location.href = "home.html";
-    } else if (user && path.endsWith("home.html")) {
+    }
+
+    if (user && path.endsWith("home.html")) {
       currentUser = user;
       await loadUserProfile();
       listenForFriends();
       setupThemeToggle();
-      setupPresence();
     }
   });
 });
@@ -43,7 +44,7 @@ async function handleSignUp() {
   const password = document.getElementById("reg-password").value.trim();
 
   if (!fullName || !username || !email || !password) {
-    alert("Please fill all fields.");
+    alert("Fill all registration fields.");
     return;
   }
 
@@ -51,8 +52,7 @@ async function handleSignUp() {
     const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
     const uid = result.user.uid;
 
-    // Save extra info to DB
-    await firebase.database().ref(`users/${uid}`).set({
+    await firebase.database().ref("users/" + uid).set({
       fullName,
       username,
       email,
@@ -69,10 +69,7 @@ async function handleSignUp() {
 
 // Load User Profile
 async function loadUserProfile() {
-  const uid = firebase.auth().currentUser?.uid;
-  if (!uid) return;
-
-  const snapshot = await firebase.database().ref("users/" + uid).once("value");
+  const snapshot = await firebase.database().ref("users/" + auth.currentUser.uid).once("value");
   const profile = snapshot.val();
   document.getElementById("chat-user").textContent = profile.fullName || profile.username;
 }
@@ -93,18 +90,15 @@ async function addFriendByUsername() {
 
   const friendUid = Object.keys(snapshot.val())[0];
 
-  if (friendUid === currentUser.uid) {
-    return alert("You cannot add yourself.");
-  }
-
-  // Save in local friends
+  // Save as friend
   await firebase.database().ref(`users/${currentUser.uid}/friends`).push(friendUid);
 
   // Open chat
+  currentChatUid = friendUid;
   loadPrivateChat(currentUser.uid, friendUid);
 }
 
-// Load Private Message History
+// Load Private Messages
 function loadPrivateChat(uid1, uid2) {
   currentChatUid = uid2;
   const chatBox = document.getElementById("chat-box");
@@ -131,18 +125,18 @@ function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  const encryptedText = encryptMessage(text);
+  const encrypted = encryptMessage(text);
 
   firebase.database().ref(`private_messages/${currentUser.uid}/${currentChatUid}`).push({
     sender: currentUser.uid,
-    text: encryptedText,
+    text: encrypted,
     timestamp: Date.now()
   });
 
   input.value = "";
 }
 
-// Encryption Functions
+// AES Encryption
 function encryptMessage(message) {
   const key = CryptoJS.enc.Utf8.parse('1234567890123456');
   return CryptoJS.AES.encrypt(message, key, {
@@ -182,12 +176,12 @@ function setupThemeToggle() {
   });
 }
 
-// Presence System
+// Presence Detection
 function setupPresence() {
   if (!currentUser) return;
 
   const ref = firebase.database().ref("users/" + currentUser.uid);
-  ref.update({ online: true, lastActive: Date.now() });
+  ref.update({ online: true });
 
   setInterval(() => {
     ref.update({ lastActive: Date.now() });
@@ -221,19 +215,16 @@ async function searchFriends() {
     .endAt(q + "\uf8ff")
     .once("value");
 
-  const resultsDiv = document.getElementById("friends-list");
-  resultsDiv.innerHTML = "";
+  const list = document.getElementById("friends-list");
+  list.innerHTML = "";
 
   if (snapshot.exists()) {
     Object.entries(snapshot.val()).forEach(([uid, data]) => {
       if (uid !== currentUser?.uid) {
         const el = document.createElement("li");
         el.textContent = `${data.fullName} (${data.username})`;
-        el.onclick = () => {
-          currentChatUid = uid;
-          loadPrivateChat(currentUser.uid, uid);
-        };
-        resultsDiv.appendChild(el);
+        el.onclick = () => loadPrivateChat(currentUser.uid, uid);
+        list.appendChild(el);
       }
     });
   }
