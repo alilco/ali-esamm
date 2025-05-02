@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>تطبيق دردشة كامل</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #messages {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="auth-container">
+    <h2>تسجيل الدخول / إنشاء حساب</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    <button onclick="signIn()">تسجيل الدخول</button>
+    <button onclick="signUp()">إنشاء حساب</button>
+</div>
+
+<div class="container" id="chat-container" style="display:none;">
+    <h2>دردشة مباشرة</h2>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
+    <button onclick="sendMessage()">إرسال</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js';
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js';
+
+    // 🔑 بيانات مشروع Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+        authDomain: "messengerapp-58f7a.firebaseapp.com",
+        projectId: "messengerapp-58f7a",
+        storageBucket: "messengerapp-58f7a.appspot.com",
+        messagingSenderId: "46178168523",
+        appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+    };
+
+    // 🔧 تهيئة Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // 🚪 تسجيل الدخول
+    function signIn() {
+        console.log("signIn تم استدعاء الدالة"); // [[5]]
+        const email = document.getElementById('username').value + '@app.com';
+        const password = document.getElementById('password').value;
+
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                console.log("تم تسجيل الدخول بنجاح", userCredential.user.email);
+                showChatUI();
+                listenForMessages();
+            })
+            .catch((error) => {
+                console.error("خطأ في تسجيل الدخول:", error.message); // [[5]]
+                alert("❌ خطأ: " + error.message);
+            });
+    }
+
+    // 🆕 إنشاء حساب جديد
+    function signUp() {
+        console.log("signUp تم استدعاء الدالة"); // [[5]]
+        const email = document.getElementById('username').value + '@app.com';
+        const password = document.getElementById('password').value;
+
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                console.log("تم إنشاء الحساب بنجاح", userCredential.user.email);
+                alert("✅ تم التسجيل بنجاح!");
+                showChatUI();
+                listenForMessages();
+            })
+            .catch((error) => {
+                console.error("خطأ في إنشاء الحساب:", error.message); // [[5]]
+                alert("❌ خطأ: " + error.message);
+            });
+    }
+
+    // 💬 إرسال رسالة
+    function sendMessage() {
+        const message = document.getElementById('messageInput').value;
+        const author = auth.currentUser.email.split('@')[0];
+
+        addDoc(collection(db, "messages"), {
+            text: message,
+            author: author,
+            timestamp: new Date()
+        }).then(() => {
+            document.getElementById('messageInput').value = '';
+        }).catch((error) => {
+            console.error("فشل في إرسال الرسالة:", error.message); // [[5]]
+            alert("❌ فشل في إرسال الرسالة");
+        });
+    }
+
+    // 🔄 الاستماع لتغيرات الرسائل
+    function listenForMessages() {
+        const messagesDiv = document.getElementById('messages');
+        const q = query(collection(db, "messages"), orderBy("timestamp"));
+
+        onSnapshot(q, (snapshot) => {
+            messagesDiv.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message';
+                msgDiv.innerHTML = `<strong>${data.author}:</strong> ${data.text}`;
+                messagesDiv.appendChild(msgDiv);
+            });
+        });
+    }
+
+    // 🖥️ عرض واجهة الدردشة
+    function showChatUI() {
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('chat-container').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
