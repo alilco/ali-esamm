@@ -1,9 +1,9 @@
 // Import Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js";
-import { getDatabase, ref, push, onValue, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js";
+import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js";
 
-// تكوين Firebase الخاص بك
+// تكوين Firebase - استبدلها بمعلومات مشروعك
 const firebaseConfig = {
   apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
   authDomain: "messengerapp-58f7a.firebaseapp.com",
@@ -19,7 +19,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// عرض الحاوية المناسبة بناءً على حالة المستخدم
+// مراقبة حالة المستخدم
 onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById("auth-container").style.display = "none";
@@ -32,23 +32,29 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // تسجيل الدخول
-function login() {
+function login(event) {
+  event.preventDefault();
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
   signInWithEmailAndPassword(auth, email, password)
+    .then(() => alert("تم تسجيل الدخول"))
     .catch((error) => {
+      console.error("Login Error:", error.code, error.message);
       alert("فشل تسجيل الدخول: " + error.message);
     });
 }
 
 // إنشاء حساب
-function signup() {
+function signup(event) {
+  event.preventDefault();
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
   createUserWithEmailAndPassword(auth, email, password)
+    .then(() => alert("تم إنشاء الحساب بنجاح"))
     .catch((error) => {
+      console.error("Signup Error:", error.code, error.message);
       alert("فشل إنشاء الحساب: " + error.message);
     });
 }
