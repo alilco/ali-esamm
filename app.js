@@ -15,29 +15,40 @@ const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 const darkModeBtn = document.getElementById('darkModeToggle');
 
-// جلب اسم المستخدم من localStorage أو تعيين افتراضي
 let username = localStorage.getItem('username') || 'مستخدم';
+let currentUser = null;
 
-// التحقق من تسجيل الدخول
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    signInAnonymously(auth).catch(console.error);
+// الانتظار حتى يتم تسجيل الدخول
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    console.log("المستخدم مسجل دخول:", user.uid);
+    loadMessages();
+  } else {
+    await signInAnonymously(auth).catch(console.error);
   }
 });
 
-// تحميل الرسائل من Firebase
-onValue(messagesRef, (snapshot) => {
-  chatBox.innerHTML = '';
-  snapshot.forEach((childSnapshot) => {
-    const msg = childSnapshot.val();
-    addMessageToChat(msg.text, msg.sender, msg.time, childSnapshot.key, msg.uid);
+// تحميل الرسائل
+function loadMessages() {
+  onValue(messagesRef, (snapshot) => {
+    chatBox.innerHTML = '';
+    snapshot.forEach((childSnapshot) => {
+      const msg = childSnapshot.val();
+      addMessageToChat(msg.text, msg.sender, msg.time, childSnapshot.key, msg.uid);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
   });
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
+}
 
 // إرسال رسالة جديدة
 messageForm.addEventListener('submit', (e) => {
   e.preventDefault();
+  if (!currentUser) {
+    alert("جارٍ تسجيل الدخول... انتظر لحظة");
+    return;
+  }
+
   const text = messageInput.value.trim();
   if (text !== '') {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -49,7 +60,7 @@ messageForm.addEventListener('submit', (e) => {
         text,
         sender: username,
         time,
-        uid: auth.currentUser?.uid
+        uid: currentUser.uid
       });
     } else {
       // غير متصل؟ احفظ محليًا
@@ -73,7 +84,7 @@ function addMessageToChat(text, sender, time, key, uid) {
     <strong>${sender}</strong><br/>
     ${text}<br/>
     <small>${time}</small>
-    ${uid === auth.currentUser?.uid ? `<button onclick="deleteMessage('${key}')">🗑️ حذف</button>` : ''}
+    ${uid === currentUser?.uid ? `<button onclick="deleteMessage('${key}')">🗑️ حذف</button>` : ''}
   `;
   chatBox.appendChild(div);
 }
@@ -100,7 +111,7 @@ function sendOfflineMessages() {
         text: msg.text,
         sender: username,
         time: msg.time,
-        uid: auth.currentUser?.uid
+        uid: currentUser?.uid
       });
     });
     localStorage.removeItem('offlineMessages');
