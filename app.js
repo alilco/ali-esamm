@@ -1,5 +1,5 @@
 // app.js
-import { messagesRef, push, onValue } from './firebase.js';
+import { messagesRef, push, onValue, set } from './firebase.js';
 
 const chatBox = document.getElementById('chat-box');
 const messageForm = document.getElementById('message-form');
@@ -16,16 +16,20 @@ onValue(messagesRef, (snapshot) => {
 });
 
 // إرسال رسالة
-messageForm.addEventListener('submit', (e) => {
-  e.preventDefault();
+messageForm.addEventListener('submit', async (e) => {
+  e.preventDefault(); // منع إعادة تحميل الصفحة
   const text = messageInput.value.trim();
   if (text !== '') {
-    const newMessageRef = push(messagesRef);
-    set(newMessageRef, {
-      text: text,
-      sender: 'user'
-    });
-    messageInput.value = '';
+    try {
+      const newMessageRef = push(messagesRef);
+      await set(newMessageRef, {
+        text: text,
+        sender: 'user'
+      });
+      messageInput.value = '';
+    } catch (error) {
+      console.error("فشل في إرسال الرسالة:", error);
+    }
   }
 });
 
