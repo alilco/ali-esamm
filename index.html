@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول</title>
+    <title>تسجيل أو تسجيل دخول</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h2>تسجيل الدخول</h2>
+        <h2 id="form-title">تسجيل دخول</h2>
         <input type="email" id="email" placeholder="البريد الإلكتروني" required>
         <input type="password" id="password" placeholder="كلمة المرور" required>
-        <input type="text" id="username" placeholder="اسم المستخدم" required>
-        <button id="register-button">سجل الآن</button>
+        <input type="text" id="username" placeholder="اسم المستخدم" style="display: none;" required>
+        <button id="auth-button">تسجيل دخول</button>
+        <p id="toggle-link">ليس لديك حساب؟ سجل الآن!</p>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
