@@ -1,8 +1,9 @@
-// Import the functions you need from the SDKs you need
+// إعدادات Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
 
-// Your web app's Firebase configuration
+// إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
     authDomain: "messengerapp-58f7a.firebaseapp.com",
@@ -14,36 +15,25 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const auth = getAuth();
 const db = getFirestore(app);
 
-// إرسال رسالة
-document.getElementById('send-button').addEventListener('click', async () => {
-    const messageInput = document.getElementById('message-input');
-    const messageText = messageInput.value.trim();
+// تسجيل الدخول
+document.getElementById('register-button').addEventListener('click', async () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const username = document.getElementById('username').value;
 
-    if (messageText !== '') {
-        try {
-            await addDoc(collection(db, "messages"), {
-                text: messageText,
-                timestamp: new Date()
-            });
-            messageInput.value = ''; // مسح حقل الإدخال بعد الإرسال
-            console.log("تم إرسال الرسالة: ", messageText);
-        } catch (error) {
-            console.error("خطأ في إرسال الرسالة: ", error);
-        }
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // حفظ اسم المستخدم في Firestore
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+            username: username
+        });
+
+        // التحويل إلى صفحة الدردشة
+        window.location.href = 'chat.html?uid=' + userCredential.user.uid;
+    } catch (error) {
+        console.error("خطأ في التسجيل: ", error);
     }
-});
-
-// استقبال الرسائل
-const messagesRef = query(collection(db, "messages"), orderBy("timestamp"));
-onSnapshot(messagesRef, (snapshot) => {
-    const chatBox = document.getElementById('chat-box');
-    chatBox.innerHTML = ''; // مسح الرسائل القديمة
-    snapshot.forEach(doc => {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('chat-message');
-        messageElement.textContent = doc.data().text;
-        chatBox.appendChild(messageElement);
-    });
 });
