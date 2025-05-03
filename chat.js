@@ -3,7 +3,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, orderBy, query, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
 
-// إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
     authDomain: "messengerapp-58f7a.firebaseapp.com",
@@ -13,7 +12,6 @@ const firebaseConfig = {
     appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth();
