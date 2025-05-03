@@ -24,6 +24,9 @@ document.getElementById('auth-button').addEventListener('click', async () => {
     const password = document.getElementById('password').value;
     const username = document.getElementById('username').value;
 
+    const feedbackElement = document.getElementById('feedback');
+    feedbackElement.textContent = ""; // مسح الرسالة السابقة
+
     const isRegistering = document.getElementById('username').style.display !== "none";
     
     try {
@@ -35,17 +38,30 @@ document.getElementById('auth-button').addEventListener('click', async () => {
                 username: username
             });
             
+            // عرض رسالة نجاح
+            feedbackElement.textContent = "تم تسجيل الحساب بنجاح!";
+            
             // الانتقال إلى صفحة الدردشة
             window.location.href = 'chat.html?uid=' + userCredential.user.uid;
         } else {
             // تسجيل دخول المستخدم
             await signInWithEmailAndPassword(auth, email, password);
+            feedbackElement.textContent = "تم تسجيل الدخول بنجاح!";
             
             // الانتقال إلى صفحة الدردشة
             window.location.href = 'chat.html?uid=' + auth.currentUser.uid;
         }
     } catch (error) {
-        console.error("خطأ في تسجيل الدخول أو تسجيل جديد: ", error);
+        // معالجة الأخطاء
+        if (error.code === 'auth/invalid-email') {
+            feedbackElement.textContent = "البريد الإلكتروني غير صالح.";
+        } else if (error.code === 'auth/user-not-found') {
+            feedbackElement.textContent = "لا يوجد حساب مرتبط بهذا البريد الإلكتروني.";
+        } else if (error.code === 'auth/wrong-password') {
+            feedbackElement.textContent = "كلمة مرور خاطئة.";
+        } else {
+            feedbackElement.textContent = "حدث خطأ: " + error.message;
+        }
     }
 });
 
@@ -55,7 +71,7 @@ document.getElementById('toggle-link').addEventListener('click', () => {
     const usernameInput = document.getElementById('username');
     
     if (usernameInput.style.display === "none") {
-        // إذا كان المستخدم لا يزال في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
+        // إذا كان المستخدم في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
         usernameInput.style.display = "block";
         currentFormTitle.innerText = "تسجيل جديد";
         document.getElementById('auth-button').innerText = "سجل الآن";
