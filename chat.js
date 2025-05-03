@@ -30,6 +30,9 @@ async function displayUsername() {
 
 displayUsername();
 
+// إعداد الرسالة لعرض الأخطاء أو النجاحات
+const feedbackElement = document.getElementById('feedback-message');
+
 // إرسال رسالة
 document.getElementById('send-button').addEventListener('click', async () => {
     const messageInput = document.getElementById('message-input');
@@ -42,10 +45,13 @@ document.getElementById('send-button').addEventListener('click', async () => {
                 userId: userId,
                 timestamp: new Date()
             });
+            feedbackElement.textContent = "تم إرسال الرسالة بنجاح!";
             messageInput.value = '';  // مسح حقل الإدخال بعد الإرسال
         } catch (error) {
-            console.error("خطأ في إرسال الرسالة: ", error);
+            feedbackElement.textContent = "حدث خطأ أثناء إرسال الرسالة: " + error.message;
         }
+    } else {
+        feedbackElement.textContent = "يرجى إدخال نص الرسالة.";
     }
 });
 
