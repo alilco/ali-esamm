@@ -1,6 +1,6 @@
 // إعدادات Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
 
 // إعدادات Firebase
@@ -18,22 +18,53 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore(app);
 
-// تسجيل الدخول
-document.getElementById('register-button').addEventListener('click', async () => {
+// التعامل مع زر تسجيل الدخول أو تسجيل جديد
+document.getElementById('auth-button').addEventListener('click', async () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const username = document.getElementById('username').value;
 
+    const isRegistering = document.getElementById('username').style.display !== "none";
+    
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        // حفظ اسم المستخدم في Firestore
-        await setDoc(doc(db, "users", userCredential.user.uid), {
-            username: username
-        });
-
-        // التحويل إلى صفحة الدردشة
-        window.location.href = 'chat.html?uid=' + userCredential.user.uid;
+        if (isRegistering) {
+            // إنشاء حساب جديد
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            // حفظ اسم المستخدم في Firestore
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+                username: username
+            });
+            
+            // الانتقال إلى صفحة الدردشة
+            window.location.href = 'chat.html?uid=' + userCredential.user.uid;
+        } else {
+            // تسجيل دخول المستخدم
+            await signInWithEmailAndPassword(auth, email, password);
+            
+            // الانتقال إلى صفحة الدردشة
+            window.location.href = 'chat.html?uid=' + auth.currentUser.uid;
+        }
     } catch (error) {
-        console.error("خطأ في التسجيل: ", error);
+        console.error("خطأ في تسجيل الدخول أو تسجيل جديد: ", error);
+    }
+});
+
+// التبديل بين تسجيل الدخول و إنشاء حساب
+document.getElementById('toggle-link').addEventListener('click', () => {
+    const currentFormTitle = document.getElementById('form-title');
+    const usernameInput = document.getElementById('username');
+    
+    if (usernameInput.style.display === "none") {
+        // إذا كان المستخدم لا يزال في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
+        usernameInput.style.display = "block";
+        currentFormTitle.innerText = "تسجيل جديد";
+        document.getElementById('auth-button').innerText = "سجل الآن";
+        document.getElementById('toggle-link').innerText = "لديك حساب؟ تسجيل الدخول";
+    } else {
+        // إذا كان المستخدم في وضع التسجيل، قم بالتبديل إلى تسجيل الدخول
+        usernameInput.style.display = "none";
+        currentFormTitle.innerText = "تسجيل دخول";
+        document.getElementById('auth-button').innerText = "تسجيل دخول";
+        document.getElementById('toggle-link').innerText = "ليس لديك حساب؟ سجل الآن!";
     }
 });
