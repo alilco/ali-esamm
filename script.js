@@ -47,7 +47,7 @@ document.getElementById('auth-button').addEventListener('click', async () => {
             // تسجيل دخول المستخدم
             await signInWithEmailAndPassword(auth, email, password);
             feedbackElement.textContent = "تم تسجيل الدخول بنجاح!";
-            window.location.href = 'chat.html?uid=' + auth.currentUser.uid;
+            document.getElementById("update-username-container").style.display = "block"; // عرض قسم تحديث اسم المستخدم
         }
     } catch (error) {
         // معالجة الأخطاء
@@ -70,7 +70,7 @@ document.getElementById('toggle-link').addEventListener('click', () => {
     const updateUsernameContainer = document.getElementById('update-username-container');
 
     if (usernameInput.style.display === "none") {
-        // إذا كان المستخدم لا يزال في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
+        // إذا كان المستخدم في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
         usernameInput.style.display = "block";
         currentFormTitle.innerText = "تسجيل جديد";
         document.getElementById('auth-button').innerText = "سجل الآن";
@@ -82,6 +82,7 @@ document.getElementById('toggle-link').addEventListener('click', () => {
         currentFormTitle.innerText = "تسجيل دخول";
         document.getElementById('auth-button').innerText = "تسجيل دخول";
         document.getElementById('toggle-link').innerText = "ليس لديك حساب؟ سجل الآن!";
+        updateUsernameContainer.style.display = "none"; // إخفاء تحديث اسم المستخدم
     }
 });
 
