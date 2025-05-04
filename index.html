@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دردشة الذكاء الاصطناعي المجاني</title>
     <link rel="stylesheet" href="style.css">
-    <!-- إضافة مكتبة WebLLM -->
-    <script src="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.0/dist/webllm.min.js"></script>
+    <!-- استخدام TensorFlow.js بدلاً من WebLLM -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/qna@1.0.1"></script>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
             <h1>دردشة الذكاء الاصطناعي</h1>
-            <div class="model-status" id="model-status">جاهز</div>
+            <div class="model-status" id="model-status">غير مُحمل</div>
         </div>
         
         <div class="messages" id="messages">
             <div class="message bot">
-                <div class="message-content">أهلا بك! أنا مساعدك الذكي. انقر على زر "تحميل النموذج" لبدء المحادثة. (سيتم التحميل مرة واحدة فقط وقد يستغرق بعض الوقت)</div>
+                <div class="message-content">أهلا بك! أنا مساعدك الذكي. انقر على زر "تحميل النموذج" لبدء المحادثة.</div>
             </div>
         </div>
         
@@ -28,12 +29,8 @@
         
         <div class="model-controls">
             <button id="load-model-btn">تحميل النموذج</button>
-            <div class="model-info" id="model-info">
-                <span>النموذج: </span>
-                <select id="model-select">
-                    <option value="Phi-2-q4f32_0" selected>Phi-2 (صغير - 1.8 جيجابايت)</option>
-                    <option value="TinyLlama-1.1B-Chat-v1.0-q4f32_0">TinyLlama (أصغر - 700 ميجابايت)</option>
-                </select>
+            <div class="progress-container" id="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
             </div>
         </div>
         
