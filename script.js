@@ -1,85 +1,103 @@
-// إعدادات Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { getDatabase, ref, set, onValue, push } from "firebase/database";
 
-// إعدادات Firebase
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-    authDomain: "messengerapp-58f7a.firebaseapp.com",
-    projectId: "messengerapp-58f7a",
-    storageBucket: "messengerapp-58f7a.appspot.com",
-    messagingSenderId: "46178168523",
-    appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
+  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
+  authDomain: "messengerapp-58f7a.firebaseapp.com",
+  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
+  projectId: "messengerapp-58f7a",
+  storageBucket: "messengerapp-58f7a.firebasestorage.app",
+  messagingSenderId: "46178168523",
+  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore(app);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-// التعامل مع زر تسجيل الدخول أو تسجيل جديد
-document.getElementById('auth-button').addEventListener('click', async () => {
+// Login function
+async function login() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const username = document.getElementById('username').value;
 
-    const feedbackElement = document.getElementById('feedback');
-    feedbackElement.textContent = ""; // مسح الرسالة السابقة
-
-    const isRegistering = document.getElementById('username').style.display !== "none";
-    
     try {
-        if (isRegistering) {
-            // إنشاء حساب جديد
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            // حفظ اسم المستخدم في Firestore
-            await setDoc(doc(db, "users", userCredential.user.uid), {
-                username: username
-            });
-            
-            // عرض رسالة نجاح
-            feedbackElement.textContent = "تم تسجيل الحساب بنجاح!";
-            
-            // الانتقال إلى صفحة الدردشة
-            window.location.href = 'chat.html?uid=' + userCredential.user.uid;
-        } else {
-            // تسجيل دخول المستخدم
-            await signInWithEmailAndPassword(auth, email, password);
-            feedbackElement.textContent = "تم تسجيل الدخول بنجاح!";
-            // الانتقال إلى صفحة الدردشة
-            window.location.href = 'chat.html?uid=' + auth.currentUser.uid;
-        }
+        await signInWithEmailAndPassword(auth, email, password);
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('chat-container').style.display = 'block';
+        document.getElementById('change-username-container').style.display = 'block';
+        loadMessages();
     } catch (error) {
-        // معالجة الأخطاء
-        if (error.code === 'auth/invalid-email') {
-            feedbackElement.textContent = "البريد الإلكتروني غير صالح.";
-        } else if (error.code === 'auth/user-not-found') {
-            feedbackElement.textContent = "لا يوجد حساب مرتبط بهذا البريد الإلكتروني.";
-        } else if (error.code === 'auth/wrong-password') {
-            feedbackElement.textContent = "كلمة مرور خاطئة.";
-        } else {
-            feedbackElement.textContent = "حدث خطأ: " + error.message;
+        console.error('Error logging in:', error);
+    }
+}
+
+// Register function
+async function register() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('chat-container').style.display = 'block';
+        document.getElementById('change-username-container').style.display = 'block';
+        loadMessages();
+    } catch (error) {
+        console.error('Error registering:', error);
+    }
+}
+
+// Change username function
+async function changeUsername() {
+    const newUsername = document.getElementById('newUsername').value;
+
+    try {
+        await updateProfile(auth.currentUser, { displayName: newUsername });
+        console.log('Username updated successfully');
+    } catch (error) {
+        console.error('Error updating username:', error);
+    }
+}
+
+// Send message function
+async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const chatWindow = document.getElementById('chatWindow');
+
+    if (messageInput.value.trim() !== '') {
+        const message = {
+            text: messageInput.value,
+            user: auth.currentUser.displayName || auth.currentUser.email,
+            timestamp: new Date().toISOString()
+        };
+
+        await push(ref(db, 'messages'), message);
+
+        messageInput.value = '';
+    }
+}
+
+// Load messages function
+function loadMessages() {
+    const chatWindow = document.getElementById('chatWindow');
+    const messagesRef = ref(db, 'messages');
+
+    onValue(messagesRef, (snapshot) => {
+        const messages = snapshot.val();
+        chatWindow.innerHTML = '';
+
+        for (const key in messages) {
+            const message = messages[key];
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.textContent = `${message.user}: ${message.text}`;
+            chatWindow.appendChild(messageDiv);
         }
-    }
-});
 
-// التبديل بين تسجيل الدخول و إنشاء حساب
-document.getElementById('toggle-link').addEventListener('click', () => {
-    const currentFormTitle = document.getElementById('form-title');
-    const usernameInput = document.getElementById('username');
-
-    if (usernameInput.style.display === "none") {
-        // إذا كان المستخدم في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
-        usernameInput.style.display = "block";
-        currentFormTitle.innerText = "تسجيل جديد";
-        document.getElementById('auth-button').innerText = "سجل الآن";
-        document.getElementById('toggle-link').innerText = "لديك حساب؟ تسجيل الدخول";
-    } else {
-        // إذا كان المستخدم في وضع التسجيل، قم بالتبديل إلى تسجيل الدخول
-        usernameInput.style.display = "none";
-        currentFormTitle.innerText = "تسجيل دخول";
-        document.getElementById('auth-button').innerText = "تسجيل دخول";
-        document.getElementById('toggle-link').innerText = "ليس لديك حساب؟ سجل الآن!";
-    }
-});
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    });
+}
