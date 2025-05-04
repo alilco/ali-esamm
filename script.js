@@ -2,42 +2,165 @@
 const messagesContainer = document.getElementById('messages');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-btn');
-const loadModelButton = document.getElementById('load-model-btn');
-const loadingIndicator = document.getElementById('loading');
-const modelStatus = document.getElementById('model-status');
-const progressContainer = document.getElementById('progress-container');
-const progressBar = document.getElementById('progress-bar');
+const typingIndicator = document.getElementById('typing-indicator');
 
-// متغيرات الحالة
-let qnaModel = null;
-let isModelLoaded = false;
-let isProcessing = false;
-let messageHistory = [];
-let context = ""; // سياق المحادثة
+// المحادثة والسياق
+let context = '';
+let conversationHistory = [];
+let isTyping = false;
 
-// مجموعة من الردود الذكية المحددة مسبقًا
-const intelligentResponses = {
-    "السلام": "وعليكم السلام ورحمة الله وبركاته! كيف يمكنني مساعدتك؟",
-    "مرحبا": "أهلاً بك! كيف حالك اليوم؟",
-    "شكرا": "العفو! سعيد بأنني استطعت المساعدة.",
-    "من أنت": "أنا مساعد ذكاء اصطناعي تم تطويري للمحادثة ومساعدتك في الإجابة على الأسئلة.",
-    "ماذا تستطيع أن تفعل": "يمكنني الإجابة على أسئلتك وتقديم معلومات مفيدة والتحدث معك في مواضيع متنوعة.",
-    "كيف حالك": "أنا بخير، شكراً للسؤال! كيف يمكنني مساعدتك اليوم؟",
-    "وداعا": "إلى اللقاء! أتمنى لك يوماً سعيداً."
-};
-
-// إضافة ردود إضافية لتغطية مجموعة واسعة من المواضيع
+// قاعدة معرفية شاملة
 const knowledgeBase = {
-    "ما هو الذكاء الاصطناعي": "الذكاء الاصطناعي هو فرع من علوم الحاسوب يهتم بإنشاء أنظمة قادرة على أداء مهام تتطلب عادةً ذكاءً بشرياً، مثل التعرف على الكلام والصور، واتخاذ القرارات، والترجمة بين اللغات.",
-    "من اخترع": "لا أستطيع تحديد من اخترع بدون معرفة ما تسأل عنه بالضبط. يمكنك تحديد الاختراع الذي تود معرفة مخترعه؟",
-    "كم عمرك": "أنا نموذج برمجي وليس لدي عمر بالمفهوم البشري. تم تطويري لمساعدتك في الإجابة على الأسئلة والمحادثة.",
-    "أين تعيش": "أنا لا أعيش في مكان محدد، فأنا نموذج رقمي يعمل على جهازك مباشرة داخل المتصفح.",
-    "ما هي البرمجة": "البرمجة هي عملية كتابة تعليمات (شيفرة) تخبر الحاسوب بما يجب عليه فعله. تستخدم لغات برمجة مختلفة مثل JavaScript و Python و C++ لإنشاء البرامج والتطبيقات والمواقع.",
-    "ما هو الانترنت": "الإنترنت هو شبكة عالمية من أجهزة الكمبيوتر المتصلة ببعضها البعض، تسمح بتبادل المعلومات والبيانات. يتيح للناس التواصل، وتصفح مواقع الويب، ومشاركة المعلومات حول العالم.",
-    "ما هي الرياضيات": "الرياضيات هي دراسة الأعداد والكميات والأشكال والبنى وعلاقاتها، باستخدام التفكير المنطقي والحساب. تُعتبر لغة عالمية وأساساً للعلوم والهندسة والتكنولوجيا."
+    // ترحيب وتحية
+    "مرحبا": "مرحباً بك! كيف يمكنني مساعدتك اليوم؟",
+    "السلام": "وعليكم السلام ورحمة الله وبركاته! كيف حالك؟",
+    "صباح الخير": "صباح النور! أتمنى لك يوماً سعيداً. كيف يمكنني مساعدتك؟",
+    "مساء الخير": "مساء النور! كيف تسير أمورك؟",
+    "كيف حالك": "أنا بخير، شكراً للسؤال! كيف يمكنني مساعدتك اليوم؟",
+    "شكرا": "العفو! سعيد بأنني استطعت المساعدة. هل هناك شيء آخر تحتاجه؟",
+    
+    // معلومات عن الذكاء الاصطناعي
+    "ما هو الذكاء الاصطناعي": "الذكاء الاصطناعي هو مجال من علوم الحاسوب يركز على تطوير أنظمة قادرة على أداء مهام تتطلب عادة ذكاءً بشرياً. يشمل ذلك التعلم، التفكير، حل المشكلات، فهم اللغة الطبيعية، والرؤية الحاسوبية.",
+    "كيف يعمل الذكاء الاصطناعي": "يعمل الذكاء الاصطناعي من خلال مجموعة من الخوارزميات والنماذج الرياضية التي تمكن الحواسيب من التعلم من البيانات واتخاذ قرارات أو توقعات. تشمل التقنيات الرئيسية التعلم الآلي، التعلم العميق، ومعالجة اللغة الطبيعية.",
+    "ما هو التعلم الآلي": "التعلم الآلي هو فرع من الذكاء الاصطناعي يركز على تطوير خوارزميات تسمح للحواسيب بالتعلم من البيانات وتحسين أدائها دون برمجة صريحة. يستخدم في تطبيقات مثل التعرف على الصور، التوصيات، والتنبؤات.",
+    
+    // تطوير المواقع والبرمجة
+    "كيف أبدأ في تعلم البرمجة": "لبدء تعلم البرمجة، يمكنك: 1) اختيار لغة برمجة مناسبة للمبتدئين مثل Python أو JavaScript، 2) استخدام منصات تعليمية مجانية مثل Codecademy أو freeCodeCamp، 3) العمل على مشاريع صغيرة لتطبيق ما تعلمته، 4) المشاركة في مجتمعات البرمجة للحصول على الدعم.",
+    "ما هي أفضل لغة برمجة للمبتدئين": "Python تعتبر من أفضل لغات البرمجة للمبتدئين بسبب بساطة صيغتها وقراءتها. JavaScript أيضاً خيار جيد خاصة إذا كنت مهتماً بتطوير الويب. اختيار اللغة يعتمد على اهتماماتك وأهدافك في مجال البرمجة.",
+    "كيف أنشئ موقع ويب": "لإنشاء موقع ويب، يمكنك اتباع هذه الخطوات: 1) تعلم HTML لهيكلة المحتوى، CSS للتصميم، وJavaScript للتفاعل، 2) اختيار استضافة مناسبة مثل Netlify أو GitHub Pages، 3) تسجيل اسم نطاق إذا كنت تريد موقعاً احترافياً، 4) تصميم وبناء صفحات موقعك، 5) اختبار الموقع ونشره.",
+    
+    // معلومات عامة
+    "ما هي أكبر دولة في العالم": "روسيا هي أكبر دولة في العالم من حيث المساحة، إذ تبلغ مساحتها حوالي 17.1 مليون كيلومتر مربع، تليها كندا ثم الولايات المتحدة والصين.",
+    "من هو مخترع الهاتف": "ألكسندر غراهام بيل هو المخترع المعترف به عموماً للهاتف، حيث سجل براءة اختراع أول هاتف عملي في عام 1876.",
+    "ماهي عاصمة مصر": "القاهرة هي عاصمة جمهورية مصر العربية، وهي أكبر مدينة في العالم العربي وإفريقيا من حيث عدد السكان.",
+    
+    // المزيد من المواضيع
+    "كيف أتعلم اللغة الإنجليزية": "لتعلم اللغة الإنجليزية بفعالية: 1) تعلم المفردات الأساسية، 2) مارس الاستماع والتحدث يومياً، 3) اقرأ مواد باللغة الإنجليزية بانتظام، 4) استخدم تطبيقات تعلم اللغة مثل Duolingo، 5) شاهد أفلاماً ومسلسلات باللغة الإنجليزية مع الترجمة، 6) انضم إلى مجموعات محادثة.",
+    "نصائح للصحة": "للحفاظ على صحة جيدة: 1) مارس النشاط البدني بانتظام، 2) اتبع نظاماً غذائياً متوازناً، 3) احصل على قسط كافٍ من النوم، 4) اشرب كمية كافية من الماء، 5) قلل من التوتر، 6) احصل على فحوصات طبية دورية.",
+    "كيفية كتابة سيرة ذاتية": "لكتابة سيرة ذاتية فعالة: 1) استخدم تنسيقاً واضحاً وبسيطاً، 2) ابدأ بمعلومات الاتصال والخلاصة المهنية، 3) اذكر خبراتك العملية بترتيب زمني عكسي، 4) أبرز إنجازاتك بدلاً من مجرد سرد المهام، 5) اذكر تعليمك ومهاراتك ذات الصلة، 6) تأكد من خلوها من الأخطاء اللغوية."
 };
 
-// إضافة رسالة إلى المحادثة
+// ردود مستندة إلى المحتوى
+const contentBasedResponses = {
+    "من أنت": "أنا مساعد ذكي مصمم للإجابة على أسئلتك وتقديم المساعدة في مختلف المواضيع. أستطيع تقديم معلومات ونصائح في عدة مجالات مثل التكنولوجيا، البرمجة، الصحة، والمعرفة العامة.",
+    "ماذا تستطيع أن تفعل": "يمكنني الإجابة على أسئلتك، تقديم معلومات في مجالات متنوعة، المساعدة في حل المشكلات، اقتراح أفكار، وإجراء محادثات تفاعلية. أنا مصمم لأكون مساعداً مفيداً ومتعدد الاستخدامات.",
+    "هل أنت إنسان": "لا، أنا نموذج محادثة ذكي مصمم لمحاكاة المحادثة البشرية. أعمل باستخدام قاعدة معرفية وخوارزميات للرد على أسئلتك ومساعدتك.",
+    "أين تعيش": "أنا لا أعيش في مكان محدد لأنني برنامج رقمي. أنا أعمل من خلال خوادم ومتصفحات الويب لمساعدة المستخدمين من مختلف أنحاء العالم.",
+    "كم عمرك": "ليس لي عمر بالمفهوم البشري. أنا برنامج تم تطويره حديثاً لأكون مساعداً محادثة مفيداً. يمكنك التفكير بي كتقنية معاصرة مصممة للمساعدة."
+};
+
+// قائمة ردود عامة تناسب مجموعة واسعة من الأسئلة
+const generalResponses = [
+    "هذا سؤال مثير للاهتمام! بناءً على معلوماتي، أعتقد أن الأمر يتعلق بعدة عوامل مترابطة. هل ترغب في معرفة المزيد عن جانب معين؟",
+    "شكراً لسؤالك. من وجهة نظري، يمكن النظر إلى هذا الموضوع من عدة زوايا. ما الجانب الذي تهتم به أكثر؟",
+    "هذا موضوع غني بالتفاصيل! يمكنني مشاركة بعض الأفكار الأساسية، ولكن أخبرني إذا كنت تريد التعمق في نقطة محددة.",
+    "استناداً إلى تحليلي، هناك عدة جوانب مهمة لهذا الموضوع. الجانب الأول هو... هل ترغب في معرفة المزيد؟",
+    "سؤال ممتاز! في رأيي، يمكن تلخيص الإجابة في عدة نقاط أساسية. هل هناك جانب معين تود التركيز عليه؟",
+    "أفهم ما تسأل عنه. بناءً على معلوماتي، هناك العديد من العوامل التي تؤثر في هذا الموضوع. دعني أشرح أهمها...",
+    "من المثير أنك تسأل عن هذا! هناك وجهات نظر متعددة حول هذا الموضوع. ما أراه أن...",
+    "هذا سؤال يستحق التفكير. لو نظرنا للموضوع بشمولية، سنجد أن هناك عدة اعتبارات مهمة. أولها..."
+];
+
+// قائمة ردود متخصصة للأسئلة التي لا نملك إجابة دقيقة عنها
+const fallbackResponses = [
+    "هذا سؤال مثير للتفكير! بصراحة، لا أملك معلومات كافية للإجابة بشكل دقيق. هل يمكنك طرح سؤال آخر أو توضيح ما تريد معرفته؟",
+    "أشكرك على هذا السؤال المثير. للأسف، معلوماتي في هذا المجال محدودة. هل يمكنني مساعدتك في موضوع آخر؟",
+    "سؤال رائع! رغم أنني أحاول الإجابة على معظم الأسئلة، إلا أن هذا السؤال تحديداً يتطلب معلومات أكثر تخصصاً مما أملك. هل هناك شيء آخر تود معرفته؟",
+    "أقدر فضولك المعرفي! للأسف، لا أستطيع تقديم إجابة دقيقة على هذا السؤال. هل ترغب في استكشاف موضوع مختلف؟",
+    "هذا سؤال مهم! للأسف، لا أملك المعلومات الكافية لأقدم إجابة موثوقة. هل يمكنني مساعدتك في أمر آخر؟"
+];
+
+// وظيفة لمحاكاة التفكير والكتابة
+function simulateTyping(callback, minDelay = 500, maxDelay = 2000) {
+    if (isTyping) return;
+    
+    isTyping = true;
+    typingIndicator.style.display = 'flex';
+    
+    // حساب التأخير بناءً على طول الرد المتوقع
+    const delay = Math.random() * (maxDelay - minDelay) + minDelay;
+    
+    setTimeout(() => {
+        typingIndicator.style.display = 'none';
+        isTyping = false;
+        callback();
+    }, delay);
+}
+
+// وظيفة البحث عن إجابة في قاعدة المعرفة
+function findInKnowledgeBase(query) {
+    query = query.toLowerCase();
+    
+    // البحث في قاعدة المعرفة العامة
+    for (const [keyword, response] of Object.entries(knowledgeBase)) {
+        if (query.includes(keyword.toLowerCase())) {
+            return response;
+        }
+    }
+    
+    // البحث في الردود المستندة إلى المحتوى
+    for (const [keyword, response] of Object.entries(contentBasedResponses)) {
+        if (query.includes(keyword.toLowerCase())) {
+            return response;
+        }
+    }
+    
+    // إذا لم يتم العثور على تطابق، أعد null
+    return null;
+}
+
+// وظيفة لتحليل النص وفهم نية المستخدم
+function analyzeIntent(text) {
+    text = text.toLowerCase();
+    
+    if (text.includes('شكر') || text.includes('ممتن') || text.includes('رائع')) {
+        return 'شكر';
+    }
+    
+    if (text.includes('سلام') || text.includes('وداع') || text.includes('إلى اللقاء')) {
+        return 'وداع';
+    }
+    
+    if (text.includes('مساعد') || text.includes('ساعد') || text.includes('احتاج')) {
+        return 'طلب_مساعدة';
+    }
+    
+    if (text.includes('كيف') || text.includes('لماذا') || text.includes('متى') || text.includes('أين') || text.includes('ما هو') || text.includes('من هو')) {
+        return 'سؤال';
+    }
+    
+    return 'غير_محدد';
+}
+
+// وظيفة للرد الذكي بناءً على النص والسياق
+function generateResponse(text) {
+    // البحث أولاً في قاعدة المعرفة
+    const knowledgeBaseResponse = findInKnowledgeBase(text);
+    if (knowledgeBaseResponse) {
+        return knowledgeBaseResponse;
+    }
+    
+    // تحليل نية المستخدم
+    const intent = analyzeIntent(text);
+    
+    // توليد رد بناءً على النية
+    switch (intent) {
+        case 'شكر':
+            return "العفو! سعيد بأنني استطعت المساعدة. هل هناك شيء آخر تحتاجه؟";
+        case 'وداع':
+            return "إلى اللقاء! كان من دواعي سروري التحدث معك. أتمنى لك يوماً سعيداً!";
+        case 'طلب_مساعدة':
+            return "بالتأكيد، أنا هنا للمساعدة! ما الذي تحتاج المساعدة فيه تحديداً؟";
+        case 'سؤال':
+            // اختيار رد عشوائي من الردود العامة للأسئلة
+            return generalResponses[Math.floor(Math.random() * generalResponses.length)];
+        default:
+            // اختيار رد عشوائي من الردود الاحتياطية
+            return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    }
+}
+
+// وظيفة إضافة رسالة إلى المحادثة
 function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
@@ -50,233 +173,41 @@ function addMessage(text, sender) {
     messagesContainer.appendChild(messageDiv);
     
     // تحديث سياق المحادثة
-    if (sender === 'user') {
-        context += "سؤال: " + text + "\n";
-    } else {
-        context += "إجابة: " + text + "\n";
+    context += (sender === 'user' ? 'المستخدم: ' : 'البوت: ') + text + '\n';
+    
+    // الاحتفاظ فقط بآخر 1000 حرف من السياق
+    if (context.length > 1000) {
+        context = context.slice(-1000);
     }
     
-    // الاحتفاظ فقط بآخر 2000 حرف من السياق
-    if (context.length > 2000) {
-        context = context.slice(-2000);
-    }
-    
-    // تخزين في تاريخ المحادثة
-    messageHistory.push({ role: sender === 'user' ? 'user' : 'assistant', content: text });
+    // حفظ في تاريخ المحادثة
+    conversationHistory.push({ role: sender, content: text });
     
     // التمرير إلى آخر رسالة
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// إظهار وإخفاء مؤشر التحميل
-function showLoading() {
-    loadingIndicator.style.display = 'flex';
-    modelStatus.textContent = 'يعمل...';
-}
-
-function hideLoading() {
-    loadingIndicator.style.display = 'none';
-    modelStatus.textContent = isModelLoaded ? 'جاهز' : 'غير محمل';
-}
-
-// تحديث شريط التقدم
-function updateProgress(progress) {
-    progressContainer.style.display = 'block';
-    progressBar.style.width = `${Math.round(progress * 100)}%`;
-}
-
-// البحث عن إجابة في قاعدة المعرفة
-function findAnswerInKnowledgeBase(query) {
-    query = query.toLowerCase();
-    
-    // البحث في الردود الذكية أولاً
-    for (const [keyword, response] of Object.entries(intelligentResponses)) {
-        if (query.includes(keyword)) {
-            return response;
-        }
-    }
-    
-    // البحث في قاعدة المعرفة
-    for (const [question, answer] of Object.entries(knowledgeBase)) {
-        if (query.includes(question.toLowerCase())) {
-            return answer;
-        }
-    }
-    
-    return null;
-}
-
-// توليد رد ذكي بناءً على الكلمات المفتاحية والسياق
-function generateSmartResponse(query) {
-    const cleanQuery = query.toLowerCase().trim();
-    
-    // البحث في القاعدة المعرفية
-    const knowledgeBaseAnswer = findAnswerInKnowledgeBase(cleanQuery);
-    if (knowledgeBaseAnswer) {
-        return knowledgeBaseAnswer;
-    }
-    
-    // ردود عامة ذكية تبدو كأنها من نموذج لغوي متقدم
-    const generalResponses = [
-        "شكراً على سؤالك! بناءً على فهمي، " + (cleanQuery.includes("كيف") ? 
-            "هناك عدة طرق للقيام بذلك. يمكنك البدء بـ..." : 
-            "هذا موضوع مثير للاهتمام يمكننا استكشافه أكثر."),
-        "سؤال جيد! " + (cleanQuery.includes("ما هو") || cleanQuery.includes("ما هي") ? 
-            "من وجهة نظري، يمكن تعريف هذا بأنه..." : 
-            "دعني أفكر في هذا..."),
-        "أفهم ما تسأل عنه. " + (cleanQuery.length > 50 ? 
-            "هذا سؤال معقد، ولكن سأحاول تقديم منظور مفيد." : 
-            "دعني أشارك بعض الأفكار حول هذا الموضوع."),
-        "بناءً على المعلومات المتاحة لدي، " + (cleanQuery.includes("لماذا") ? 
-            "هناك عدة أسباب محتملة. أولاً،..." : 
-            "يمكنني تقديم بعض الرؤى حول هذا الموضوع."),
-        "سؤال مثير للتفكير! " + (cleanQuery.includes("متى") || cleanQuery.includes("أين") ? 
-            "يعتمد ذلك على سياق معين، ولكن عموماً..." : 
-            "هناك عدة جوانب يجب مراعاتها عند الإجابة على هذا السؤال.")
-    ];
-    
-    // اختيار رد عشوائي من الردود العامة
-    return generalResponses[Math.floor(Math.random() * generalResponses.length)];
-}
-
-// وظيفة تحميل النموذج
-async function loadModel() {
-    if (isModelLoaded || isProcessing) return;
-    
-    isProcessing = true;
-    showLoading();
-    modelStatus.textContent = 'جاري التحميل...';
-    loadModelButton.disabled = true;
-    progressContainer.style.display = 'block';
-    
-    // تتبع تقدم التحميل باستخدام معلومات TensorFlow
-    let lastProgress = 0;
-    const checkProgress = setInterval(() => {
-        const currentProgress = tf.engine().state.numBytes / 10000000; // تقدير حجم النموذج
-        if (currentProgress > lastProgress) {
-            lastProgress = Math.min(currentProgress, 0.95); // الحد الأقصى 95% حتى الاكتمال
-            updateProgress(lastProgress);
-        }
-    }, 100);
-    
-    try {
-        // إضافة رسالة حول بدء التحميل
-        addMessage("جاري تحميل نموذج الذكاء الاصطناعي... سيكون جاهزاً في لحظات.", "bot");
-        
-        // استخدام نموذج الأسئلة والأجوبة TensorFlow.js
-        qnaModel = await qna.load();
-        
-        clearInterval(checkProgress);
-        updateProgress(1); // اكتمال 100%
-        
-        isModelLoaded = true;
-        modelStatus.textContent = 'جاهز';
-        userInput.disabled = false;
-        sendButton.disabled = false;
-        
-        // رسالة النجاح
-        addMessage("تم تحميل النموذج بنجاح! يمكنك الآن بدء المحادثة.", "bot");
-        
-        // إخفاء شريط التقدم بعد ثوانٍ
-        setTimeout(() => {
-            progressContainer.style.display = 'none';
-        }, 2000);
-        
-    } catch (error) {
-        clearInterval(checkProgress);
-        console.error("فشل في تحميل النموذج:", error);
-        
-        // رسالة الفشل وتفعيل الوضع الاحتياطي
-        addMessage("لقد واجهنا مشكلة في تحميل النموذج الكامل. سنستخدم نظام محادثة بسيط بدلاً من ذلك.", "bot");
-        
-        // تفعيل نموذج احتياطي "وهمي" للسماح بالمحادثة
-        qnaModel = {
-            findAnswers: async () => []
-        };
-        
-        isModelLoaded = true; // نتظاهر بأن النموذج محمّل
-        modelStatus.textContent = 'محدود';
-        userInput.disabled = false;
-        sendButton.disabled = false;
-        progressContainer.style.display = 'none';
-    } finally {
-        hideLoading();
-        isProcessing = false;
-    }
-}
-
-// وظيفة إرسال الرسائل
-async function sendMessage() {
-    if (isProcessing) return;
-    
+// وظيفة إرسال رسالة
+function sendMessage() {
     const userMessage = userInput.value.trim();
-    if (!userMessage) return;
+    if (!userMessage || isTyping) return;
     
     // إضافة رسالة المستخدم وتفريغ حقل الإدخال
     addMessage(userMessage, 'user');
     userInput.value = '';
     
-    // إذا لم يكن النموذج محملاً بعد، قم بتحميله
-    if (!isModelLoaded) {
-        addMessage("دعني أقوم بتحميل النموذج أولاً...", "bot");
-        await loadModel();
-    }
-    
-    isProcessing = true;
-    showLoading();
-    
-    try {
-        let botResponse;
+    // محاكاة التفكير والكتابة
+    simulateTyping(() => {
+        // توليد الرد
+        const botResponse = generateResponse(userMessage);
         
-        // محاولة استخدام النموذج إذا كان متاحاً
-        if (qnaModel) {
-            try {
-                // البحث عن إجابة في قاعدة المعرفة أولاً
-                const knowledgeBaseResponse = findAnswerInKnowledgeBase(userMessage);
-                
-                if (knowledgeBaseResponse) {
-                    botResponse = knowledgeBaseResponse;
-                } else {
-                    // محاولة استخدام نموذج QnA
-                    const answers = await qnaModel.findAnswers(userMessage, context);
-                    
-                    if (answers && answers.length > 0 && answers[0].score > 0.3) {
-                        botResponse = answers[0].text;
-                    } else {
-                        // استخدام مولد الردود الذكية كحل بديل
-                        botResponse = generateSmartResponse(userMessage);
-                    }
-                }
-            } catch (modelError) {
-                console.error("خطأ في معالجة النموذج:", modelError);
-                botResponse = generateSmartResponse(userMessage);
-            }
-        } else {
-            // استخدام النظام البديل
-            botResponse = generateSmartResponse(userMessage);
-        }
-        
-        // تأخير قصير لتحسين تجربة المستخدم
-        setTimeout(() => {
-            addMessage(botResponse, 'bot');
-            hideLoading();
-            isProcessing = false;
-        }, 500);
-        
-    } catch (error) {
-        console.error("خطأ عام:", error);
-        addMessage("عذراً، حدث خطأ في معالجة رسالتك. يرجى المحاولة مرة أخرى.", 'bot');
-        hideLoading();
-        isProcessing = false;
-    }
+        // إضافة رد البوت
+        addMessage(botResponse, 'bot');
+    });
 }
 
 // إعداد مستمعي الأحداث
-loadModelButton.addEventListener('click', loadModel);
-
-sendButton.addEventListener('click', () => {
-    sendMessage();
-});
+sendButton.addEventListener('click', sendMessage);
 
 userInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -285,16 +216,9 @@ userInput.addEventListener('keypress', (event) => {
     }
 });
 
-// التحقق من دعم المتصفح
-function checkBrowserSupport() {
-    if (!window.tf) {
-        addMessage("متصفحك قد لا يدعم بعض التقنيات المطلوبة. سنحاول تشغيل نظام محادثة بسيط.", "bot");
-        return false;
-    }
-    return true;
-}
-
-// عند تحميل الصفحة
+// جعل مؤشر الإدخال نشطاً عند تحميل الصفحة
 window.addEventListener('load', () => {
-    checkBrowserSupport();
+    setTimeout(() => {
+        userInput.focus();
+    }, 500);
 });
