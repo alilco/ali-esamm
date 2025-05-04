@@ -37,8 +37,11 @@ body {
 .model-status {
     font-size: 14px;
     padding: 5px 10px;
-    background: rgba(255, 255, 255, 0.2);
     border-radius: 20px;
+}
+
+.online {
+    background-color: rgba(46, 204, 113, 0.3);
 }
 
 .messages {
@@ -75,70 +78,33 @@ body {
     background-color: #f0f0f0;
 }
 
-.loading-indicator {
+.typing-indicator {
     display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 15px;
-    gap: 10px;
-}
-
-.loading-spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #075e54;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.loading-text {
-    font-size: 14px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.progress-container {
-    width: 100%;
-    background-color: #f1f1f1;
-    border-radius: 20px;
-    margin: 0 10px;
-    height: 10px;
-    display: none;
-}
-
-.progress-bar {
-    height: 10px;
-    border-radius: 20px;
-    width: 0%;
-    background-color: #075e54;
-    transition: width 0.3s;
-}
-
-.model-controls {
-    display: flex;
     padding: 10px 20px;
-    background-color: #f8f8f8;
-    justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #e0e0e0;
 }
 
-#load-model-btn {
-    background-color: #075e54;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: bold;
+.dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #888;
+    margin-left: 4px;
+    animation: typing 1.5s infinite ease-in-out;
 }
 
-#load-model-btn:hover {
-    background-color: #128c7e;
+.dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
 }
 
 .input-area {
@@ -158,11 +124,6 @@ textarea {
     font-size: 16px;
 }
 
-textarea:disabled {
-    background-color: #e0e0e0;
-    color: #999;
-}
-
 button {
     margin-right: 10px;
     margin-left: 10px;
@@ -175,12 +136,7 @@ button {
     font-size: 16px;
 }
 
-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-button:not(:disabled):hover {
+button:hover {
     background-color: #128c7e;
 }
 
