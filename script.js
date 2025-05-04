@@ -1,7 +1,7 @@
 // إعدادات Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
 
 // إعدادات Firebase
 const firebaseConfig = {
@@ -47,7 +47,8 @@ document.getElementById('auth-button').addEventListener('click', async () => {
             // تسجيل دخول المستخدم
             await signInWithEmailAndPassword(auth, email, password);
             feedbackElement.textContent = "تم تسجيل الدخول بنجاح!";
-            document.getElementById("update-username-container").style.display = "block"; // عرض قسم تحديث اسم المستخدم
+            // الانتقال إلى صفحة الدردشة
+            window.location.href = 'chat.html?uid=' + auth.currentUser.uid;
         }
     } catch (error) {
         // معالجة الأخطاء
@@ -67,46 +68,18 @@ document.getElementById('auth-button').addEventListener('click', async () => {
 document.getElementById('toggle-link').addEventListener('click', () => {
     const currentFormTitle = document.getElementById('form-title');
     const usernameInput = document.getElementById('username');
-    const updateUsernameContainer = document.getElementById('update-username-container');
 
     if (usernameInput.style.display === "none") {
-        // إذا كان المستخدم لا يزال في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
+        // إذا كان المستخدم في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
         usernameInput.style.display = "block";
         currentFormTitle.innerText = "تسجيل جديد";
         document.getElementById('auth-button').innerText = "سجل الآن";
         document.getElementById('toggle-link').innerText = "لديك حساب؟ تسجيل الدخول";
-        updateUsernameContainer.style.display = "none"; // إخفاء تحديث اسم المستخدم
     } else {
         // إذا كان المستخدم في وضع التسجيل، قم بالتبديل إلى تسجيل الدخول
         usernameInput.style.display = "none";
         currentFormTitle.innerText = "تسجيل دخول";
         document.getElementById('auth-button').innerText = "تسجيل دخول";
         document.getElementById('toggle-link').innerText = "ليس لديك حساب؟ سجل الآن!";
-        updateUsernameContainer.style.display = "none"; // إخفاء تحديث اسم المستخدم
-    }
-});
-
-// تحديث اسم المستخدم
-document.getElementById('update-button').addEventListener('click', async () => {
-    const newUsername = document.getElementById('new-username').value;
-    const userId = auth.currentUser ? auth.currentUser.uid : null; // الحصول على معرف المستخدم الحالي
-    const updateFeedbackElement = document.getElementById('update-feedback');
-
-    if (!userId) {
-        updateFeedbackElement.textContent = "يرجى تسجيل الدخول لتحديث اسم المستخدم.";
-        return;
-    }
-
-    if (newUsername.trim() !== '') {
-        try {
-            await updateDoc(doc(db, "users", userId), {
-                username: newUsername
-            });
-            updateFeedbackElement.textContent = "تم تحديث اسم المستخدم بنجاح!";
-        } catch (error) {
-            updateFeedbackElement.textContent = "حدث خطأ أثناء تحديث اسم المستخدم: " + error.message;
-        }
-    } else {
-        updateFeedbackElement.textContent = "يرجى إدخال اسم مستخدم جديد.";
     }
 });
