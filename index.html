@@ -3,23 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل أو تسجيل دخول</title>
-    <link rel="stylesheet" href="style.css"> <!-- رابط لملف CSS -->
+    <title>تطبيق دردشة</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h2 id="form-title">تسجيل دخول</h2>
-        <input type="email" id="email" placeholder="البريد الإلكتروني" required>
-        <input type="password" id="password" placeholder="كلمة المرور" required>
-        <input type="text" id="username" placeholder="اسم المستخدم" style="display: none;" required>
-        <button id="auth-button">تسجيل دخول</button>
-        <p id="toggle-link">ليس لديك حساب؟ سجل الآن!</p>
-        <div id="feedback"></div> <!-- عنصر لعرض الرسائل -->
+    <div class="chat-container">
+        <div id="login-container">
+            <input type="text" id="email" placeholder="البريد الإلكتروني">
+            <input type="password" id="password" placeholder="كلمة المرور">
+            <button onclick="login()">تسجيل الدخول</button>
+            <button onclick="register()">تسجيل جديد</button>
+        </div>
+        <div id="change-username-container" style="display:none;">
+            <input type="text" id="newUsername" placeholder="اسم المستخدم الجديد">
+            <button onclick="changeUsername()">تغيير اسم المستخدم</button>
+        </div>
+        <div id="chat-container" style="display:none;">
+            <div class="chat-window" id="chatWindow">
+                <!-- Messages will be displayed here -->
+            </div>
+            <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
+            <button onclick="sendMessage()">إرسال</button>
+        </div>
     </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js"></script>
-    <script src="script.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
