@@ -3,44 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دردشة الذكاء الاصطناعي المجاني</title>
+    <title>دردشة الذكاء الاصطناعي الفوري</title>
     <link rel="stylesheet" href="style.css">
-    <!-- استخدام TensorFlow.js بدلاً من WebLLM -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/qna@1.0.1"></script>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
             <h1>دردشة الذكاء الاصطناعي</h1>
-            <div class="model-status" id="model-status">غير مُحمل</div>
+            <div class="model-status online">متصل</div>
         </div>
         
         <div class="messages" id="messages">
             <div class="message bot">
-                <div class="message-content">أهلا بك! أنا مساعدك الذكي. انقر على زر "تحميل النموذج" لبدء المحادثة.</div>
+                <div class="message-content">مرحباً بك! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟</div>
             </div>
         </div>
         
-        <div class="loading-indicator" id="loading">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">جاري التحميل...</div>
-        </div>
-        
-        <div class="model-controls">
-            <button id="load-model-btn">تحميل النموذج</button>
-            <div class="progress-container" id="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
+        <div class="typing-indicator" id="typing-indicator">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
         </div>
         
         <div class="input-area">
-            <textarea id="user-input" placeholder="اكتب رسالتك هنا..." rows="2" disabled></textarea>
-            <button id="send-btn" disabled>إرسال</button>
+            <textarea id="user-input" placeholder="اكتب رسالتك هنا..." rows="2"></textarea>
+            <button id="send-btn">إرسال</button>
         </div>
         
         <div class="app-footer">
-            <p>هذا التطبيق يعمل بالكامل داخل متصفحك - لا يتم إرسال أي بيانات إلى خادم خارجي</p>
+            <p>تطبيق دردشة ذكي يعمل فوراً بدون تحميل نماذج</p>
         </div>
     </div>
     
