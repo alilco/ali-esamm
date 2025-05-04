@@ -70,7 +70,7 @@ document.getElementById('toggle-link').addEventListener('click', () => {
     const updateUsernameContainer = document.getElementById('update-username-container');
 
     if (usernameInput.style.display === "none") {
-        // إذا كان المستخدم في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
+        // إذا كان المستخدم لا يزال في وضع تسجيل الدخول، قم بالتبديل إلى التسجيل
         usernameInput.style.display = "block";
         currentFormTitle.innerText = "تسجيل جديد";
         document.getElementById('auth-button').innerText = "سجل الآن";
@@ -89,8 +89,13 @@ document.getElementById('toggle-link').addEventListener('click', () => {
 // تحديث اسم المستخدم
 document.getElementById('update-button').addEventListener('click', async () => {
     const newUsername = document.getElementById('new-username').value;
-    const userId = auth.currentUser.uid; // الحصول على معرف المستخدم الحالي
+    const userId = auth.currentUser ? auth.currentUser.uid : null; // الحصول على معرف المستخدم الحالي
     const updateFeedbackElement = document.getElementById('update-feedback');
+
+    if (!userId) {
+        updateFeedbackElement.textContent = "يرجى تسجيل الدخول لتحديث اسم المستخدم.";
+        return;
+    }
 
     if (newUsername.trim() !== '') {
         try {
