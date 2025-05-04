@@ -1,34 +1,35 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق دردشة</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>دردشة الذكاء الاصطناعي</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0"></script>
 </head>
 <body>
     <div class="chat-container">
-        <div id="login-container">
-            <input type="text" id="email" placeholder="البريد الإلكتروني">
-            <input type="password" id="password" placeholder="كلمة المرور">
-            <button onclick="login()">تسجيل الدخول</button>
-            <button onclick="register()">تسجيل جديد</button>
+        <div class="chat-header">
+            <h1>دردشة الذكاء الاصطناعي</h1>
         </div>
-        <div id="change-username-container" style="display:none;">
-            <input type="text" id="newUsername" placeholder="اسم المستخدم الجديد">
-            <button onclick="changeUsername()">تغيير اسم المستخدم</button>
-        </div>
-        <div id="chat-container" style="display:none;">
-            <div class="chat-window" id="chatWindow">
-                <!-- Messages will be displayed here -->
+        
+        <div class="messages" id="messages">
+            <div class="message bot">
+                <div class="message-content">أهلا بك! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟</div>
             </div>
-            <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
-            <button onclick="sendMessage()">إرسال</button>
+        </div>
+        
+        <div class="loading-indicator" id="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">جاري التفكير...</div>
+        </div>
+        
+        <div class="input-area">
+            <textarea id="user-input" placeholder="اكتب رسالتك هنا..." rows="2"></textarea>
+            <button id="send-btn">إرسال</button>
         </div>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    
     <script src="script.js"></script>
 </body>
 </html>
