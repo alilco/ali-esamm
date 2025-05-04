@@ -24,7 +24,7 @@ const userId = urlParams.get('uid');
 async function displayUsername() {
     const userDoc = await getDoc(doc(db, "users", userId));
     if (userDoc.exists()) {
-        document.getElementById('username-display').textContent = userDoc.data().username;
+        document.getElementById('username-display').textContent = userDoc.data().username; // عرض اسم المستخدم على الشاشة
     }
 }
 
