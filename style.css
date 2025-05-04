@@ -1,124 +1,71 @@
-/* إعداد الجسم */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
     margin: 0;
-    padding: 0;
 }
 
-/* إعداد الحاوة الرئيسية */
-.container {
-    width: 400px;
-    margin: 50px auto;
-    padding: 20px;
-    border-radius: 5px;
-    background: white;
+.chat-container {
+    width: 300px;
+    background-color: #fff;
+    border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
-/* عنوان النموذج */
-h2 {
-    text-align: center;
-    color: #333;
+#login-container, #change-username-container, #chat-container {
+    padding: 20px;
 }
 
-/* إعدادات الإدخال */
-input[type="email"],
-input[type="password"],
-input[type="text"] {
-    width: 100%;
+input[type="text"], input[type="password"] {
+    width: calc(100% - 20px);
     padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box; /* لجعل padding يضاف إلى width */
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
-/* زر التسجيل أو تسجيل الدخول */
 button {
     width: 100%;
     padding: 10px;
+    margin-bottom: 10px;
+    border: none;
     background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
+    color: #fff;
     cursor: pointer;
+    border-radius: 4px;
 }
 
-button:hover {
-    background-color: #0056b3;
-}
-
-/* الرابط للتبديل بين تسجيل الدخول والتسجيل */
-#toggle-link {
-    text-align: center;
-    margin-top: 10px;
-    color: #007bff;
-    cursor: pointer;
-}
-
-#toggle-link:hover {
-    text-decoration: underline;
-}
-
-/* واجهة الدردشة */
-.chat-container {
-    width: 400px;
-    margin: 50px auto;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-/* رأس الدردشة */
-.chat-header {
-    background: #007bff;
-    color: white;
+.chat-window {
+    height: 400px;
     padding: 10px;
-    text-align: center;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-}
-
-/* مربع الدردشة */
-.chat-box {
-    height: 300px;
+    border-bottom: 1px solid #ddd;
     overflow-y: auto;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
 }
 
-/* رسائل الدردشة */
-.chat-message {
-    margin: 5px 0;
-}
-
-/* إعداد حقل الإدخال في مربع الدردشة */
-#message-input {
-    width: calc(100% - 80px);
+.message {
+    background-color: #f1f1f1;
     padding: 10px;
-    border: 1px solid #ccc;
     border-radius: 5px;
+    margin-bottom: 10px;
 }
 
-/* زر إرسال الرسالة */
-#send-button {
+input[type="text"] {
+    width: calc(100% - 20px);
     padding: 10px;
-    background: #007bff;
-    color: white;
     border: none;
-    border-radius: 5px;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
     cursor: pointer;
-}
-
-#send-button:hover {
-    background: #0056b3;
-}
-
-/* رسالة النجاح أو الخطأ */
-#feedback-message {
-    color: red;
-    text-align: center;
-    margin: 10px 0;
 }
