@@ -1,40 +1,108 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دردشة الذكاء الاصطناعي الفوري</title>
+    <title>مساعد البرمجة الذكي</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/html.min.js"></script>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h1>دردشة الذكاء الاصطناعي</h1>
-            <div class="model-status online">متصل</div>
-        </div>
-        
-        <div class="messages" id="messages">
-            <div class="message bot">
-                <div class="message-content">مرحباً بك! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟</div>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-robot"></i> مساعد البرمجة الذكي</h2>
+            </div>
+            <div class="new-chat">
+                <button id="new-chat-btn"><i class="fas fa-plus"></i> محادثة جديدة</button>
+            </div>
+            <div class="history-list" id="history-list">
+                <!-- ستتم إضافة المحادثات هنا ديناميكيًا -->
+            </div>
+            <div class="sidebar-footer">
+                <button id="clear-history-btn"><i class="fas fa-trash"></i> مسح المحادثات</button>
+                <div class="theme-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span id="theme-label">الوضع الداكن</span>
+                </div>
             </div>
         </div>
-        
-        <div class="typing-indicator" id="typing-indicator">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-        </div>
-        
-        <div class="input-area">
-            <textarea id="user-input" placeholder="اكتب رسالتك هنا..." rows="2"></textarea>
-            <button id="send-btn">إرسال</button>
-        </div>
-        
-        <div class="app-footer">
-            <p>تطبيق دردشة ذكي يعمل فوراً بدون تحميل نماذج</p>
+
+        <div class="main-content">
+            <div class="chat-header">
+                <button id="toggle-sidebar"><i class="fas fa-bars"></i></button>
+                <div class="language-selector">
+                    <select id="code-language">
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="java">Java</option>
+                        <option value="php">PHP</option>
+                        <option value="csharp">C#</option>
+                    </select>
+                    <label for="code-language">لغة البرمجة:</label>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <!-- ستتم إضافة الرسائل هنا ديناميكيًا -->
+                <div class="message bot">
+                    <div class="message-content">
+                        <p>مرحباً! أنا مساعد البرمجة الذكي. يمكنني مساعدتك في:</p>
+                        <ul>
+                            <li>كتابة أكواد برمجية جديدة</li>
+                            <li>شرح مفاهيم البرمجة</li>
+                            <li>تصحيح وتحسين الكود</li>
+                            <li>حل مشاكل برمجية</li>
+                            <li>الإجابة على أسئلتك العامة</li>
+                        </ul>
+                        <p>كيف يمكنني مساعدتك اليوم؟</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+
+            <div class="input-area">
+                <textarea id="user-input" placeholder="اكتب سؤالك أو اطلب كتابة كود..."></textarea>
+                <div class="input-buttons">
+                    <button id="code-btn" title="طلب كود"><i class="fas fa-code"></i></button>
+                    <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
     </div>
-    
+
+    <div class="code-modal" id="code-modal">
+        <div class="code-modal-content">
+            <div class="code-modal-header">
+                <h3>استخراج الكود</h3>
+                <button id="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="code-display" id="code-display">
+                <pre><code id="extracted-code">// سيتم عرض الكود هنا</code></pre>
+            </div>
+            <div class="code-modal-footer">
+                <button id="copy-code-btn"><i class="fas fa-copy"></i> نسخ الكود</button>
+                <button id="download-code-btn"><i class="fas fa-download"></i> تنزيل الكود</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
