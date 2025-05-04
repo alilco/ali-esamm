@@ -16,7 +16,7 @@ body {
 .chat-container {
     width: 90%;
     max-width: 800px;
-    height: 80vh;
+    height: 90vh;
     background-color: white;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -25,11 +25,20 @@ body {
 }
 
 .chat-header {
-    padding: 20px;
+    padding: 15px 20px;
     background-color: #075e54;
     color: white;
     border-radius: 10px 10px 0 0;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.model-status {
+    font-size: 14px;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
 }
 
 .messages {
@@ -55,6 +64,7 @@ body {
     border-radius: 10px;
     max-width: 70%;
     word-wrap: break-word;
+    line-height: 1.5;
 }
 
 .user .message-content {
@@ -63,6 +73,66 @@ body {
 
 .bot .message-content {
     background-color: #f0f0f0;
+}
+
+.loading-indicator {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    gap: 10px;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #075e54;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    font-size: 14px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.model-controls {
+    display: flex;
+    padding: 10px 20px;
+    background-color: #f8f8f8;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e0e0e0;
+}
+
+#load-model-btn {
+    background-color: #075e54;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#load-model-btn:hover {
+    background-color: #128c7e;
+}
+
+.model-info {
+    font-size: 14px;
+    color: #666;
+}
+
+select {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
 }
 
 .input-area {
@@ -82,6 +152,11 @@ textarea {
     font-size: 16px;
 }
 
+textarea:disabled {
+    background-color: #e0e0e0;
+    color: #999;
+}
+
 button {
     margin-right: 10px;
     margin-left: 10px;
@@ -94,28 +169,31 @@ button {
     font-size: 16px;
 }
 
-button:hover {
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
     background-color: #128c7e;
 }
 
-.loading-indicator {
-    display: none;
-    align-items: center;
-    justify-content: center;
+.app-footer {
+    text-align: center;
     padding: 10px;
-    gap: 10px;
+    border-top: 1px solid #e0e0e0;
+    color: #666;
+    font-size: 12px;
 }
 
-.loading-spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #075e54;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+/* تحسينات للأجهزة المحمولة */
+@media (max-width: 600px) {
+    .chat-container {
+        width: 95%;
+        height: 95vh;
+    }
+    
+    .message-content {
+        max-width: 85%;
+    }
 }
