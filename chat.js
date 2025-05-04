@@ -12,6 +12,7 @@ const firebaseConfig = {
     appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth();
@@ -22,9 +23,15 @@ const userId = urlParams.get('uid');
 
 // عرض اسم المستخدم
 async function displayUsername() {
-    const userDoc = await getDoc(doc(db, "users", userId));
-    if (userDoc.exists()) {
-        document.getElementById('username-display').textContent = userDoc.data().username; // عرض اسم المستخدم على الشاشة
+    try {
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+            document.getElementById('username-display').textContent = userDoc.data().username; // عرض اسم المستخدم على الشاشة
+        } else {
+            console.log("مستخدم غير موجود في قاعدة البيانات");
+        }
+    } catch (error) {
+        console.error("خطأ في جلب اسم المستخدم:", error);
     }
 }
 
