@@ -1,103 +1,117 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { getDatabase, ref, set, onValue, push } from "firebase/database";
+// إعداد نموذج الذكاء الاصطناعي
+const { pipeline } = window.Transformers;
+let model = null;
+let modelLoading = false;
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDkL37i0-pd885YbCBYOkADYQVQINcswhk",
-  authDomain: "messengerapp-58f7a.firebaseapp.com",
-  databaseURL: "https://messengerapp-58f7a-default-rtdb.firebaseio.com",
-  projectId: "messengerapp-58f7a",
-  storageBucket: "messengerapp-58f7a.firebasestorage.app",
-  messagingSenderId: "46178168523",
-  appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-// Login function
-async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
+// تهيئة النموذج
+async function initModel() {
+    if (model || modelLoading) return;
+    
+    modelLoading = true;
+    showLoading();
+    
     try {
-        await signInWithEmailAndPassword(auth, email, password);
-        document.getElementById('login-container').style.display = 'none';
-        document.getElementById('chat-container').style.display = 'block';
-        document.getElementById('change-username-container').style.display = 'block';
-        loadMessages();
+        model = await pipeline(
+            'text-generation',
+            'Xenova/distilgpt2'  // نموذج خفيف للأداء السريع في المتصفح
+        );
+        console.log("تم تحميل النموذج بنجاح");
     } catch (error) {
-        console.error('Error logging in:', error);
+        console.error("خطأ في تحميل النموذج:", error);
+        addMessage("حدث خطأ في تحميل نموذج الذكاء الاصطناعي. يرجى تحديث الصفحة والمحاولة مرة أخرى.", "bot");
+    } finally {
+        modelLoading = false;
+        hideLoading();
     }
 }
 
-// Register function
-async function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+// العناصر في واجهة المستخدم
+const messagesContainer = document.getElementById('messages');
+const userInput = document.getElementById('user-input');
+const sendButton = document.getElementById('send-btn');
+const loadingIndicator = document.getElementById('loading');
 
-    try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        document.getElementById('login-container').style.display = 'none';
-        document.getElementById('chat-container').style.display = 'block';
-        document.getElementById('change-username-container').style.display = 'block';
-        loadMessages();
-    } catch (error) {
-        console.error('Error registering:', error);
-    }
+// إظهار وإخفاء مؤشر التحميل
+function showLoading() {
+    loadingIndicator.style.display = 'flex';
 }
 
-// Change username function
-async function changeUsername() {
-    const newUsername = document.getElementById('newUsername').value;
-
-    try {
-        await updateProfile(auth.currentUser, { displayName: newUsername });
-        console.log('Username updated successfully');
-    } catch (error) {
-        console.error('Error updating username:', error);
-    }
+function hideLoading() {
+    loadingIndicator.style.display = 'none';
 }
 
-// Send message function
+// إضافة رسالة إلى المحادثة
+function addMessage(text, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message', sender);
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('message-content');
+    contentDiv.textContent = text;
+    
+    messageDiv.appendChild(contentDiv);
+    messagesContainer.appendChild(messageDiv);
+    
+    // التمرير إلى آخر رسالة
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// إرسال رسالة المستخدم ومعالجتها
 async function sendMessage() {
-    const messageInput = document.getElementById('messageInput');
-    const chatWindow = document.getElementById('chatWindow');
-
-    if (messageInput.value.trim() !== '') {
-        const message = {
-            text: messageInput.value,
-            user: auth.currentUser.displayName || auth.currentUser.email,
-            timestamp: new Date().toISOString()
-        };
-
-        await push(ref(db, 'messages'), message);
-
-        messageInput.value = '';
+    const userMessage = userInput.value.trim();
+    
+    if (!userMessage) return;
+    
+    // إضافة رسالة المستخدم إلى المحادثة
+    addMessage(userMessage, 'user');
+    userInput.value = '';
+    
+    // تأكد من تحميل النموذج
+    if (!model) {
+        await initModel();
+    }
+    
+    showLoading();
+    
+    try {
+        // إنشاء سياق المحادثة
+        const context = `User: ${userMessage}\nAssistant:`;
+        
+        // الحصول على الرد من النموذج
+        const result = await model(context, {
+            max_new_tokens: 100,
+            temperature: 0.7,
+            do_sample: true,
+        });
+        
+        // استخراج الرد من النتيجة وتنظيفه
+        let botResponse = result[0].generated_text;
+        botResponse = botResponse.replace(context, '').trim();
+        
+        // إضافة رد البوت إلى المحادثة
+        addMessage(botResponse || "عذراً، لم أستطع إنشاء رد. يرجى المحاولة مرة أخرى.", 'bot');
+    } catch (error) {
+        console.error("خطأ في معالجة الرسالة:", error);
+        addMessage("عذراً، حدث خطأ في معالجة رسالتك. يرجى المحاولة مرة أخرى.", 'bot');
+    } finally {
+        hideLoading();
     }
 }
 
-// Load messages function
-function loadMessages() {
-    const chatWindow = document.getElementById('chatWindow');
-    const messagesRef = ref(db, 'messages');
+// إضافة مستمعي الأحداث
+sendButton.addEventListener('click', sendMessage);
 
-    onValue(messagesRef, (snapshot) => {
-        const messages = snapshot.val();
-        chatWindow.innerHTML = '';
+userInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
+});
 
-        for (const key in messages) {
-            const message = messages[key];
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            messageDiv.textContent = `${message.user}: ${message.text}`;
-            chatWindow.appendChild(messageDiv);
-        }
-
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    });
-}
+// بدء تحميل النموذج عند تحميل الصفحة
+window.addEventListener('load', () => {
+    // تأخير قليل قبل بدء تحميل النموذج لتسريع تحميل الصفحة الأولي
+    setTimeout(() => {
+        initModel();
+    }, 1000);
+});
