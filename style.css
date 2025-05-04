@@ -101,6 +101,23 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+.progress-container {
+    width: 100%;
+    background-color: #f1f1f1;
+    border-radius: 20px;
+    margin: 0 10px;
+    height: 10px;
+    display: none;
+}
+
+.progress-bar {
+    height: 10px;
+    border-radius: 20px;
+    width: 0%;
+    background-color: #075e54;
+    transition: width 0.3s;
+}
+
 .model-controls {
     display: flex;
     padding: 10px 20px;
@@ -122,17 +139,6 @@ body {
 
 #load-model-btn:hover {
     background-color: #128c7e;
-}
-
-.model-info {
-    font-size: 14px;
-    color: #666;
-}
-
-select {
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
 }
 
 .input-area {
