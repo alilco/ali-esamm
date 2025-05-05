@@ -1,108 +1,80 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساعد البرمجة الذكي</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/html.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تطبيق الدردشة</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .chat-message {
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+  </style>
 </head>
-<body>
-    <div class="app-container">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2><i class="fas fa-robot"></i> مساعد البرمجة الذكي</h2>
-            </div>
-            <div class="new-chat">
-                <button id="new-chat-btn"><i class="fas fa-plus"></i> محادثة جديدة</button>
-            </div>
-            <div class="history-list" id="history-list">
-                <!-- ستتم إضافة المحادثات هنا ديناميكيًا -->
-            </div>
-            <div class="sidebar-footer">
-                <button id="clear-history-btn"><i class="fas fa-trash"></i> مسح المحادثات</button>
-                <div class="theme-toggle">
-                    <label class="switch">
-                        <input type="checkbox" id="theme-toggle">
-                        <span class="slider round"></span>
-                    </label>
-                    <span id="theme-label">الوضع الداكن</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="chat-header">
-                <button id="toggle-sidebar"><i class="fas fa-bars"></i></button>
-                <div class="language-selector">
-                    <select id="code-language">
-                        <option value="javascript">JavaScript</option>
-                        <option value="python">Python</option>
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                        <option value="java">Java</option>
-                        <option value="php">PHP</option>
-                        <option value="csharp">C#</option>
-                    </select>
-                    <label for="code-language">لغة البرمجة:</label>
-                </div>
-            </div>
-
-            <div class="chat-messages" id="chat-messages">
-                <!-- ستتم إضافة الرسائل هنا ديناميكيًا -->
-                <div class="message bot">
-                    <div class="message-content">
-                        <p>مرحباً! أنا مساعد البرمجة الذكي. يمكنني مساعدتك في:</p>
-                        <ul>
-                            <li>كتابة أكواد برمجية جديدة</li>
-                            <li>شرح مفاهيم البرمجة</li>
-                            <li>تصحيح وتحسين الكود</li>
-                            <li>حل مشاكل برمجية</li>
-                            <li>الإجابة على أسئلتك العامة</li>
-                        </ul>
-                        <p>كيف يمكنني مساعدتك اليوم؟</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="typing-indicator" id="typing-indicator">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-            </div>
-
-            <div class="input-area">
-                <textarea id="user-input" placeholder="اكتب سؤالك أو اطلب كتابة كود..."></textarea>
-                <div class="input-buttons">
-                    <button id="code-btn" title="طلب كود"><i class="fas fa-code"></i></button>
-                    <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </div>
-        </div>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4">
+    <!-- شاشة تسجيل الدخول -->
+    <div id="auth-section" class="bg-white p-6 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold text-center mb-4">تسجيل الدخول</h1>
+      <input type="email" id="email" placeholder="البريد الإلكتروني" class="w-full p-2 mb-4 border rounded">
+      <input type="password" id="password" placeholder="كلمة السر" class="w-full p-2 mb-4 border rounded">
+      <button onclick="signIn()" class="w-full bg-blue-500 text-white p-2 rounded">تسجيل الدخول</button>
+      <button onclick="showSignUp()" class="w-full bg-gray-500 text-white p-2 rounded mt-2">إنشاء حساب</button>
     </div>
 
-    <div class="code-modal" id="code-modal">
-        <div class="code-modal-content">
-            <div class="code-modal-header">
-                <h3>استخراج الكود</h3>
-                <button id="close-modal"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="code-display" id="code-display">
-                <pre><code id="extracted-code">// سيتم عرض الكود هنا</code></pre>
-            </div>
-            <div class="code-modal-footer">
-                <button id="copy-code-btn"><i class="fas fa-copy"></i> نسخ الكود</button>
-                <button id="download-code-btn"><i class="fas fa-download"></i> تنزيل الكود</button>
-            </div>
-        </div>
+    <!-- شاشة إنشاء حساب -->
+    <div id="signup-section" class="bg-white p-6 rounded-lg shadow-md hidden">
+      <h1 class="text-2xl font-bold text-center mb-4">إنشاء حساب</h1>
+      <input type="text" id="username" placeholder="اسم المستخدم" class="w-full p-2 mb-4 border rounded">
+      <input type="email" id="signup-email" placeholder="البريد الإلكتروني" class="w-full p-2 mb-4 border rounded">
+      <input type="password" id="signup-password" placeholder="كلمة السر" class="w-full p-2 mb-4 border rounded">
+      <button onclick="signUp()" class="w-full bg-green-500 text-white p-2 rounded">إنشاء حساب</button>
+      <button onclick="showLogin()" class="w-full bg-gray-500 text-white p-2 rounded mt-2">العودة لتسجيل الدخول</button>
     </div>
 
-    <script src="script.js"></script>
+    <!-- شاشة الرئيسية -->
+    <div id="home-section" class="hidden">
+      <h1 class="text-2xl font-bold text-center mb-4">مرحبًا، <span id="current-user"></span></h1>
+      <div class="flex justify-between mb-4">
+        <button onclick="showAddUser()" class="bg-blue-500 text-white p-2 rounded">إضافة مستخدم</button>
+        <button onclick="showProfile()" class="bg-gray-500 text-white p-2 rounded">معلومات شخصية</button>
+        <button onclick="signOut()" class="bg-red-500 text-white p-2 rounded">تسجيل الخروج</button>
+      </div>
+
+      <!-- قائمة المستخدمين -->
+      <div id="users-list" class="bg-white p-4 rounded-lg shadow-md mb-4">
+        <h2 class="text-xl font-bold mb-2">المستخدمون</h2>
+        <ul id="users"></ul>
+      </div>
+
+      <!-- شاشة إضافة مستخدم -->
+      <div id="add-user-section" class="bg-white p-4 rounded-lg shadow-md mb-4 hidden">
+        <h2 class="text-xl font-bold mb-2">إضافة مستخدم</h2>
+        <input type="text" id="add-username" placeholder="اسم المستخدم" class="w-full p-2 mb-4 border rounded">
+        <button onclick="addUser()" class="w-full bg-green-500 text-white p-2 rounded">إضافة</button>
+        <button onclick="hideAddUser()" class="w-full bg-gray-500 text-white p-2 rounded mt-2">إلغاء</button>
+      </div>
+
+      <!-- شاشة المحادثة -->
+      <div id="chat-section" class="bg-white p-4 rounded-lg shadow-md hidden">
+        <h2 class="text-xl font-bold mb-2">المحادثة مع <span id="chat-with"></span></h2>
+        <div id="chat-messages" class="mb-4"></div>
+        <input type="text" id="chat-input" placeholder="اكتب رسالة..." class="w-full p-2 border rounded">
+        <button onclick="sendMessage()" class="w-full bg-blue-500 text-white p-2 rounded mt-2">إرسال</button>
+        <button onclick="hideChat()" class="w-full bg-gray-500 text-white p-2 rounded mt-2">إغلاق المحادثة</button>
+      </div>
+
+      <!-- شاشة المعلومات الشخصية -->
+      <div id="profile-section" class="bg-white p-4 rounded-lg shadow-md hidden">
+        <h2 class="text-xl font-bold mb-2">معلومات شخصية</h2>
+        <input type="text" id="profile-username" placeholder="اسم المستخدم" class="w-full p-2 mb-4 border rounded">
+        <input type="email" id="profile-email" placeholder="البريد الإلكتروني" class="w-full p-2 mb-4 border rounded">
+        <button onclick="updateProfile()" class="w-full bg-blue-500 text-white p-2 rounded">تحديث</button>
+        <button onclick="hideProfile()" class="w-full bg-gray-500 text-white p-2 rounded mt-2">إغلاق</button>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
 </body>
 </html>
