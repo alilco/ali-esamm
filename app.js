@@ -9,57 +9,40 @@ const firebaseConfig = {
   appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
-// تهيئة التطبيق
+// Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
 // متغيرات التطبيق
 let currentUser = null;
-let selectedUserId = null;
-let selectedUsername = null;
+let currentChatId = null;
+let currentChatUser = null;
+let isTyping = false;
+let typingTimeout = null;
 
 // ========== وظائف المصادقة ==========
-
-// تسجيل الدخول
 function signIn() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   const errorElement = document.getElementById('auth-error');
 
   if (!email || !password) {
-    errorElement.textContent = 'الرجاء إدخال البريد الإلكتروني وكلمة السر';
-    errorElement.classList.remove('hidden');
+    showError(errorElement, 'الرجاء إدخال البريد الإلكتروني وكلمة السر');
     return;
   }
-
-  errorElement.classList.add('hidden');
 
   auth.signInWithEmailAndPassword(email, password)
     .then((userCredential) => {
       currentUser = userCredential.user;
-      loadUserProfile();
+      loadUserData();
       showHome();
     })
     .catch((error) => {
-      let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
-      switch (error.code) {
-        case 'auth/user-not-found':
-          errorMessage = 'البريد الإلكتروني غير مسجل';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'كلمة السر غير صحيحة';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'بريد إلكتروني غير صالح';
-          break;
-      }
-      errorElement.textContent = errorMessage;
-      errorElement.classList.remove('hidden');
+      showError(errorElement, getAuthErrorMessage(error.code));
     });
 }
 
-// إنشاء حساب جديد
 function signUp() {
   const username = document.getElementById('username').value;
   const email = document.getElementById('signup-email').value;
@@ -67,18 +50,14 @@ function signUp() {
   const errorElement = document.getElementById('signup-error');
 
   if (!username || !email || !password) {
-    errorElement.textContent = 'الرجاء إدخال جميع الحقول المطلوبة';
-    errorElement.classList.remove('hidden');
+    showError(errorElement, 'الرجاء إدخال جميع الحقول');
     return;
   }
 
   if (password.length < 6) {
-    errorElement.textContent = 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
-    errorElement.classList.remove('hidden');
+    showError(errorElement, 'كلمة السر يجب أن تكون 6 أحرف على الأقل');
     return;
   }
-
-  errorElement.classList.add('hidden');
 
   auth.createUserWithEmailAndPassword(email, password)
     .then((userCredential) => {
@@ -86,7 +65,8 @@ function signUp() {
       return db.ref('users/' + currentUser.uid).set({
         username: username,
         email: email,
-        createdAt: firebase.database.ServerValue.TIMESTAMP
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        status: 'متصل الآن'
       });
     })
     .then(() => {
@@ -94,214 +74,176 @@ function signUp() {
       alert('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول');
     })
     .catch((error) => {
-      let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'بريد إلكتروني غير صالح';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'كلمة السر ضعيفة جداً';
-          break;
-      }
-      errorElement.textContent = errorMessage;
-      errorElement.classList.remove('hidden');
+      showError(errorElement, getAuthErrorMessage(error.code));
     });
 }
 
-// تسجيل الخروج
 function signOut() {
-  auth.signOut().then(() => {
-    currentUser = null;
-    selectedUserId = null;
-    showLogin();
-  }).catch((error) => {
-    console.error('Error signing out:', error);
-  });
+  if (currentUser) {
+    // تحديث حالة المستخدم إلى غير متصل قبل تسجيل الخروج
+    db.ref('users/' + currentUser.uid + '/status').set('غير متصل')
+      .then(() => {
+        auth.signOut();
+      });
+  } else {
+    auth.signOut();
+  }
+}
+
+function getAuthErrorMessage(errorCode) {
+  const messages = {
+    'auth/email-already-in-use': 'البريد الإلكتروني مستخدم بالفعل',
+    'auth/invalid-email': 'بريد إلكتروني غير صالح',
+    'auth/weak-password': 'كلمة السر ضعيفة جداً',
+    'auth/user-not-found': 'الحساب غير موجود',
+    'auth/wrong-password': 'كلمة السر غير صحيحة'
+  };
+  return messages[errorCode] || 'حدث خطأ غير متوقع';
 }
 
 // ========== وظائف واجهة المستخدم ==========
-
-// عرض شاشة تسجيل الدخول
 function showLogin() {
   document.getElementById('auth-section').classList.remove('hidden');
   document.getElementById('signup-section').classList.add('hidden');
   document.getElementById('home-section').classList.add('hidden');
-  document.getElementById('auth-error').classList.add('hidden');
+  clearErrors();
 }
 
-// عرض شاشة إنشاء حساب
 function showSignUp() {
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('signup-section').classList.remove('hidden');
   document.getElementById('home-section').classList.add('hidden');
-  document.getElementById('signup-error').classList.add('hidden');
+  clearErrors();
 }
 
-// عرض الشاشة الرئيسية
 function showHome() {
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('signup-section').classList.add('hidden');
   document.getElementById('home-section').classList.remove('hidden');
-  loadUsers();
-}
-
-// عرض شاشة إضافة مستخدم
-function showAddUser() {
-  document.getElementById('add-user-section').classList.remove('hidden');
-  document.getElementById('add-username').value = '';
-  document.getElementById('add-user-error').classList.add('hidden');
-}
-
-// إخفاء شاشة إضافة مستخدم
-function hideAddUser() {
-  document.getElementById('add-user-section').classList.add('hidden');
-}
-
-// عرض شاشة المحادثة
-function showChat(userId, username) {
-  selectedUserId = userId;
-  selectedUsername = username;
-  document.getElementById('chat-with').textContent = username;
-  document.getElementById('chat-section').classList.remove('hidden');
-  document.getElementById('chat-input').value = '';
-  loadMessages();
-}
-
-// إخفاء شاشة المحادثة
-function hideChat() {
   document.getElementById('chat-section').classList.add('hidden');
-  selectedUserId = null;
-  selectedUsername = null;
+  document.getElementById('profile-section').classList.add('hidden');
+  
+  loadConversations();
 }
 
-// عرض شاشة المعلومات الشخصية
 function showProfile() {
   document.getElementById('profile-section').classList.remove('hidden');
-  db.ref('users/' + currentUser.uid).once('value').then((snapshot) => {
-    const userData = snapshot.val();
-    document.getElementById('profile-username').value = userData.username || '';
-    document.getElementById('profile-email').value = userData.email || currentUser.email;
-  });
+  loadProfileData();
 }
 
-// إخفاء شاشة المعلومات الشخصية
 function hideProfile() {
   document.getElementById('profile-section').classList.add('hidden');
-  document.getElementById('profile-error').classList.add('hidden');
 }
 
-// ========== وظائف قاعدة البيانات ==========
+function showChat(userId, username) {
+  currentChatUser = { id: userId, name: username };
+  currentChatId = [currentUser.uid, userId].sort().join('_');
+  
+  document.getElementById('chat-with-user').textContent = username;
+  document.getElementById('chat-section').classList.remove('hidden');
+  document.getElementById('conversations-list').classList.add('hidden');
+  
+  loadMessages();
+  setupTypingListener();
+}
 
-// تحميل بيانات المستخدم الشخصية
-function loadUserProfile() {
-  return db.ref('users/' + currentUser.uid).once('value').then((snapshot) => {
-    const userData = snapshot.val();
-    if (!userData) {
-      return db.ref('users/' + currentUser.uid).set({
-        username: currentUser.email.split('@')[0],
-        email: currentUser.email,
-        createdAt: firebase.database.ServerValue.TIMESTAMP
-      });
-    }
-    return Promise.resolve();
+function hideChat() {
+  document.getElementById('chat-section').classList.add('hidden');
+  document.getElementById('conversations-list').classList.remove('hidden');
+  currentChatId = null;
+  currentChatUser = null;
+}
+
+function showError(element, message) {
+  element.textContent = message;
+  element.classList.remove('hidden');
+}
+
+function clearErrors() {
+  document.querySelectorAll('[id$="-error"]').forEach(el => {
+    el.classList.add('hidden');
   });
 }
 
-// تحميل قائمة المستخدمين
-function loadUsers() {
-  const usersList = document.getElementById('users');
-  usersList.innerHTML = '<li class="text-center py-2 text-gray-500">جاري التحميل...</li>';
+// ========== وظائف البيانات ==========
+function loadUserData() {
+  db.ref('users/' + currentUser.uid).on('value', (snapshot) => {
+    const userData = snapshot.val();
+    if (userData) {
+      document.getElementById('current-username').textContent = userData.username;
+    }
+  });
+}
+
+function loadProfileData() {
+  db.ref('users/' + currentUser.uid).once('value').then((snapshot) => {
+    const userData = snapshot.val();
+    if (userData) {
+      document.getElementById('profile-username').textContent = userData.username;
+      document.getElementById('profile-email').textContent = userData.email;
+      document.getElementById('fullname').value = userData.fullname || '';
+      document.getElementById('status').value = userData.status || '';
+    }
+  });
+}
+
+function updateProfile() {
+  const fullname = document.getElementById('fullname').value;
+  const status = document.getElementById('status').value;
+  
+  db.ref('users/' + currentUser.uid).update({
+    fullname: fullname,
+    status: status
+  }).then(() => {
+    hideProfile();
+    alert('تم تحديث الملف الشخصي بنجاح');
+  });
+}
+
+function loadConversations() {
+  const conversationsList = document.getElementById('conversations-list');
+  conversationsList.innerHTML = '<div class="p-4 text-center text-gray-500">جاري تحميل المحادثات...</div>';
   
   db.ref('users').orderByChild('username').on('value', (snapshot) => {
-    usersList.innerHTML = '';
+    conversationsList.innerHTML = '';
     
     snapshot.forEach((childSnapshot) => {
       const user = childSnapshot.val();
       const userId = childSnapshot.key;
       
       if (userId !== currentUser.uid) {
-        const li = document.createElement('li');
-        li.className = 'user-item flex items-center p-3 rounded-lg';
-        li.innerHTML = `
-          <div class="bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center mr-3">
+        const conversationItem = document.createElement('div');
+        conversationItem.className = 'p-3 border-b flex items-center hover:bg-gray-50 cursor-pointer';
+        conversationItem.innerHTML = `
+          <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl mr-3">
             ${user.username.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <div class="font-semibold">${user.username}</div>
-            <div class="text-sm text-gray-500">${user.email}</div>
+          <div class="flex-1">
+            <div class="font-bold">${user.username}</div>
+            <div class="text-sm text-gray-500">${user.status || 'غير متصل'}</div>
           </div>
+          <i class="fas fa-chevron-left text-gray-400"></i>
         `;
-        li.addEventListener('click', () => showChat(userId, user.username));
-        usersList.appendChild(li);
+        conversationItem.addEventListener('click', () => showChat(userId, user.username));
+        conversationsList.appendChild(conversationItem);
       }
     });
     
-    if (usersList.children.length === 0) {
-      usersList.innerHTML = '<li class="text-center py-2 text-gray-500">لا يوجد مستخدمون آخرون</li>';
+    if (conversationsList.children.length === 0) {
+      conversationsList.innerHTML = '<div class="p-4 text-center text-gray-500">لا توجد محادثات بعد</div>';
     }
   });
 }
 
-// إضافة مستخدم جديد
-function addUser() {
-  const username = document.getElementById('add-username').value.trim();
-  const errorElement = document.getElementById('add-user-error');
-  
-  if (!username) {
-    errorElement.textContent = 'الرجاء إدخال اسم المستخدم';
-    errorElement.classList.remove('hidden');
-    return;
-  }
-  
-  db.ref('users').orderByChild('username').equalTo(username).once('value')
-    .then((snapshot) => {
-      if (snapshot.exists()) {
-        snapshot.forEach((childSnapshot) => {
-          const userId = childSnapshot.key;
-          const userData = childSnapshot.val();
-          
-          return db.ref('friends/' + currentUser.uid + '/' + userId).once('value')
-            .then((friendSnapshot) => {
-              if (!friendSnapshot.exists()) {
-                return db.ref('friends/' + currentUser.uid + '/' + userId).set({
-                  username: userData.username,
-                  email: userData.email,
-                  addedAt: firebase.database.ServerValue.TIMESTAMP
-                });
-              }
-              return Promise.resolve();
-            });
-        }).then(() => {
-          hideAddUser();
-          alert(`تمت إضافة ${username} بنجاح`);
-        });
-      } else {
-        errorElement.textContent = 'اسم المستخدم غير موجود';
-        errorElement.classList.remove('hidden');
-      }
-    })
-    .catch((error) => {
-      errorElement.textContent = 'حدث خطأ أثناء البحث عن المستخدم';
-      errorElement.classList.remove('hidden');
-      console.error('Error adding user:', error);
-    });
-}
-
-// تحميل الرسائل
 function loadMessages() {
   const chatMessages = document.getElementById('chat-messages');
   chatMessages.innerHTML = '<div class="text-center py-4 text-gray-500">جاري تحميل الرسائل...</div>';
   
-  const chatId = [currentUser.uid, selectedUserId].sort().join('_');
-  
-  db.ref('chats/' + chatId).orderByChild('timestamp').on('value', (snapshot) => {
+  db.ref('chats/' + currentChatId).orderByChild('timestamp').on('value', (snapshot) => {
     chatMessages.innerHTML = '';
     
     if (!snapshot.exists()) {
-      chatMessages.innerHTML = '<div class="text-center py-4 text-gray-500">لا توجد رسائل بعد. ابدأ المحادثة الآن!</div>';
+      chatMessages.innerHTML = '<div class="text-center py-4 text-gray-500">ابدأ المحادثة الآن!</div>';
       return;
     }
     
@@ -310,77 +252,99 @@ function loadMessages() {
       const isSent = message.sender === currentUser.uid;
       
       const messageDiv = document.createElement('div');
-      messageDiv.className = `p-3 rounded-lg ${isSent ? 'message-sent' : 'message-received'}`;
-      messageDiv.textContent = message.text;
-      
+      messageDiv.className = `p-3 max-w-xs ${isSent ? 'ml-auto message-sent' : 'mr-auto message-received'}`;
+      messageDiv.innerHTML = `
+        <div>${message.text}</div>
+        <div class="text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}">
+          ${new Date(message.timestamp).toLocaleTimeString()}
+        </div>
+      `;
       chatMessages.appendChild(messageDiv);
     });
     
+    // التمرير للأسفل لرؤية أحدث الرسائل
     chatMessages.scrollTop = chatMessages.scrollHeight;
   });
 }
 
-// إرسال رسالة
 function sendMessage() {
-  const messageInput = document.getElementById('chat-input');
+  const messageInput = document.getElementById('message-input');
   const message = messageInput.value.trim();
   
-  if (!message) return;
+  if (!message || !currentChatId) return;
   
-  const chatId = [currentUser.uid, selectedUserId].sort().join('_');
-  
-  db.ref('chats/' + chatId).push({
+  // إرسال الرسالة
+  db.ref('chats/' + currentChatId).push({
     text: message,
     sender: currentUser.uid,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
-  })
-  .then(() => {
+    timestamp: Date.now()
+  }).then(() => {
     messageInput.value = '';
-  })
-  .catch((error) => {
-    console.error('Error sending message:', error);
-    alert('حدث خطأ أثناء إرسال الرسالة');
+  });
+  
+  // إعلام المستخدم الآخر أنك تكتب
+  updateTypingStatus(false);
+}
+
+function setupTypingListener() {
+  db.ref('users/' + currentChatUser.id + '/typing').on('value', (snapshot) => {
+    const typingData = snapshot.val();
+    const typingIndicator = document.getElementById('typing-indicator');
+    
+    if (typingData && typingData.isTyping && typingData.chatId === currentChatId) {
+      document.getElementById('typing-user').textContent = currentChatUser.name;
+      typingIndicator.classList.remove('hidden');
+    } else {
+      typingIndicator.classList.add('hidden');
+    }
   });
 }
 
-// تحديث المعلومات الشخصية
-function updateProfile() {
-  const username = document.getElementById('profile-username').value.trim();
-  const email = document.getElementById('profile-email').value.trim();
-  const errorElement = document.getElementById('profile-error');
+function updateTypingStatus(isTyping) {
+  if (!currentChatId) return;
   
-  if (!username || !email) {
-    errorElement.textContent = 'الرجاء إدخال جميع الحقول المطلوبة';
-    errorElement.classList.remove('hidden');
-    return;
+  clearTimeout(typingTimeout);
+  
+  if (isTyping) {
+    db.ref('users/' + currentUser.uid + '/typing').set({
+      isTyping: true,
+      chatId: currentChatId
+    });
+    
+    typingTimeout = setTimeout(() => {
+      updateTypingStatus(false);
+    }, 2000);
+  } else {
+    db.ref('users/' + currentUser.uid + '/typing').set({
+      isTyping: false,
+      chatId: currentChatId
+    });
   }
-  
-  db.ref('users/' + currentUser.uid).update({
-    username: username,
-    email: email
-  })
-  .then(() => {
-    hideProfile();
-    alert('تم تحديث المعلومات بنجاح');
-  })
-  .catch((error) => {
-    errorElement.textContent = 'حدث خطأ أثناء تحديث المعلومات';
-    errorElement.classList.remove('hidden');
-    console.error('Error updating profile:', error);
-  });
 }
 
-// ========== إدارة حالة المصادقة ==========
+// ========== إدارة الأحداث ==========
+document.getElementById('message-input').addEventListener('input', () => {
+  if (!isTyping) {
+    isTyping = true;
+    updateTypingStatus(true);
+  }
+});
+
+document.getElementById('message-input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
 
 // مراقبة حالة المصادقة
 auth.onAuthStateChanged((user) => {
   if (user) {
     currentUser = user;
-    loadUserProfile().then(() => {
-      if (!document.getElementById('home-section').classList.contains('hidden')) {
-        loadUsers();
-      }
-    });
+    loadUserData();
+    showHome();
+    
+    // تحديث حالة المستخدم إلى متصل
+    db.ref('users/' + currentUser.uid + '/status').set('متصل الآن');
   } else {
     currentUser = null;
     showLogin();
@@ -393,19 +357,7 @@ window.signUp = signUp;
 window.signOut = signOut;
 window.showSignUp = showSignUp;
 window.showLogin = showLogin;
-window.showAddUser = showAddUser;
-window.hideAddUser = hideAddUser;
-window.addUser = addUser;
-window.showChat = showChat;
-window.hideChat = hideChat;
-window.sendMessage = sendMessage;
 window.showProfile = showProfile;
 window.hideProfile = hideProfile;
 window.updateProfile = updateProfile;
-
-// السماح بإرسال الرسالة بالضغط على Enter
-document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    sendMessage();
-  }
-});
+window.sendMessage = sendMessage;
