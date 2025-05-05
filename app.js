@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:46178168523:web:cba8a71de3d7cc5910f54e"
 };
 
-// Initialize Firebase
+// تهيئة التطبيق
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
@@ -27,7 +27,6 @@ function signIn() {
   const password = document.getElementById('password').value;
   const errorElement = document.getElementById('auth-error');
 
-  // التحقق من المدخلات
   if (!email || !password) {
     errorElement.textContent = 'الرجاء إدخال البريد الإلكتروني وكلمة السر';
     errorElement.classList.remove('hidden');
@@ -67,7 +66,6 @@ function signUp() {
   const password = document.getElementById('signup-password').value;
   const errorElement = document.getElementById('signup-error');
 
-  // التحقق من المدخلات
   if (!username || !email || !password) {
     errorElement.textContent = 'الرجاء إدخال جميع الحقول المطلوبة';
     errorElement.classList.remove('hidden');
@@ -85,8 +83,6 @@ function signUp() {
   auth.createUserWithEmailAndPassword(email, password)
     .then((userCredential) => {
       currentUser = userCredential.user;
-      
-      // حفظ معلومات المستخدم في قاعدة البيانات
       return db.ref('users/' + currentUser.uid).set({
         username: username,
         email: email,
@@ -95,7 +91,6 @@ function signUp() {
     })
     .then(() => {
       showLogin();
-      document.getElementById('signup-error').classList.add('hidden');
       alert('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول');
     })
     .catch((error) => {
@@ -134,10 +129,6 @@ function showLogin() {
   document.getElementById('auth-section').classList.remove('hidden');
   document.getElementById('signup-section').classList.add('hidden');
   document.getElementById('home-section').classList.add('hidden');
-  
-  // مسح حقول الإدخال
-  document.getElementById('email').value = '';
-  document.getElementById('password').value = '';
   document.getElementById('auth-error').classList.add('hidden');
 }
 
@@ -146,11 +137,6 @@ function showSignUp() {
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('signup-section').classList.remove('hidden');
   document.getElementById('home-section').classList.add('hidden');
-  
-  // مسح حقول الإدخال
-  document.getElementById('username').value = '';
-  document.getElementById('signup-email').value = '';
-  document.getElementById('signup-password').value = '';
   document.getElementById('signup-error').classList.add('hidden');
 }
 
@@ -159,8 +145,6 @@ function showHome() {
   document.getElementById('auth-section').classList.add('hidden');
   document.getElementById('signup-section').classList.add('hidden');
   document.getElementById('home-section').classList.remove('hidden');
-  
-  // تحميل قائمة المستخدمين
   loadUsers();
 }
 
@@ -180,12 +164,9 @@ function hideAddUser() {
 function showChat(userId, username) {
   selectedUserId = userId;
   selectedUsername = username;
-  
   document.getElementById('chat-with').textContent = username;
   document.getElementById('chat-section').classList.remove('hidden');
   document.getElementById('chat-input').value = '';
-  
-  // تحميل الرسائل
   loadMessages();
 }
 
@@ -199,8 +180,6 @@ function hideChat() {
 // عرض شاشة المعلومات الشخصية
 function showProfile() {
   document.getElementById('profile-section').classList.remove('hidden');
-  
-  // تعبئة البيانات الحالية
   db.ref('users/' + currentUser.uid).once('value').then((snapshot) => {
     const userData = snapshot.val();
     document.getElementById('profile-username').value = userData.username || '';
@@ -221,7 +200,6 @@ function loadUserProfile() {
   return db.ref('users/' + currentUser.uid).once('value').then((snapshot) => {
     const userData = snapshot.val();
     if (!userData) {
-      // إذا لم يكن للمستخدم بيانات، ننشئها
       return db.ref('users/' + currentUser.uid).set({
         username: currentUser.email.split('@')[0],
         email: currentUser.email,
@@ -244,7 +222,6 @@ function loadUsers() {
       const user = childSnapshot.val();
       const userId = childSnapshot.key;
       
-      // لا نعرض المستخدم الحالي في القائمة
       if (userId !== currentUser.uid) {
         const li = document.createElement('li');
         li.className = 'user-item flex items-center p-3 rounded-lg';
@@ -279,20 +256,16 @@ function addUser() {
     return;
   }
   
-  // البحث عن المستخدم بالاسم
   db.ref('users').orderByChild('username').equalTo(username).once('value')
     .then((snapshot) => {
       if (snapshot.exists()) {
-        // المستخدم موجود، نضيفه إلى قائمة الأصدقاء
         snapshot.forEach((childSnapshot) => {
           const userId = childSnapshot.key;
           const userData = childSnapshot.val();
           
-          // نتحقق من عدم وجود صداقة مسبقاً
           return db.ref('friends/' + currentUser.uid + '/' + userId).once('value')
             .then((friendSnapshot) => {
               if (!friendSnapshot.exists()) {
-                // ننشئ صداقة جديدة
                 return db.ref('friends/' + currentUser.uid + '/' + userId).set({
                   username: userData.username,
                   email: userData.email,
@@ -322,7 +295,6 @@ function loadMessages() {
   const chatMessages = document.getElementById('chat-messages');
   chatMessages.innerHTML = '<div class="text-center py-4 text-gray-500">جاري تحميل الرسائل...</div>';
   
-  // إنشاء معرف المحادثة (فرز IDs لتكون دائماً نفسها بغض النظر عن الترتيب)
   const chatId = [currentUser.uid, selectedUserId].sort().join('_');
   
   db.ref('chats/' + chatId).orderByChild('timestamp').on('value', (snapshot) => {
@@ -344,7 +316,6 @@ function loadMessages() {
       chatMessages.appendChild(messageDiv);
     });
     
-    // التمرير إلى آخر رسالة
     chatMessages.scrollTop = chatMessages.scrollHeight;
   });
 }
@@ -356,10 +327,8 @@ function sendMessage() {
   
   if (!message) return;
   
-  // إنشاء معرف المحادثة
   const chatId = [currentUser.uid, selectedUserId].sort().join('_');
   
-  // إرسال الرسالة
   db.ref('chats/' + chatId).push({
     text: message,
     sender: currentUser.uid,
@@ -386,7 +355,6 @@ function updateProfile() {
     return;
   }
   
-  // تحديث البيانات في قاعدة البيانات
   db.ref('users/' + currentUser.uid).update({
     username: username,
     email: email
