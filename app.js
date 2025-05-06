@@ -113,6 +113,8 @@ function showNotification(message, type) {
 }
 
 function formatTime(timestamp) {
+    if (!timestamp) return '';
+    
     const date = new Date(timestamp);
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -121,47 +123,85 @@ function formatTime(timestamp) {
 
 // الاستماع لحالة المصادقة
 firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-        // المستخدم مسجل الدخول
-        currentUser = user;
-        
-        // جلب بيانات المستخدم
-        firebase.database().ref(`users/${user.uid}`).once('value')
-            .then((snapshot) => {
-                const userData = snapshot.val();
-                if (userData) {
-                    currentUserData = userData;
-                    userDisplayName.textContent = userData.fullName || userData.name || userData.username;
-                    
-                    // تحميل جهات الاتصال
-                    loadContacts();
-                    
-                    // تحميل جميع المستخدمين (لأغراض البحث)
-                    loadAllUsers();
-                    
-                    // عرض واجهة الدردشة
-                    showChatInterface();
+    try {
+        if (user) {
+            // المستخدم مسجل الدخول
+            currentUser = user;
+            
+            // جلب بيانات المستخدم
+            firebase.database().ref(`users/${user.uid}`).once('value')
+                .then((snapshot) => {
+                    try {
+                        const userData = snapshot.val();
+                        if (userData) {
+                            currentUserData = userData;
+                            userDisplayName.textContent = userData.fullName || userData.name || userData.username || user.email;
+                            
+                            // تحميل جهات الاتصال
+                            loadContacts();
+                            
+                            // تحميل جميع المستخدمين (لأغراض البحث)
+                            loadAllUsers();
+                            
+                            // عرض واجهة الدردشة
+                            showChatInterface();
+                        } else {
+                            // إذا كان المستخدم مسجل ولكن لا توجد بيانات له، نضيف بيانات أساسية
+                            const newUserData = {
+                                fullName: user.displayName || user.email.split('@')[0],
+                                username: user.email.split('@')[0].toLowerCase(),
+                                email: user.email,
+                                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                                profilePicture: user.photoURL || ''
+                            };
+                            
+                            // حفظ بيانات المستخدم
+                            firebase.database().ref('users/' + user.uid).set(newUserData)
+                                .then(() => {
+                                    currentUserData = newUserData;
+                                    userDisplayName.textContent = newUserData.fullName;
+                                    
+                                    // حفظ اسم المستخدم للبحث
+                                    firebase.database().ref('usernames/' + newUserData.username).set(user.uid)
+                                        .catch(error => console.error("خطأ في حفظ اسم المستخدم:", error));
+                                    
+                                    loadContacts();
+                                    loadAllUsers();
+                                    showChatInterface();
+                                })
+                                .catch(error => {
+                                    console.error("خطأ في إنشاء بيانات المستخدم:", error);
+                                    showNotification('حدث خطأ أثناء إنشاء ملفك الشخصي', 'error');
+                                });
+                        }
+                    } catch (error) {
+                        console.error("خطأ في معالجة بيانات المستخدم:", error);
+                        showNotification('حدث خطأ أثناء تحميل بياناتك', 'error');
+                    } finally {
+                        hideElement(loadingScreen);
+                    }
+                })
+                .catch((error) => {
+                    console.error("خطأ في جلب بيانات المستخدم:", error);
                     hideElement(loadingScreen);
-                } else {
-                    // حالة نادرة: المستخدم مسجل ولكن لا توجد بيانات له
-                    firebase.auth().signOut();
-                    hideElement(loadingScreen);
+                    showNotification('حدث خطأ أثناء تحميل بياناتك', 'error');
                     showLoginForm();
-                }
-            })
-            .catch((error) => {
-                hideElement(loadingScreen);
-                console.error("خطأ في جلب بيانات المستخدم:", error);
-                showLoginForm();
-            });
-    } else {
-        // المستخدم غير مسجل الدخول
+                });
+        } else {
+            // المستخدم غير مسجل الدخول
+            hideElement(loadingScreen);
+            currentUser = null;
+            currentUserData = null;
+            currentChatId = null;
+            currentChatUser = null;
+            myContacts = {};
+            allUsers = {};
+            showLoginForm();
+        }
+    } catch (error) {
+        console.error("خطأ في التحقق من حالة المصادقة:", error);
         hideElement(loadingScreen);
-        currentUser = null;
-        currentUserData = null;
-        currentChatId = null;
-        currentChatUser = null;
-        myContacts = {};
+        showNotification('حدث خطأ غير متوقع', 'error');
         showLoginForm();
     }
 });
@@ -201,9 +241,12 @@ loginForm.addEventListener('submit', (e) => {
                 case 'auth/too-many-requests':
                     errorMessage = 'تم تعطيل الحساب مؤقتًا بسبب محاولات تسجيل دخول متكررة';
                     break;
+                default:
+                    errorMessage = `خطأ: ${error.message}`;
             }
             
             loginError.textContent = errorMessage;
+            showNotification(errorMessage, 'error');
         });
 });
 
@@ -221,63 +264,75 @@ registerForm.addEventListener('submit', (e) => {
     if (password.length < 6) {
         hideElement(loadingScreen);
         registerError.textContent = 'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+        showNotification('يجب أن تكون كلمة المرور 6 أحرف على الأقل', 'error');
         return;
     }
 
-    // التحقق من فريد اسم المستخدم
-    firebase.database().ref('usernames').child(username).once('value')
-        .then((snapshot) => {
-            if (snapshot.exists()) {
-                hideElement(loadingScreen);
-                registerError.textContent = 'اسم المستخدم مستخدم بالفعل، الرجاء اختيار اسم آخر';
-                return Promise.reject(new Error('Username already exists'));
-            }
-            return firebase.auth().createUserWithEmailAndPassword(email, password);
-        })
-        .then((userCredential) => {
-            // إنشاء معلومات المستخدم في قاعدة البيانات
-            const user = userCredential.user;
-            
-            const userData = {
-                fullName: fullName,
-                username: username,
-                email: email,
-                createdAt: firebase.database.ServerValue.TIMESTAMP,
-                profilePicture: ''
-            };
+    try {
+        // التحقق من فريد اسم المستخدم
+        firebase.database().ref('usernames').child(username).once('value')
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                    hideElement(loadingScreen);
+                    registerError.textContent = 'اسم المستخدم مستخدم بالفعل، الرجاء اختيار اسم آخر';
+                    showNotification('اسم المستخدم مستخدم بالفعل', 'error');
+                    return Promise.reject(new Error('Username already exists'));
+                }
+                return firebase.auth().createUserWithEmailAndPassword(email, password);
+            })
+            .then((userCredential) => {
+                // إنشاء معلومات المستخدم في قاعدة البيانات
+                const user = userCredential.user;
+                
+                const userData = {
+                    fullName: fullName,
+                    username: username,
+                    email: email,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    profilePicture: ''
+                };
 
-            // حفظ بيانات المستخدم
-            const userPromise = firebase.database().ref('users/' + user.uid).set(userData);
-            
-            // حفظ اسم المستخدم للبحث
-            const usernamePromise = firebase.database().ref('usernames/' + username).set(user.uid);
-            
-            return Promise.all([userPromise, usernamePromise]);
-        })
-        .then(() => {
-            registerForm.reset();
-            showNotification('تم إنشاء الحساب بنجاح!', 'success');
-        })
-        .catch((error) => {
-            if (error.message === 'Username already exists') return;
-            
-            hideElement(loadingScreen);
-            let errorMessage = 'خطأ في إنشاء الحساب';
-            
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
-                    break;
-                case 'auth/invalid-email':
-                    errorMessage = 'البريد الإلكتروني غير صالح';
-                    break;
-                case 'auth/weak-password':
-                    errorMessage = 'كلمة المرور ضعيفة جدًا';
-                    break;
-            }
-            
-            registerError.textContent = errorMessage;
-        });
+                // حفظ بيانات المستخدم
+                const userPromise = firebase.database().ref('users/' + user.uid).set(userData);
+                
+                // حفظ اسم المستخدم للبحث
+                const usernamePromise = firebase.database().ref('usernames/' + username).set(user.uid);
+                
+                return Promise.all([userPromise, usernamePromise]);
+            })
+            .then(() => {
+                registerForm.reset();
+                showNotification('تم إنشاء الحساب بنجاح!', 'success');
+            })
+            .catch((error) => {
+                if (error.message === 'Username already exists') return;
+                
+                hideElement(loadingScreen);
+                let errorMessage = 'خطأ في إنشاء الحساب';
+                
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'البريد الإلكتروني غير صالح';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = 'كلمة المرور ضعيفة جدًا';
+                        break;
+                    default:
+                        errorMessage = `خطأ: ${error.message}`;
+                }
+                
+                registerError.textContent = errorMessage;
+                showNotification(errorMessage, 'error');
+            });
+    } catch (error) {
+        hideElement(loadingScreen);
+        console.error("خطأ غير متوقع أثناء إنشاء الحساب:", error);
+        registerError.textContent = 'حدث خطأ غير متوقع. حاول مرة أخرى.';
+        showNotification('حدث خطأ غير متوقع', 'error');
+    }
 });
 
 // معالجة تسجيل الخروج
@@ -297,19 +352,32 @@ logoutBtn.addEventListener('click', () => {
 
 // معالجة فتح وإغلاق مربع الملف الشخصي
 profileBtn.addEventListener('click', () => {
-    // ملء البيانات الحالية
-    profileFullName.value = currentUserData.fullName || '';
-    profileUsername.value = currentUserData.username || '';
-    profileEmail.value = currentUserData.email || '';
-    
-    if (currentUserData.profilePicture) {
-        profilePhoto.innerHTML = `<img src="${currentUserData.profilePicture}" alt="صورة الملف الشخصي">`;
-    } else {
-        profilePhoto.innerHTML = `<i class="fas fa-user"></i>`;
+    try {
+        if (!currentUserData) {
+            showNotification('لا يمكن تحميل بيانات الملف الشخصي', 'error');
+            return;
+        }
+        
+        // ملء البيانات الحالية
+        profileFullName.value = currentUserData.fullName || '';
+        profileUsername.value = currentUserData.username || '';
+        profileEmail.value = currentUserData.email || '';
+        
+        if (currentUserData.profilePicture) {
+            profilePhoto.innerHTML = `<img src="${currentUserData.profilePicture}" alt="صورة الملف الشخصي">`;
+        } else {
+            profilePhoto.innerHTML = `<i class="fas fa-user"></i>`;
+        }
+        
+        // إعادة تعيين رسالة الخطأ
+        profileError.textContent = '';
+        
+        // عرض مربع الملف الشخصي
+        profileModal.style.display = 'flex';
+    } catch (error) {
+        console.error('خطأ في فتح الملف الشخصي:', error);
+        showNotification('حدث خطأ أثناء تحميل الملف الشخصي', 'error');
     }
-    
-    // عرض مربع الملف الشخصي
-    profileModal.style.display = 'flex';
 });
 
 closeProfileBtn.addEventListener('click', () => {
@@ -331,104 +399,132 @@ changePhotoBtn.addEventListener('click', () => {
 });
 
 photoInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
-        showNotification('الرجاء اختيار صورة صالحة (JPEG، PNG، GIF)', 'error');
-        return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) { // 5 ميجابايت
-        showNotification('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
-        return;
-    }
-    
-    // تحميل الصورة إلى Firebase Storage
-    const storageRef = firebase.storage().ref();
-    const fileRef = storageRef.child(`profile_pictures/${currentUser.uid}/${Date.now()}_${file.name}`);
-    
-    showElement(loadingScreen);
-    
-    fileRef.put(file)
-        .then((snapshot) => {
-            return snapshot.ref.getDownloadURL();
-        })
-        .then((downloadURL) => {
-            // تحديث URL الصورة في قاعدة البيانات
-            return firebase.database().ref(`users/${currentUser.uid}`).update({
-                profilePicture: downloadURL
+    try {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            showNotification('الرجاء اختيار صورة صالحة (JPEG، PNG، GIF)', 'error');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) { // 5 ميجابايت
+            showNotification('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+            return;
+        }
+        
+        // تحميل الصورة إلى Firebase Storage
+        showElement(loadingScreen);
+        
+        const storageRef = firebase.storage().ref();
+        const fileRef = storageRef.child(`profile_pictures/${currentUser.uid}/${Date.now()}_${file.name}`);
+        
+        fileRef.put(file)
+            .then((snapshot) => {
+                return snapshot.ref.getDownloadURL();
+            })
+            .then((downloadURL) => {
+                // تحديث URL الصورة في قاعدة البيانات
+                return firebase.database().ref(`users/${currentUser.uid}`).update({
+                    profilePicture: downloadURL
+                });
+            })
+            .then(() => {
+                // تحديث الصورة في واجهة المستخدم والمتغيرات العالمية
+                profilePhoto.innerHTML = `<img src="${downloadURL}" alt="صورة الملف الشخصي">`;
+                if (!currentUserData) currentUserData = {};
+                currentUserData.profilePicture = downloadURL;
+                
+                hideElement(loadingScreen);
+                showNotification('تم تحديث الصورة بنجاح', 'success');
+            })
+            .catch((error) => {
+                hideElement(loadingScreen);
+                console.error('خطأ في تحميل الصورة:', error);
+                showNotification('حدث خطأ أثناء تحميل الصورة', 'error');
             });
-        })
-        .then(() => {
-            // تحديث الصورة في واجهة المستخدم
-            profilePhoto.innerHTML = `<img src="${downloadURL}" alt="صورة الملف الشخصي">`;
-            currentUserData.profilePicture = downloadURL;
-            
-            // تحديث الصورة في قائمة المحادثات إذا كان المستخدم في قائمة المحادثات
-            updateUserPictureInChat(currentUser.uid, downloadURL);
-            
-            hideElement(loadingScreen);
-            showNotification('تم تحديث الصورة بنجاح', 'success');
-        })
-        .catch((error) => {
-            hideElement(loadingScreen);
-            console.error('خطأ في تحميل الصورة:', error);
-            showNotification('حدث خطأ أثناء تحميل الصورة', 'error');
-        });
+    } catch (error) {
+        hideElement(loadingScreen);
+        console.error('خطأ غير متوقع في تغيير الصورة الشخصية:', error);
+        showNotification('حدث خطأ أثناء تحميل الصورة', 'error');
+    }
 });
-
-// تحديث صورة المستخدم في قائمة المحادثات
-function updateUserPictureInChat(userId, pictureUrl) {
-    const chatItems = document.querySelectorAll(`.chat-item[data-user-id="${userId}"] .chat-profile-pic`);
-    chatItems.forEach(item => {
-        item.innerHTML = `<img src="${pictureUrl}" alt="صورة المستخدم">`;
-    });
-}
 
 // معالجة تحديث الملف الشخصي
 profileForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    const fullName = profileFullName.value.trim();
-    const username = profileUsername.value.trim().toLowerCase();
-    
-    if (!fullName || !username) {
-        profileError.textContent = 'الرجاء ملء جميع الحقول المطلوبة';
-        return;
-    }
-    
-    // التأكد من أن اسم المستخدم غير مستخدم بالفعل (إذا تم تغييره)
-    if (username !== currentUserData.username) {
+    try {
+        const fullName = profileFullName.value.trim();
+        const username = profileUsername.value.trim().toLowerCase();
+        
+        if (!fullName || !username) {
+            profileError.textContent = 'الرجاء ملء جميع الحقول المطلوبة';
+            showNotification('الرجاء ملء جميع الحقول المطلوبة', 'error');
+            return;
+        }
+        
         showElement(loadingScreen);
         
-        firebase.database().ref('usernames').child(username).once('value')
-            .then((snapshot) => {
-                if (snapshot.exists()) {
+        // التأكد من أن اسم المستخدم غير مستخدم بالفعل (إذا تم تغييره)
+        if (username !== currentUserData.username) {
+            firebase.database().ref('usernames').child(username).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists() && snapshot.val() !== currentUser.uid) {
+                        hideElement(loadingScreen);
+                        profileError.textContent = 'اسم المستخدم مستخدم بالفعل، الرجاء اختيار اسم آخر';
+                        showNotification('اسم المستخدم مستخدم بالفعل', 'error');
+                        return Promise.reject(new Error('Username already exists'));
+                    }
+                    
+                    // حذف اسم المستخدم القديم إذا كان موجوداً
+                    if (currentUserData.username) {
+                        return firebase.database().ref('usernames').child(currentUserData.username).remove();
+                    }
+                    return Promise.resolve();
+                })
+                .then(() => {
+                    // إضافة اسم المستخدم الجديد
+                    return firebase.database().ref('usernames').child(username).set(currentUser.uid);
+                })
+                .then(() => {
+                    // تحديث بيانات المستخدم
+                    return firebase.database().ref(`users/${currentUser.uid}`).update({
+                        fullName: fullName,
+                        username: username
+                    });
+                })
+                .then(() => {
+                    // تحديث المتغيرات العامة
+                    if (!currentUserData) currentUserData = {};
+                    currentUserData.fullName = fullName;
+                    currentUserData.username = username;
+                    
+                    // تحديث العرض
+                    userDisplayName.textContent = fullName;
+                    
                     hideElement(loadingScreen);
-                    profileError.textContent = 'اسم المستخدم مستخدم بالفعل، الرجاء اختيار اسم آخر';
-                    return Promise.reject(new Error('Username already exists'));
-                }
-                
-                // حذف اسم المستخدم القديم
-                return firebase.database().ref('usernames').child(currentUserData.username).remove();
-            })
-            .then(() => {
-                // إضافة اسم المستخدم الجديد
-                return firebase.database().ref('usernames').child(username).set(currentUser.uid);
-            })
-            .then(() => {
-                // تحديث بيانات المستخدم
-                return firebase.database().ref(`users/${currentUser.uid}`).update({
-                    fullName: fullName,
-                    username: username
+                    showNotification('تم تحديث الملف الشخصي بنجاح', 'success');
+                    profileModal.style.display = 'none';
+                })
+                .catch((error) => {
+                    if (error.message === 'Username already exists') return;
+                    
+                    hideElement(loadingScreen);
+                    console.error('خطأ في تحديث الملف الشخصي:', error);
+                    profileError.textContent = 'حدث خطأ في تحديث الملف الشخصي';
+                    showNotification('حدث خطأ في تحديث الملف الشخصي', 'error');
                 });
+        } else {
+            // تحديث الاسم الكامل فقط
+            firebase.database().ref(`users/${currentUser.uid}`).update({
+                fullName: fullName
             })
             .then(() => {
                 // تحديث المتغيرات العامة
+                if (!currentUserData) currentUserData = {};
                 currentUserData.fullName = fullName;
-                currentUserData.username = username;
                 
                 // تحديث العرض
                 userDisplayName.textContent = fullName;
@@ -438,199 +534,175 @@ profileForm.addEventListener('submit', (e) => {
                 profileModal.style.display = 'none';
             })
             .catch((error) => {
-                if (error.message === 'Username already exists') return;
-                
                 hideElement(loadingScreen);
                 console.error('خطأ في تحديث الملف الشخصي:', error);
                 profileError.textContent = 'حدث خطأ في تحديث الملف الشخصي';
+                showNotification('حدث خطأ في تحديث الملف الشخصي', 'error');
             });
-    } else {
-        // تحديث الاسم الكامل فقط
-        showElement(loadingScreen);
-        
-        firebase.database().ref(`users/${currentUser.uid}`).update({
-            fullName: fullName
-        })
-        .then(() => {
-            // تحديث المتغيرات العامة
-            currentUserData.fullName = fullName;
-            
-            // تحديث العرض
-            userDisplayName.textContent = fullName;
-            
-            hideElement(loadingScreen);
-            showNotification('تم تحديث الملف الشخصي بنجاح', 'success');
-            profileModal.style.display = 'none';
-        })
-        .catch((error) => {
-            hideElement(loadingScreen);
-            console.error('خطأ في تحديث الملف الشخصي:', error);
-            profileError.textContent = 'حدث خطأ في تحديث الملف الشخصي';
-        });
+        }
+    } catch (error) {
+        hideElement(loadingScreen);
+        console.error('خطأ غير متوقع في تحديث الملف الشخصي:', error);
+        profileError.textContent = 'حدث خطأ غير متوقع';
+        showNotification('حدث خطأ غير متوقع', 'error');
     }
 });
 
 // تحميل جميع المستخدمين
 function loadAllUsers() {
-    firebase.database().ref('users').once('value')
-        .then((snapshot) => {
-            allUsers = snapshot.val() || {};
-        })
-        .catch((error) => {
-            console.error('خطأ في تحميل المستخدمين:', error);
-        });
+    try {
+        firebase.database().ref('users').once('value')
+            .then((snapshot) => {
+                allUsers = snapshot.val() || {};
+            })
+            .catch((error) => {
+                console.error('خطأ في تحميل المستخدمين:', error);
+                showNotification('فشل في تحميل قائمة المستخدمين', 'error');
+            });
+    } catch (error) {
+        console.error('خطأ غير متوقع في تحميل المستخدمين:', error);
+    }
 }
 
 // تحميل جهات الاتصال
 function loadContacts() {
-    // قراءة قائمة جهات الاتصال الخاصة بالمستخدم
-    firebase.database().ref(`contacts/${currentUser.uid}`).on('value', (snapshot) => {
-        const contacts = snapshot.val() || {};
-        myContacts = {};
-        chatList.innerHTML = '';
-        
-        // لا توجد جهات اتصال بعد
-        if (Object.keys(contacts).length === 0) {
-            chatList.innerHTML = '<div class="no-conversations">لم تبدأ محادثات بعد.<br>استخدم زر + لإضافة مستخدم جديد.</div>';
-            return;
-        }
-        
-        // إنشاء عنصر لكل جهة اتصال
-        Object.keys(contacts).forEach(userId => {
-            firebase.database().ref(`users/${userId}`).once('value')
-                .then((userSnapshot) => {
-                    const userData = userSnapshot.val();
-                    if (!userData) return;
-                    
-                    myContacts[userId] = userData;
-                    
-                    // إنشاء معرف للدردشة بين المستخدمين
-                    const chatId = getChatId(currentUser.uid, userId);
-                    
-                    // إنشاء عنصر في قائمة المحادثات
-                    const chatItem = document.createElement('li');
-                    chatItem.className = 'chat-item';
-                    chatItem.dataset.chatId = chatId;
-                    chatItem.dataset.userId = userId;
-                    
-                    chatItem.innerHTML = `
-                        <div class="chat-profile-pic">
-                            ${userData.profilePicture
-                                ? `<img src="${userData.profilePicture}" alt="${userData.fullName}">`
-                                : `<i class="fas fa-user"></i>`
-                            }
-                        </div>
-                        <div class="chat-info">
-                            <div class="chat-name">${userData.fullName || userData.name || userData.username || 'مستخدم'}</div>
-                            <div class="chat-last-message">انقر للدردشة</div>
-                        </div>
-                    `;
-                    
-                    chatItem.addEventListener('click', () => openChat(chatId, userId));
-                    chatList.appendChild(chatItem);
-                })
-                .catch(error => {
-                    console.error('خطأ في تحميل بيانات المستخدم:', error);
-                });
+    try {
+        // قراءة قائمة جهات الاتصال الخاصة بالمستخدم
+        firebase.database().ref(`contacts/${currentUser.uid}`).on('value', (snapshot) => {
+            const contacts = snapshot.val() || {};
+            myContacts = {};
+            chatList.innerHTML = '';
+            
+            // لا توجد جهات اتصال بعد
+            if (Object.keys(contacts).length === 0) {
+                chatList.innerHTML = '<div class="no-conversations">لم تبدأ محادثات بعد.<br>استخدم زر + لإضافة مستخدم جديد.</div>';
+                return;
+            }
+            
+            // إنشاء عنصر لكل جهة اتصال
+            Object.keys(contacts).forEach(userId => {
+                firebase.database().ref(`users/${userId}`).once('value')
+                    .then((userSnapshot) => {
+                        const userData = userSnapshot.val();
+                        if (!userData) return;
+                        
+                        myContacts[userId] = userData;
+                        
+                        // إنشاء معرف للدردشة بين المستخدمين
+                        const chatId = getChatId(currentUser.uid, userId);
+                        
+                        // إنشاء عنصر في قائمة المحادثات
+                        const chatItem = document.createElement('li');
+                        chatItem.className = 'chat-item';
+                        chatItem.dataset.chatId = chatId;
+                        chatItem.dataset.userId = userId;
+                        
+                        chatItem.innerHTML = `
+                            <div class="chat-profile-pic">
+                                ${userData.profilePicture
+                                    ? `<img src="${userData.profilePicture}" alt="${userData.fullName}">`
+                                    : `<i class="fas fa-user"></i>`
+                                }
+                            </div>
+                            <div class="chat-info">
+                                <div class="chat-name">${userData.fullName || userData.name || userData.username || 'مستخدم'}</div>
+                                <div class="chat-last-message">انقر للدردشة</div>
+                            </div>
+                        `;
+                        
+                        chatItem.addEventListener('click', () => openChat(chatId, userId));
+                        chatList.appendChild(chatItem);
+                    })
+                    .catch(error => {
+                        console.error('خطأ في تحميل بيانات المستخدم:', error);
+                    });
+            });
         });
-    });
+    } catch (error) {
+        console.error('خطأ غير متوقع في تحميل جهات الاتصال:', error);
+        showNotification('فشل في تحميل جهات الاتصال', 'error');
+    }
 }
 
 // معالجة البحث عن مستخدمين وإضافتهم
 addUserBtn.addEventListener('click', toggleAddUserContainer);
 
 searchUserBtn.addEventListener('click', () => {
-    const searchTerm = searchUsername.value.trim().toLowerCase();
-    if (!searchTerm) return;
-    
-    searchResults.innerHTML = '<div class="no-conversations">جاري البحث...</div>';
-    
-    firebase.database().ref('usernames').child(searchTerm).once('value')
-        .then((snapshot) => {
-            const userId = snapshot.val();
-            
-            if (!userId) {
-                searchResults.innerHTML = '<div class="no-conversations">لم يتم العثور على مستخدم بهذا الاسم</div>';
-                return;
-            }
-            
-            if (userId === currentUser.uid) {
-                searchResults.innerHTML = '<div class="no-conversations">لا يمكنك إضافة نفسك</div>';
-                return;
-            }
-            
-            // التحقق إذا كان المستخدم موجود بالفعل في جهات الاتصال
-            return firebase.database().ref(`contacts/${currentUser.uid}/${userId}`).once('value')
-                .then((contactSnapshot) => {
-                    if (contactSnapshot.exists()) {
-                        searchResults.innerHTML = '<div class="no-conversations">هذا المستخدم موجود بالفعل في جهات الاتصال الخاصة بك</div>';
-                        return null;
-                    }
-                    
-                    // البحث عن بيانات المستخدم
-                    return firebase.database().ref(`users/${userId}`).once('value');
-                });
-        })
-        .then((snapshot) => {
-            if (!snapshot || !snapshot.val()) return;
-            
-            const userData = snapshot.val();
-            
-            searchResults.innerHTML = `
-                <div class="search-result-item" data-user-id="${snapshot.key}">
-                    <div class="user-avatar">
-                        ${userData.profilePicture 
-                            ? `<img src="${userData.profilePicture}" alt="${userData.fullName}">`
-                            : `<i class="fas fa-user"></i>`
+    try {
+        const searchTerm = searchUsername.value.trim().toLowerCase();
+        if (!searchTerm) {
+            showNotification('الرجاء إدخال اسم مستخدم للبحث', 'warning');
+            return;
+        }
+        
+        searchResults.innerHTML = '<div class="no-conversations">جاري البحث...</div>';
+        
+        firebase.database().ref('usernames').child(searchTerm).once('value')
+            .then((snapshot) => {
+                const userId = snapshot.val();
+                
+                if (!userId) {
+                    searchResults.innerHTML = '<div class="no-conversations">لم يتم العثور على مستخدم بهذا الاسم</div>';
+                    return;
+                }
+                
+                if (userId === currentUser.uid) {
+                    searchResults.innerHTML = '<div class="no-conversations">لا يمكنك إضافة نفسك</div>';
+                    return;
+                }
+                
+                // التحقق إذا كان المستخدم موجود بالفعل في جهات الاتصال
+                return firebase.database().ref(`contacts/${currentUser.uid}/${userId}`).once('value')
+                    .then((contactSnapshot) => {
+                        if (contactSnapshot.exists()) {
+                            searchResults.innerHTML = '<div class="no-conversations">هذا المستخدم موجود بالفعل في جهات الاتصال الخاصة بك</div>';
+                            return null;
                         }
+                        
+                        // البحث عن بيانات المستخدم
+                        return firebase.database().ref(`users/${userId}`).once('value');
+                    });
+            })
+                        .then((snapshot) => {
+                if (!snapshot || !snapshot.val()) return;
+                
+                const userData = snapshot.val();
+                
+                searchResults.innerHTML = `
+                    <div class="search-result-item" data-user-id="${snapshot.key}">
+                        <div class="user-avatar">
+                            ${userData.profilePicture 
+                                ? `<img src="${userData.profilePicture}" alt="${userData.fullName}">`
+                                : `<i class="fas fa-user"></i>`
+                            }
+                        </div>
+                        <div class="result-user-info">
+                            <div class="result-user-name">${userData.fullName || userData.name || userData.username}</div>
+                            <div class="result-username">@${userData.username}</div>
+                        </div>
                     </div>
-                    <div class="result-user-info">
-                        <div class="result-user-name">${userData.fullName || userData.name || userData.username}</div>
-                        <div class="result-username">@${userData.username}</div>
-                    </div>
-                </div>
-            `;
-            
-            // إضافة الاستماع للنقر
-            const resultItem = searchResults.querySelector('.search-result-item');
-            if (resultItem) {
-                resultItem.addEventListener('click', () => {
-                    const userId = resultItem.dataset.userId;
-                    addContact(userId, userData);
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('خطأ في البحث عن المستخدم:', error);
-            searchResults.innerHTML = '<div class="no-conversations">حدث خطأ أثناء البحث</div>';
-        });
+                `;
+                
+                // إضافة الاستماع للنقر
+                const resultItem = searchResults.querySelector('.search-result-item');
+                if (resultItem) {
+                    resultItem.addEventListener('click', () => {
+                        const userId = resultItem.dataset.userId;
+                        addContact(userId, userData);
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error('خطأ في البحث عن المستخدم:', error);
+                searchResults.innerHTML = '<div class="no-conversations">حدث خطأ أثناء البحث</div>';
+                showNotification('حدث خطأ أثناء البحث عن المستخدم', 'error');
+            });
+    } catch (error) {
+        console.error('خطأ غير متوقع في البحث عن المستخدم:', error);
+        searchResults.innerHTML = '<div class="no-conversations">حدث خطأ غير متوقع</div>';
+        showNotification('حدث خطأ غير متوقع', 'error');
+    }
 });
-
-// إضافة مستخدم إلى جهات الاتصال
-function addContact(userId, userData) {
-    showElement(loadingScreen);
-    
-    // إضافة المستخدم إلى جهات الاتصال الخاصة بي
-    firebase.database().ref(`contacts/${currentUser.uid}/${userId}`).set(true)
-        .then(() => {
-            // إضافتي إلى جهات اتصال المستخدم
-            return firebase.database().ref(`contacts/${userId}/${currentUser.uid}`).set(true);
-        })
-        .then(() => {
-            hideElement(loadingScreen);
-            showNotification('تمت إضافة المستخدم بنجاح', 'success');
-            toggleAddUserContainer();
-            
-            // فتح الدردشة مع المستخدم المضاف
-            const chatId = getChatId(currentUser.uid, userId);
-            openChat(chatId, userId);
-        })
-        .catch((error) => {
-            hideElement(loadingScreen);
-            console.error('خطأ في إضافة المستخدم:', error);
-            showNotification('حدث خطأ أثناء إضافة المستخدم', 'error');
-        });
-}
 
 // البحث عند الضغط على Enter
 searchUsername.addEventListener('keypress', (e) => {
@@ -640,6 +712,38 @@ searchUsername.addEventListener('keypress', (e) => {
     }
 });
 
+// إضافة مستخدم إلى جهات الاتصال
+function addContact(userId, userData) {
+    try {
+        showElement(loadingScreen);
+        
+        // إضافة المستخدم إلى جهات الاتصال الخاصة بي
+        firebase.database().ref(`contacts/${currentUser.uid}/${userId}`).set(true)
+            .then(() => {
+                // إضافتي إلى جهات اتصال المستخدم
+                return firebase.database().ref(`contacts/${userId}/${currentUser.uid}`).set(true);
+            })
+            .then(() => {
+                hideElement(loadingScreen);
+                showNotification('تمت إضافة المستخدم بنجاح', 'success');
+                toggleAddUserContainer();
+                
+                // فتح الدردشة مع المستخدم المضاف
+                const chatId = getChatId(currentUser.uid, userId);
+                openChat(chatId, userId);
+            })
+            .catch((error) => {
+                hideElement(loadingScreen);
+                console.error('خطأ في إضافة المستخدم:', error);
+                showNotification('حدث خطأ أثناء إضافة المستخدم', 'error');
+            });
+    } catch (error) {
+        hideElement(loadingScreen);
+        console.error('خطأ غير متوقع في إضافة المستخدم:', error);
+        showNotification('حدث خطأ غير متوقع', 'error');
+    }
+}
+
 // الحصول على معرف الدردشة بين مستخدمين
 function getChatId(uid1, uid2) {
     return [uid1, uid2].sort().join('_');
@@ -647,144 +751,183 @@ function getChatId(uid1, uid2) {
 
 // فتح دردشة مع مستخدم محدد
 function openChat(chatId, userId) {
-    currentChatId = chatId;
-    
-    // البحث عن بيانات المستخدم
-    firebase.database().ref(`users/${userId}`).once('value')
-        .then(snapshot => {
-            if (!snapshot.exists()) return;
-            
-            const userData = snapshot.val();
-            currentChatUser = userData;
-            
-            // تحديث واجهة المستخدم
-            currentChatName.textContent = userData.fullName || userData.name || userData.username || 'مستخدم';
-            
-            const currentChatProfile = document.querySelector('.current-chat-profile');
-            if (currentChatProfile) {
-                if (userData.profilePicture) {
-                    currentChatProfile.innerHTML = `<img src="${userData.profilePicture}" alt="${userData.fullName || userData.username}">`;
-                } else {
-                    currentChatProfile.innerHTML = `<i class="fas fa-user"></i>`;
+    try {
+        currentChatId = chatId;
+        
+        // البحث عن بيانات المستخدم
+        firebase.database().ref(`users/${userId}`).once('value')
+            .then(snapshot => {
+                if (!snapshot.exists()) {
+                    showNotification('لم يتم العثور على المستخدم', 'error');
+                    return;
                 }
-            }
-            
-            messageInput.disabled = false;
-            sendButton.disabled = false;
-            
-            // إذا كان على شاشة صغيرة، يتم إظهار قسم المحادثة وإخفاء قائمة المحادثات
-            if (window.innerWidth <= 768) {
-                chatMain.classList.add('active');
-                chatSidebar.style.display = 'none';
-            }
-            
-            // تحديث المحادثة النشطة في قائمة المحادثات
-            const chatItems = document.querySelectorAll('.chat-item');
-            chatItems.forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.chatId === chatId) {
-                    item.classList.add('active');
+                
+                const userData = snapshot.val();
+                currentChatUser = userData;
+                
+                // تحديث واجهة المستخدم
+                currentChatName.textContent = userData.fullName || userData.name || userData.username || 'مستخدم';
+                
+                const currentChatProfile = document.querySelector('.current-chat-profile');
+                if (currentChatProfile) {
+                    if (userData.profilePicture) {
+                        currentChatProfile.innerHTML = `<img src="${userData.profilePicture}" alt="${userData.fullName || userData.username}">`;
+                    } else {
+                        currentChatProfile.innerHTML = `<i class="fas fa-user"></i>`;
+                    }
                 }
+                
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                
+                // إذا كان على شاشة صغيرة، يتم إظهار قسم المحادثة وإخفاء قائمة المحادثات
+                if (window.innerWidth <= 768) {
+                    chatMain.classList.add('active');
+                    chatSidebar.style.display = 'none';
+                }
+                
+                // تحديث المحادثة النشطة في قائمة المحادثات
+                const chatItems = document.querySelectorAll('.chat-item');
+                chatItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.chatId === chatId) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // تحميل الرسائل للدردشة الحالية
+                loadMessages(chatId);
+            })
+            .catch(error => {
+                console.error('خطأ في تحميل بيانات المستخدم:', error);
+                showNotification('حدث خطأ أثناء فتح المحادثة', 'error');
             });
-            
-            // تحميل الرسائل للدردشة الحالية
-            loadMessages(chatId);
-        })
-        .catch(error => {
-            console.error('خطأ في تحميل بيانات المستخدم:', error);
-        });
+    } catch (error) {
+        console.error('خطأ غير متوقع في فتح المحادثة:', error);
+        showNotification('حدث خطأ غير متوقع', 'error');
+    }
 }
 
 // تحميل الرسائل للدردشة المحددة
 function loadMessages(chatId) {
-    messagesContainer.innerHTML = '';
-    
-    firebase.database().ref('messages/' + chatId).on('value', (snapshot) => {
+    try {
         messagesContainer.innerHTML = '';
         
-        if (!snapshot.exists()) {
-            const emptyMessages = document.createElement('div');
-            emptyMessages.className = 'welcome-message';
-            emptyMessages.innerHTML = `
-                <h3>ابدأ المحادثة</h3>
-                <p>لا توجد رسائل بعد. ابدأ بإرسال رسالة!</p>
-            `;
-            messagesContainer.appendChild(emptyMessages);
-            return;
-        }
-        
-                snapshot.forEach((childSnapshot) => {
-            const message = childSnapshot.val();
+        firebase.database().ref('messages/' + chatId).on('value', (snapshot) => {
+            messagesContainer.innerHTML = '';
             
-            // إنشاء عنصر الرسالة
-            const messageElement = document.createElement('div');
-            messageElement.className = `message ${message.senderId === currentUser.uid ? 'outgoing' : 'incoming'}`;
+            if (!snapshot.exists()) {
+                const emptyMessages = document.createElement('div');
+                emptyMessages.className = 'welcome-message';
+                emptyMessages.innerHTML = `
+                    <h3>ابدأ المحادثة</h3>
+                    <p>لا توجد رسائل بعد. ابدأ بإرسال رسالة!</p>
+                `;
+                messagesContainer.appendChild(emptyMessages);
+                return;
+            }
             
-            const messageTime = formatTime(message.timestamp);
+            snapshot.forEach((childSnapshot) => {
+                const message = childSnapshot.val();
+                displayMessage(message);
+            });
             
-            messageElement.innerHTML = `
-                <div class="message-content">
-                    <div class="message-text">${message.text}</div>
-                    <div class="message-time">${messageTime}</div>
-                </div>
-            `;
+            // التمرير إلى آخر رسالة
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
-            messagesContainer.appendChild(messageElement);
+            // تحديث آخر رسالة في قائمة المحادثات
+            updateLastMessage(chatId);
         });
-        
-        // التمرير إلى آخر رسالة
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // تحديث آخر رسالة في قائمة المحادثات
-        updateLastMessage(chatId, currentChatUser.id);
-    });
+    } catch (error) {
+        console.error('خطأ غير متوقع في تحميل الرسائل:', error);
+        showNotification('حدث خطأ أثناء تحميل الرسائل', 'error');
+    }
 }
 
 // تحديث آخر رسالة في قائمة المحادثات
-function updateLastMessage(chatId, userId) {
-    firebase.database().ref('messages/' + chatId).limitToLast(1).once('value', (snapshot) => {
-        if (!snapshot.exists()) return;
-        
-        snapshot.forEach((childSnapshot) => {
-            const lastMessage = childSnapshot.val();
-            const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+function updateLastMessage(chatId) {
+    try {
+        firebase.database().ref('messages/' + chatId).limitToLast(1).once('value', (snapshot) => {
+            if (!snapshot.exists()) return;
             
-            if (chatItem) {
-                const lastMessageElement = chatItem.querySelector('.chat-last-message');
-                if (lastMessageElement) {
-                    const messageText = lastMessage.text.length > 25 
-                        ? lastMessage.text.substring(0, 25) + '...' 
-                        : lastMessage.text;
-                    
-                    lastMessageElement.textContent = messageText;
+            snapshot.forEach((childSnapshot) => {
+                const lastMessage = childSnapshot.val();
+                const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+                
+                if (chatItem) {
+                    const lastMessageElement = chatItem.querySelector('.chat-last-message');
+                    if (lastMessageElement) {
+                        let messagePreview = lastMessage.text;
+                        // اقتصار طول النص
+                        if (messagePreview.length > 30) {
+                            messagePreview = messagePreview.substring(0, 30) + '...';
+                        }
+                        
+                        // إذا كان المستخدم الحالي هو مرسل الرسالة، نضيف "أنت: "
+                        if (lastMessage.senderId === currentUser.uid) {
+                            messagePreview = 'أنت: ' + messagePreview;
+                        }
+                        
+                        lastMessageElement.textContent = messagePreview;
+                    }
                 }
-            }
+            });
         });
-    });
+    } catch (error) {
+        console.error('خطأ في تحديث آخر رسالة:', error);
+    }
+}
+
+// عرض رسالة في المحادثة
+function displayMessage(messageData) {
+    try {
+        const isCurrentUser = messageData.senderId === currentUser.uid;
+        
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${isCurrentUser ? 'outgoing' : 'incoming'}`;
+        
+        const messageTime = formatTime(messageData.timestamp);
+        
+        messageElement.innerHTML = `
+            <div class="message-content">
+                <div class="message-text">${messageData.text}</div>
+                <div class="message-time">${messageTime}</div>
+            </div>
+        `;
+        
+        messagesContainer.appendChild(messageElement);
+    } catch (error) {
+        console.error('خطأ في عرض الرسالة:', error);
+    }
 }
 
 // إرسال رسالة
 function sendMessage() {
-    const messageText = messageInput.value.trim();
-    if (!messageText || !currentChatId) return;
-    
-    const messageData = {
-        text: messageText,
-        senderId: currentUser.uid,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    };
-    
-    // إضافة الرسالة إلى قاعدة البيانات
-    const newMessageRef = firebase.database().ref('messages/' + currentChatId).push();
-    newMessageRef.set(messageData)
-        .then(() => {
-            messageInput.value = '';
-            messageInput.focus();
-        })
-        .catch((error) => {
-            console.error('خطأ في إرسال الرسالة:', error);
-            showNotification('فشل في إرسال الرسالة', 'error');
-        });
+    try {
+        const messageText = messageInput.value.trim();
+        if (!messageText || !currentChatId) return;
+        
+        const messageData = {
+            text: messageText,
+            senderId: currentUser.uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        // إضافة الرسالة إلى قاعدة البيانات
+        const newMessageRef = firebase.database().ref('messages/' + currentChatId).push();
+        newMessageRef.set(messageData)
+            .then(() => {
+                messageInput.value = '';
+                messageInput.focus();
+            })
+            .catch((error) => {
+                console.error('خطأ في إرسال الرسالة:', error);
+                showNotification('فشل في إرسال الرسالة', 'error');
+            });
+    } catch (error) {
+        console.error('خطأ غير متوقع في إرسال الرسالة:', error);
+        showNotification('حدث خطأ غير متوقع', 'error');
+    }
 }
 
 // معالجة النقر على زر الإرسال
@@ -800,23 +943,30 @@ messageInput.addEventListener('keypress', (e) => {
 
 // التعامل مع زر العودة إلى قائمة المحادثات (للشاشات الصغيرة)
 backToChats.addEventListener('click', () => {
-    chatMain.classList.remove('active');
-    chatSidebar.style.display = 'flex';
-    currentChatId = null;
+    try {
+        chatMain.classList.remove('active');
+        chatSidebar.style.display = 'block';
+    } catch (error) {
+        console.error('خطأ في التنقل:', error);
+    }
 });
 
 // معالجة تغيير حجم النافذة
 window.addEventListener('resize', () => {
-    if (window.innerWidth > 768) {
-        chatMain.classList.remove('active');
-        chatSidebar.style.display = 'flex';
-    } else if (currentChatId) {
-        chatMain.classList.add('active');
-        chatSidebar.style.display = 'none';
+    try {
+        if (window.innerWidth > 768) {
+            chatMain.classList.remove('active');
+            chatSidebar.style.display = 'block';
+        } else if (currentChatId) {
+            chatMain.classList.add('active');
+            chatSidebar.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('خطأ في معالجة تغيير حجم النافذة:', error);
     }
 });
 
-// التعامل مع حالة الاتصال/الاتصال بالإنترنت
+// التعامل مع حالة الاتصال/عدم الاتصال بالإنترنت
 window.addEventListener('online', () => {
     showNotification('أنت متصل بالإنترنت الآن', 'success');
 });
@@ -827,13 +977,17 @@ window.addEventListener('offline', () => {
 
 // عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
-    // تعطيل حقل الرسالة وزر الإرسال حتى يتم اختيار محادثة
-    messageInput.disabled = true;
-    sendButton.disabled = true;
-    
-    // إذا كانت الشاشة صغيرة، يتم إظهار قائمة المحادثات فقط
-    if (window.innerWidth <= 768) {
-        chatMain.classList.remove('active');
+    try {
+        // تعطيل حقل الرسالة وزر الإرسال حتى يتم اختيار محادثة
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+        
+        // إذا كانت الشاشة صغيرة، يتم إظهار قائمة المحادثات فقط
+        if (window.innerWidth <= 768) {
+            chatMain.classList.remove('active');
+        }
+    } catch (error) {
+        console.error('خطأ في تهيئة الصفحة:', error);
     }
 });
 
