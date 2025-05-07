@@ -9,7 +9,8 @@ body {
     background-color: #f0f2f5;
 }
 
-.login-container {
+/* نمط صفحة تسجيل الدخول */
+.login-container, .register-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -101,6 +102,14 @@ body {
     left: 0;
 }
 
+.error-message {
+    color: #f03d25;
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* نمط صفحة الدردشة */
 .chat-container {
     display: none;
     width: 100%;
@@ -212,8 +221,8 @@ body {
 }
 
 .search-result-item .user-avatar {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background-color: #ddd;
     display: flex;
@@ -247,6 +256,7 @@ body {
     list-style: none;
     flex: 1;
     overflow-y: auto;
+    padding: 0;
 }
 
 .chat-item {
@@ -362,30 +372,49 @@ body {
     clear: both;
 }
 
-.message-sent {
+.message.outgoing {
     float: left;
-    background-color: #0084ff;
-    color: white;
-    border-radius: 18px;
-    padding: 10px 15px;
 }
 
-.message-received {
+.message.incoming {
     float: right;
+}
+
+.message-content {
+    padding: 10px 15px;
+    border-radius: 18px;
+    position: relative;
+}
+
+.outgoing .message-content {
+    background-color: #0084ff;
+    color: white;
+    border-bottom-left-radius: 4px;
+}
+
+.incoming .message-content {
     background-color: #e4e6eb;
     color: #050505;
-    border-radius: 18px;
-    padding: 10px 15px;
+    border-bottom-right-radius: 4px;
+}
+
+.message-text {
+    margin-bottom: 4px;
+    word-wrap: break-word;
 }
 
 .message-time {
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 5px;
+    opacity: 0.8;
+    margin-top: 2px;
     text-align: right;
 }
 
-.message-received .message-time {
+.outgoing .message-time {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.incoming .message-time {
     color: #65676b;
 }
 
@@ -403,6 +432,7 @@ body {
     border-radius: 20px;
     font-size: 15px;
     margin-left: 10px;
+    resize: none;
 }
 
 .send-button {
@@ -416,20 +446,17 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .send-button:hover {
     background-color: #0069d9;
 }
 
-.register-container {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    width: 100%;
-    background-color: #f0f2f5;
+.send-button:disabled {
+    background-color: #e4e6eb;
+    color: #bcc0c4;
+    cursor: not-allowed;
 }
 
 .no-conversations {
@@ -527,6 +554,7 @@ body {
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
+    transition: background-color 0.2s;
 }
 
 .change-photo-btn:hover {
@@ -556,6 +584,10 @@ body {
     font-size: 16px;
 }
 
+.form-group input:disabled {
+    background-color: #f0f2f5;
+}
+
 .save-profile-btn {
     width: 100%;
     padding: 10px;
@@ -566,12 +598,88 @@ body {
     font-weight: bold;
     cursor: pointer;
     margin-top: 10px;
+    transition: background-color 0.2s;
 }
 
 .save-profile-btn:hover {
     background-color: #0069d9;
 }
 
+/* نافذة معاينة الصورة */
+.image-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+
+.image-preview-content {
+    background-color: white;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    padding: 20px;
+    text-align: center;
+}
+
+.image-preview-content h3 {
+    margin-bottom: 15px;
+    color: #0084ff;
+}
+
+.preview-container {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+#imagePreview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 4px;
+}
+
+.preview-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.confirm-btn, .cancel-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.confirm-btn {
+    background-color: #0084ff;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+.confirm-btn:hover {
+    background-color: #0069d9;
+}
+
+.cancel-btn:hover {
+    background-color: #e4e6eb;
+}
+
+/* التوافقية مع الشاشات الصغيرة */
 @media (max-width: 768px) {
     .chat-sidebar {
         width: 100%;
@@ -595,6 +703,11 @@ body {
         border: none;
         font-size: 20px;
         cursor: pointer;
+        color: #0084ff;
+    }
+
+    .profile-content, .image-preview-content {
+        width: 95%;
     }
 }
 
@@ -602,6 +715,7 @@ body {
     display: none;
 }
 
+/* الإشعارات */
 .notification {
     position: fixed;
     top: 20px;
@@ -613,6 +727,17 @@ body {
     font-weight: bold;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
 }
 
 .notification.success {
@@ -623,10 +748,8 @@ body {
     background-color: #ff3b30;
 }
 
-.error-message {
-    color: #ff3b30;
-    margin-top: 5px;
-    font-size: 14px;
+.notification.warning {
+    background-color: #ff9500;
 }
 
 .loading-screen {
