@@ -23,6 +23,8 @@ const goToRegisterBtn = document.getElementById('goToRegisterBtn');
 const goToLoginBtn = document.getElementById('goToLoginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const chatList = document.getElementById('chatList');
+const pinnedChatList = document.getElementById('pinnedChatList');
+const pinnedChatsHeader = document.querySelector('.pinned-chats-header');
 const chatMain = document.getElementById('chatMain');
 const chatSidebar = document.getElementById('chatSidebar');
 const currentChatName = document.getElementById('currentChatName');
@@ -33,6 +35,9 @@ const backToChats = document.getElementById('backToChats');
 const userDisplayName = document.getElementById('userDisplayName');
 const loginError = document.getElementById('loginError');
 const registerError = document.getElementById('registerError');
+const typingIndicator = document.getElementById('typingIndicator');
+const chatUserStatus = document.getElementById('chatUserStatus');
+const userOnlineStatus = document.getElementById('userOnlineStatus');
 
 // عناصر الملف الشخصي
 const profileBtn = document.getElementById('profileBtn');
@@ -60,6 +65,25 @@ const searchUsername = document.getElementById('searchUsername');
 const searchUserBtn = document.getElementById('searchUserBtn');
 const searchResults = document.getElementById('searchResults');
 
+// عناصر الرموز التعبيرية
+const emojiBtn = document.getElementById('emojiBtn');
+const emojiPickerContainer = document.getElementById('emojiPickerContainer');
+
+// عناصر إرسال الصور
+const imageInput = document.getElementById('imageInput');
+const imageButton = document.getElementById('imageButton');
+
+// عناصر الحظر
+const blockUserBtn = document.getElementById('blockUserBtn');
+const unblockUserBtn = document.getElementById('unblockUserBtn');
+
+// عناصر تثبيت المحادثة
+const pinChatBtn = document.getElementById('pinChatBtn');
+const unpinChatBtn = document.getElementById('unpinChatBtn');
+
+// عناصر الوضع المظلم
+const darkModeBtn = document.getElementById('darkModeBtn');
+
 // متغيرات عامة لحالة التطبيق
 let currentUser = null;
 let currentUserData = null;
@@ -69,6 +93,9 @@ let myContacts = {}; // المستخدمين الذين تمت إضافتهم ف
 let allUsers = {}; // جميع المستخدمين في النظام
 let isAddUserVisible = false;
 let selectedImageBase64 = null; // لتخزين الصورة المختارة كـ Base64
+let typingTimeout = null; // مؤقت لمؤشر الكتابة
+let onlineStatusRef = null; // مرجع حالة الاتصال
+let usersOnlineStatus = {}; // تخزين حالة اتصال المستخدمين
 
 // وظائف المساعدة
 function showElement(element) {
@@ -128,6 +155,44 @@ function formatTime(timestamp) {
     return `${hours}:${minutes}`;
 }
 
+// طلب إذن الإشعارات
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        Notification.requestPermission()
+            .then(permission => {
+                if (permission === 'granted') {
+                    console.log('تم منح إذن الإشعارات');
+                }
+            });
+    }
+}
+
+// إرسال إشعار عند استلام رسالة جديدة
+function sendNotification(senderName, messageText, senderPic = null) {
+    if (Notification.permission === 'granted' && document.hidden) {
+        let options = {
+            body: messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText,
+            icon: senderPic || '/favicon.ico'
+        };
+        
+        const notification = new Notification('رسالة جديدة من ' + senderName, options);
+        
+        notification.onclick = function() {
+            window.focus();
+            this.close();
+        };
+        
+        // تشغيل صوت تنبيه
+        playNotificationSound();
+    }
+}
+
+// تشغيل صوت التنبيه
+function playNotificationSound() {
+    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3');
+    audio.play().catch(e => console.log('فشل تشغيل الصوت:', e));
+}
+
 // دالة مساعدة لضغط الصورة
 function compressImage(base64Image, maxWidth) {
     return new Promise((resolve, reject) => {
@@ -176,6 +241,12 @@ firebase.auth().onAuthStateChanged((user) => {
             // المستخدم مسجل الدخول
             currentUser = user;
             
+            // طلب إذن الإشعارات
+            requestNotificationPermission();
+            
+            // ضبط حالة الاتصال
+            setupOnlineStatus(user.uid);
+            
             // جلب بيانات المستخدم
             firebase.database().ref(`users/${user.uid}`).once('value')
                 .then((snapshot) => {
@@ -190,6 +261,9 @@ firebase.auth().onAuthStateChanged((user) => {
                             
                             // تحميل جميع المستخدمين (لأغراض البحث)
                             loadAllUsers();
+                            
+                            // تحميل المحادثات المثبتة
+                            loadPinnedChats();
                             
                             // عرض واجهة الدردشة
                             showChatInterface();
@@ -244,6 +318,14 @@ firebase.auth().onAuthStateChanged((user) => {
             currentChatUser = null;
             myContacts = {};
             allUsers = {};
+            usersOnlineStatus = {};
+            
+            // إذا كان هناك مرجع لحالة الاتصال، نلغيه
+            if (onlineStatusRef) {
+                onlineStatusRef.off();
+                onlineStatusRef = null;
+            }
+            
             showLoginForm();
         }
     } catch (error) {
@@ -253,6 +335,92 @@ firebase.auth().onAuthStateChanged((user) => {
         showLoginForm();
     }
 });
+
+// إعداد مراقبة حالة الاتصال
+function setupOnlineStatus(userId) {
+    const userStatusRef = firebase.database().ref(`status/${userId}`);
+    
+    // حفظ حالة الاتصال
+    firebase.database().ref('.info/connected').on('value', (snapshot) => {
+        if (snapshot.val() === false) {
+            return;
+        }
+
+        userStatusRef.onDisconnect().set({
+            status: 'offline',
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+            userStatusRef.set({
+                status: 'online',
+                lastSeen: firebase.database.ServerValue.TIMESTAMP
+            });
+        });
+    });
+
+    // مراقبة حالة الاتصال للمستخدمين الآخرين
+    onlineStatusRef = firebase.database().ref('status');
+    onlineStatusRef.on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            const statuses = snapshot.val();
+            usersOnlineStatus = statuses;
+            
+            // تحديث حالة المستخدم الحالي في المحادثة
+            if (currentChatUser && statuses[currentChatUser.id]) {
+                updateChatUserStatus(currentChatUser.id);
+            }
+            
+            // تحديث مؤشرات الاتصال في قائمة المحادثات
+            updateContactsOnlineStatus();
+        }
+    });
+}
+
+// تحديث حالة الاتصال للمستخدم الحالي في المحادثة
+function updateChatUserStatus(userId) {
+    if (!userId || !usersOnlineStatus[userId]) return;
+    
+    const status = usersOnlineStatus[userId];
+    
+    if (status.status === 'online') {
+        chatUserStatus.textContent = 'متصل الآن';
+        chatUserStatus.style.color = '#42b72a';
+    } else {
+        const lastSeen = new Date(status.lastSeen);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - lastSeen) / (1000 * 60));
+        
+        if (diffMinutes < 60) {
+            chatUserStatus.textContent = `آخر ظهور منذ ${diffMinutes} دقيقة`;
+        } else if (diffMinutes < 1440) {
+            const hours = Math.floor(diffMinutes / 60);
+            chatUserStatus.textContent = `آخر ظهور منذ ${hours} ساعة`;
+        } else {
+            const days = Math.floor(diffMinutes / 1440);
+            chatUserStatus.textContent = `آخر ظهور منذ ${days} يوم`;
+        }
+        chatUserStatus.style.color = '#65676b';
+    }
+}
+
+// تحديث مؤشرات الاتصال في قائمة المحادثات
+function updateContactsOnlineStatus() {
+    const chatItems = document.querySelectorAll('.chat-item');
+    chatItems.forEach(item => {
+        const userId = item.dataset.userId;
+        const onlineIndicator = item.querySelector('.online-indicator');
+        
+        if (userId && usersOnlineStatus[userId] && usersOnlineStatus[userId].status === 'online') {
+            if (!onlineIndicator) {
+                const profilePic = item.querySelector('.chat-profile-pic');
+                const indicator = document.createElement('div');
+                indicator.className = 'online-indicator';
+                profilePic.appendChild(indicator);
+            }
+        } else if (onlineIndicator) {
+            onlineIndicator.remove();
+        }
+    });
+}
 
 // معالجة الأحداث المتعلقة بتسجيل الدخول وإنشاء حساب
 goToRegisterBtn.addEventListener('click', showRegisterForm);
@@ -386,16 +554,32 @@ registerForm.addEventListener('submit', (e) => {
 // معالجة تسجيل الخروج
 logoutBtn.addEventListener('click', () => {
     showElement(loadingScreen);
-    firebase.auth().signOut()
-        .then(() => {
+    
+    // ضبط حالة عدم الاتصال قبل تسجيل الخروج
+    if (currentUser) {
+        firebase.database().ref(`status/${currentUser.uid}`).set({
+            status: 'offline',
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+            firebase.auth().signOut()
+                .then(() => {
+                    hideElement(loadingScreen);
+                    showNotification('تم تسجيل الخروج بنجاح', 'success');
+                })
+                .catch((error) => {
+                    hideElement(loadingScreen);
+                    console.error('خطأ في تسجيل الخروج:', error);
+                    showNotification('حدث خطأ أثناء تسجيل الخروج', 'error');
+                });
+        }).catch(error => {
+            console.error('خطأ في ضبط حالة عدم الاتصال:', error);
+            firebase.auth().signOut();
             hideElement(loadingScreen);
-            showNotification('تم تسجيل الخروج بنجاح', 'success');
-        })
-        .catch((error) => {
-            hideElement(loadingScreen);
-            console.error('خطأ في تسجيل الخروج:', error);
-            showNotification('حدث خطأ أثناء تسجيل الخروج', 'error');
         });
+    } else {
+        firebase.auth().signOut();
+        hideElement(loadingScreen);
+    }
 });
 
 // معالجة فتح وإغلاق مربع الملف الشخصي
@@ -537,7 +721,20 @@ function updateUserPictureInChat(userId, pictureUrl) {
         // تحديث صورة المستخدم في قائمة المحادثات
         const chatItems = document.querySelectorAll(`.chat-item[data-user-id="${userId}"] .chat-profile-pic`);
         chatItems.forEach(item => {
-            item.innerHTML = `<img src="${pictureUrl}" alt="صورة المستخدم">`;
+            const img = document.createElement('img');
+            img.src = pictureUrl;
+            img.alt = "صورة المستخدم";
+            
+            // إزالة المحتوى الحالي
+            item.innerHTML = '';
+            item.appendChild(img);
+            
+            // إعادة مؤشر الاتصال إذا كان المستخدم متصلاً
+            if (usersOnlineStatus[userId] && usersOnlineStatus[userId].status === 'online') {
+                const indicator = document.createElement('div');
+                indicator.className = 'online-indicator';
+                item.appendChild(indicator);
+            }
         });
         
         // تحديث صورة المستخدم في المحادثة الحالية إذا كانت مفتوحة
@@ -665,6 +862,50 @@ function loadAllUsers() {
     }
 }
 
+// تحميل المحادثات المثبتة
+function loadPinnedChats() {
+    try {
+        firebase.database().ref(`pinnedChats/${currentUser.uid}`).on('value', (snapshot) => {
+            const pinnedChats = snapshot.val() || {};
+            pinnedChatList.innerHTML = '';
+            
+            // إذا كانت هناك محادثات مثبتة، نعرض رأس القسم
+            if (Object.keys(pinnedChats).length > 0) {
+                pinnedChatsHeader.style.display = 'block';
+            } else {
+                pinnedChatsHeader.style.display = 'none';
+                return;
+            }
+            
+            // إنشاء عنصر لكل محادثة مثبتة
+            Object.keys(pinnedChats).forEach(userId => {
+                if (pinnedChats[userId]) {
+                    firebase.database().ref(`users/${userId}`).once('value')
+                        .then((userSnapshot) => {
+                            const userData = userSnapshot.val();
+                            if (!userData) return;
+                            
+                            // إنشاء معرف للدردشة بين المستخدمين
+                            const chatId = getChatId(currentUser.uid, userId);
+                            
+                            // إنشاء عنصر في قائمة المحادثات المثبتة
+                            createChatItem(chatId, userId, userData, pinnedChatList);
+                            
+                            // تحديث آخر رسالة وعدد الرسائل غير المقروءة
+                            updateLastMessage(chatId);
+                            updateUnreadCount(chatId);
+                        })
+                        .catch(error => {
+                            console.error('خطأ في تحميل بيانات المستخدم المثبت:', error);
+                        });
+                }
+            });
+        });
+    } catch (error) {
+        console.error('خطأ غير متوقع في تحميل المحادثات المثبتة:', error);
+    }
+}
+
 // تحميل جهات الاتصال
 function loadContacts() {
     try {
@@ -680,52 +921,106 @@ function loadContacts() {
                 return;
             }
             
-            // إنشاء عنصر لكل جهة اتصال
-            Object.keys(contacts).forEach(userId => {
-                firebase.database().ref(`users/${userId}`).once('value')
-                    .then((userSnapshot) => {
-                        const userData = userSnapshot.val();
-                        if (!userData) return;
+            // الحصول على المحادثات المثبتة لاستبعادها من القائمة العادية
+            firebase.database().ref(`pinnedChats/${currentUser.uid}`).once('value')
+                .then((pinnedSnapshot) => {
+                    const pinnedChats = pinnedSnapshot.val() || {};
+                    
+                    // إنشاء عنصر لكل جهة اتصال غير مثبتة
+                    Object.keys(contacts).forEach(userId => {
+                        // تخطي المستخدمين المثبتين
+                        if (pinnedChats && pinnedChats[userId]) return;
                         
-                        myContacts[userId] = userData;
-                        
-                        // إنشاء معرف للدردشة بين المستخدمين
-                        const chatId = getChatId(currentUser.uid, userId);
-                        
-                        // إنشاء عنصر في قائمة المحادثات
-                        const chatItem = document.createElement('li');
-                        chatItem.className = 'chat-item';
-                        chatItem.dataset.chatId = chatId;
-                        chatItem.dataset.userId = userId;
-                        
-                                                chatItem.innerHTML = `
-                            <div class="chat-profile-pic">
-                                ${userData.profilePicture
-                                    ? `<img src="${userData.profilePicture}" alt="${userData.fullName}">`
-                                    : `<i class="fas fa-user"></i>`
-                                }
-                            </div>
-                            <div class="chat-info">
-                                <div class="chat-name">${userData.fullName || userData.name || userData.username || 'مستخدم'}</div>
-                                <div class="chat-last-message">انقر للدردشة</div>
-                            </div>
-                        `;
-                        
-                        chatItem.addEventListener('click', () => openChat(chatId, userId));
-                        chatList.appendChild(chatItem);
-                        
-                        // تحديث آخر رسالة في قائمة المحادثات
-                        updateLastMessage(chatId);
-                    })
-                    .catch(error => {
-                        console.error('خطأ في تحميل بيانات المستخدم:', error);
+                        firebase.database().ref(`users/${userId}`).once('value')
+                            .then((userSnapshot) => {
+                                const userData = userSnapshot.val();
+                                if (!userData) return;
+                                
+                                myContacts[userId] = userData;
+                                
+                                // إنشاء معرف للدردشة بين المستخدمين
+                                const chatId = getChatId(currentUser.uid, userId);
+                                
+                                // إنشاء عنصر في قائمة المحادثات
+                                createChatItem(chatId, userId, userData, chatList);
+                                
+                                // تحديث آخر رسالة وعدد الرسائل غير المقروءة
+                                updateLastMessage(chatId);
+                                updateUnreadCount(chatId);
+                            })
+                            .catch(error => {
+                                console.error('خطأ في تحميل بيانات المستخدم:', error);
+                            });
                     });
-            });
+                })
+                .catch(error => {
+                    console.error('خطأ في تحميل المحادثات المثبتة:', error);
+                });
         });
     } catch (error) {
         console.error('خطأ غير متوقع في تحميل جهات الاتصال:', error);
         showNotification('فشل في تحميل جهات الاتصال', 'error');
     }
+}
+
+// إنشاء عنصر محادثة في القائمة
+function createChatItem(chatId, userId, userData, parentList) {
+    // إنشاء عنصر في قائمة المحادثات
+    const chatItem = document.createElement('li');
+    chatItem.className = 'chat-item';
+    chatItem.dataset.chatId = chatId;
+    chatItem.dataset.userId = userId;
+    
+    const isOnline = usersOnlineStatus[userId] && usersOnlineStatus[userId].status === 'online';
+    
+    chatItem.innerHTML = `
+        <div class="chat-profile-pic">
+            ${userData.profilePicture
+                ? `<img src="${userData.profilePicture}" alt="${userData.fullName}">`
+                : `<i class="fas fa-user"></i>`
+            }
+            ${isOnline ? '<div class="online-indicator"></div>' : ''}
+        </div>
+        <div class="chat-info">
+            <div class="chat-name">${userData.fullName || userData.name || userData.username || 'مستخدم'}</div>
+            <div class="chat-last-message">انقر للدردشة</div>
+        </div>
+    `;
+    
+    chatItem.addEventListener('click', () => openChat(chatId, userId));
+    parentList.appendChild(chatItem);
+    
+    return chatItem;
+}
+
+// تحديث عدد الرسائل غير المقروءة
+function updateUnreadCount(chatId) {
+    if (!currentUser) return;
+    
+    firebase.database().ref(`unreadMessages/${currentUser.uid}/${chatId}`).once('value')
+        .then(snapshot => {
+            const unreadCount = snapshot.val() || 0;
+            
+            const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+            if (!chatItem) return;
+            
+            // إزالة شارة العدد القديمة إن وجدت
+            const oldBadge = chatItem.querySelector('.unread-badge');
+            if (oldBadge) {
+                oldBadge.remove();
+            }
+            
+            // إضافة شارة جديدة إذا كان هناك رسائل غير مقروءة
+            if (unreadCount > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'unread-badge';
+                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                chatItem.appendChild(badge);
+            }
+        })
+        .catch(error => {
+            console.error('خطأ في تحديث عدد الرسائل غير المقروءة:', error);
+        });
 }
 
 // معالجة البحث عن مستخدمين وإضافتهم
@@ -848,6 +1143,110 @@ function addContact(userId, userData) {
     }
 }
 
+// تثبيت/إلغاء تثبيت محادثة
+pinChatBtn.addEventListener('click', () => {
+    if (!currentChatUser || !currentChatUser.id) return;
+    
+    showElement(loadingScreen);
+    firebase.database().ref(`pinnedChats/${currentUser.uid}/${currentChatUser.id}`).set(true)
+        .then(() => {
+            hideElement(loadingScreen);
+            pinChatBtn.style.display = 'none';
+            unpinChatBtn.style.display = 'inline-block';
+            showNotification('تم تثبيت المحادثة بنجاح', 'success');
+        })
+        .catch(error => {
+            hideElement(loadingScreen);
+            console.error('خطأ في تثبيت المحادثة:', error);
+            showNotification('حدث خطأ أثناء تثبيت المحادثة', 'error');
+        });
+});
+
+unpinChatBtn.addEventListener('click', () => {
+    if (!currentChatUser || !currentChatUser.id) return;
+    
+    showElement(loadingScreen);
+    firebase.database().ref(`pinnedChats/${currentUser.uid}/${currentChatUser.id}`).remove()
+        .then(() => {
+            hideElement(loadingScreen);
+            unpinChatBtn.style.display = 'none';
+            pinChatBtn.style.display = 'inline-block';
+            showNotification('تم إلغاء تثبيت المحادثة بنجاح', 'success');
+        })
+        .catch(error => {
+            hideElement(loadingScreen);
+            console.error('خطأ في إلغاء تثبيت المحادثة:', error);
+            showNotification('حدث خطأ أثناء إلغاء تثبيت المحادثة', 'error');
+        });
+});
+
+// حظر/إلغاء حظر مستخدم
+blockUserBtn.addEventListener('click', () => {
+    if (!currentChatUser || !currentChatUser.id) return;
+    
+    if (confirm(`هل أنت متأكد من حظر ${currentChatUser.fullName || currentChatUser.username}؟`)) {
+        showElement(loadingScreen);
+        
+        firebase.database().ref(`blockedUsers/${currentUser.uid}/${currentChatUser.id}`).set(true)
+            .then(() => {
+                hideElement(loadingScreen);
+                showNotification('تم حظر المستخدم بنجاح', 'success');
+                updateBlockUI(true);
+            })
+            .catch(error => {
+                hideElement(loadingScreen);
+                console.error('خطأ في حظر المستخدم:', error);
+                showNotification('فشل في حظر المستخدم', 'error');
+            });
+    }
+});
+
+unblockUserBtn.addEventListener('click', () => {
+    if (!currentChatUser || !currentChatUser.id) return;
+    
+    showElement(loadingScreen);
+    
+    firebase.database().ref(`blockedUsers/${currentUser.uid}/${currentChatUser.id}`).remove()
+        .then(() => {
+            hideElement(loadingScreen);
+            showNotification('تم إلغاء حظر المستخدم بنجاح', 'success');
+            updateBlockUI(false);
+        })
+        .catch(error => {
+            hideElement(loadingScreen);
+            console.error('خطأ في إلغاء حظر المستخدم:', error);
+            showNotification('فشل في إلغاء حظر المستخدم', 'error');
+        });
+});
+
+// تحديث واجهة الحظر
+function updateBlockUI(isBlocked) {
+    if (isBlocked) {
+        blockUserBtn.style.display = 'none';
+        unblockUserBtn.style.display = 'inline-block';
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+        imageButton.disabled = true;
+        emojiBtn.disabled = true;
+        
+        // إضافة رسالة الحظر
+        const blockedMessage = document.createElement('div');
+        blockedMessage.className = 'blocked-message';
+        blockedMessage.textContent = 'لقد قمت بحظر هذا المستخدم. يجب إلغاء الحظر للتمكن من المراسلة.';
+        messagesContainer.appendChild(blockedMessage);
+    } else {
+        blockUserBtn.style.display = 'inline-block';
+        unblockUserBtn.style.display = 'none';
+        messageInput.disabled = false;
+        sendButton.disabled = false;
+        imageButton.disabled = false;
+        emojiBtn.disabled = false;
+        
+        // إعادة تحميل الرسائل
+        loadMessages(currentChatId);
+    }
+}
+
 // الحصول على معرف الدردشة بين مستخدمين
 function getChatId(uid1, uid2) {
     return [uid1, uid2].sort().join('_');
@@ -882,8 +1281,41 @@ function openChat(chatId, userId) {
                     }
                 }
                 
-                messageInput.disabled = false;
-                sendButton.disabled = false;
+                // تحديث حالة الاتصال
+                if (usersOnlineStatus[userId]) {
+                    updateChatUserStatus(userId);
+                } else {
+                    chatUserStatus.textContent = '';
+                }
+                
+                // التحقق من حالة الحظر
+                return firebase.database().ref(`blockedUsers/${currentUser.uid}/${userId}`).once('value');
+            })
+            .then(snapshot => {
+                const isBlocked = snapshot && snapshot.exists();
+                
+                // التحقق من حالة التثبيت
+                return firebase.database().ref(`pinnedChats/${currentUser.uid}/${userId}`).once('value')
+                    .then(pinnedSnapshot => {
+                        const isPinned = pinnedSnapshot && pinnedSnapshot.exists();
+                        
+                        // تحديث أزرار التثبيت
+                        pinChatBtn.style.display = isPinned ? 'none' : 'inline-block';
+                        unpinChatBtn.style.display = isPinned ? 'inline-block' : 'none';
+                        
+                        return isBlocked;
+                    });
+            })
+            .then(isBlocked => {
+                // تحديث أزرار الحظر
+                blockUserBtn.style.display = isBlocked ? 'none' : 'inline-block';
+                unblockUserBtn.style.display = isBlocked ? 'inline-block' : 'none';
+                
+                // تحديث حالة حقول الإدخال
+                messageInput.disabled = isBlocked;
+                sendButton.disabled = isBlocked;
+                imageButton.disabled = isBlocked;
+                emojiBtn.disabled = isBlocked;
                 
                 // إذا كان على شاشة صغيرة، يتم إظهار قسم المحادثة وإخفاء قائمة المحادثات
                 if (window.innerWidth <= 768) {
@@ -900,8 +1332,41 @@ function openChat(chatId, userId) {
                     }
                 });
                 
+                // إعادة تعيين عدد الرسائل غير المقروءة
+                firebase.database().ref(`unreadMessages/${currentUser.uid}/${chatId}`).remove();
+                updateUnreadCount(chatId);
+                
                 // تحميل الرسائل للدردشة الحالية
                 loadMessages(chatId);
+                
+                if (isBlocked) {
+                    // إضافة رسالة الحظر
+                    setTimeout(() => {
+                        const blockedMessage = document.createElement('div');
+                        blockedMessage.className = 'blocked-message';
+                        blockedMessage.textContent = 'لقد قمت بحظر هذا المستخدم. يجب إلغاء الحظر للتمكن من المراسلة.';
+                        messagesContainer.appendChild(blockedMessage);
+                    }, 500);
+                }
+                
+                return firebase.database().ref(`typing/${chatId}`).on('value', snapshot => {
+                                        if (snapshot.exists()) {
+                        const typingUsers = snapshot.val() || {};
+                        // تجاهل إشعار الكتابة للمستخدم الحالي
+                        if (typingUsers[currentUser.uid]) {
+                            delete typingUsers[currentUser.uid];
+                        }
+                        
+                        // إذا كان أي شخص آخر يكتب، أظهر المؤشر
+                        if (Object.keys(typingUsers).length > 0) {
+                            typingIndicator.style.display = 'block';
+                        } else {
+                            typingIndicator.style.display = 'none';
+                        }
+                    } else {
+                        typingIndicator.style.display = 'none';
+                    }
+                });
             })
             .catch(error => {
                 console.error('خطأ في تحميل بيانات المستخدم:', error);
@@ -934,6 +1399,7 @@ function loadMessages(chatId) {
             
             snapshot.forEach((childSnapshot) => {
                 const message = childSnapshot.val();
+                message.id = childSnapshot.key; // حفظ معرف الرسالة
                 displayMessage(message);
             });
             
@@ -949,6 +1415,48 @@ function loadMessages(chatId) {
     }
 }
 
+// عرض رسالة في المحادثة
+function displayMessage(messageData) {
+    try {
+        const isCurrentUser = messageData.senderId === currentUser.uid;
+        
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${isCurrentUser ? 'outgoing' : 'incoming'}`;
+        messageElement.dataset.messageId = messageData.id || '';
+        
+        const messageTime = formatTime(messageData.timestamp);
+        
+        let messageContent = `
+            <div class="message-content">`;
+        
+        // إذا كان المستخدم الحالي هو المرسل، أضف خيارات للرسالة
+        if (isCurrentUser) {
+            messageContent += `
+                <div class="message-options">
+                    <button class="delete-message-btn" onclick="deleteMessage('${messageData.id || ''}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>`;
+        }
+        
+        messageContent += `<div class="message-text">${messageData.text}</div>`;
+        
+        // إذا كانت الرسالة تحتوي على صورة
+        if (messageData.type === 'image' && messageData.image) {
+            messageContent += `
+                <img src="${messageData.image}" alt="صورة" class="message-image" onclick="showImageFullscreen('${messageData.image}')">`;
+        }
+        
+        messageContent += `<div class="message-time">${messageTime}</div>
+            </div>`;
+        
+        messageElement.innerHTML = messageContent;
+        messagesContainer.appendChild(messageElement);
+    } catch (error) {
+        console.error('خطأ في عرض الرسالة:', error);
+    }
+}
+
 // تحديث آخر رسالة في قائمة المحادثات
 function updateLastMessage(chatId) {
     try {
@@ -957,12 +1465,20 @@ function updateLastMessage(chatId) {
             
             snapshot.forEach((childSnapshot) => {
                 const lastMessage = childSnapshot.val();
-                const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+                const chatItems = document.querySelectorAll(`.chat-item[data-chat-id="${chatId}"]`);
                 
-                if (chatItem) {
+                chatItems.forEach(chatItem => {
                     const lastMessageElement = chatItem.querySelector('.chat-last-message');
                     if (lastMessageElement) {
-                        let messagePreview = lastMessage.text;
+                        let messagePreview = '';
+                        
+                        // تحديد نوع الرسالة
+                        if (lastMessage.type === 'image') {
+                            messagePreview = '📷 صورة';
+                        } else {
+                            messagePreview = lastMessage.text;
+                        }
+                        
                         // اقتصار طول النص
                         if (messagePreview.length > 30) {
                             messagePreview = messagePreview.substring(0, 30) + '...';
@@ -975,6 +1491,31 @@ function updateLastMessage(chatId) {
                         
                         lastMessageElement.textContent = messagePreview;
                     }
+                });
+                
+                // إذا كانت الرسالة جديدة ومن مستخدم آخر، وليست مفتوحة حاليًا
+                if (lastMessage.senderId !== currentUser.uid && (!currentChatId || currentChatId !== chatId)) {
+                    // زيادة عدد الرسائل غير المقروءة
+                    firebase.database().ref(`unreadMessages/${currentUser.uid}/${chatId}`).transaction(count => {
+                        return (count || 0) + 1;
+                    });
+                    
+                    // إرسال إشعار
+                    const senderId = lastMessage.senderId;
+                    firebase.database().ref(`users/${senderId}`).once('value')
+                        .then(snapshot => {
+                            if (snapshot.exists()) {
+                                const senderData = snapshot.val();
+                                sendNotification(
+                                    senderData.fullName || senderData.username || 'مستخدم',
+                                    lastMessage.type === 'image' ? '📷 أرسل لك صورة' : lastMessage.text,
+                                    senderData.profilePicture
+                                );
+                            }
+                        })
+                        .catch(error => {
+                            console.error('خطأ في جلب بيانات المرسل:', error);
+                        });
                 }
             });
         });
@@ -983,28 +1524,34 @@ function updateLastMessage(chatId) {
     }
 }
 
-// عرض رسالة في المحادثة
-function displayMessage(messageData) {
-    try {
-        const isCurrentUser = messageData.senderId === currentUser.uid;
-        
-        const messageElement = document.createElement('div');
-        messageElement.className = `message ${isCurrentUser ? 'outgoing' : 'incoming'}`;
-        
-        const messageTime = formatTime(messageData.timestamp);
-        
-        messageElement.innerHTML = `
-            <div class="message-content">
-                <div class="message-text">${messageData.text}</div>
-                <div class="message-time">${messageTime}</div>
-            </div>
-        `;
-        
-        messagesContainer.appendChild(messageElement);
-    } catch (error) {
-        console.error('خطأ في عرض الرسالة:', error);
+// حذف رسالة
+window.deleteMessage = function(messageId) {
+    if (!messageId || !currentChatId) return;
+    
+    if (confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
+        firebase.database().ref(`messages/${currentChatId}/${messageId}`).remove()
+            .then(() => {
+                showNotification('تم حذف الرسالة بنجاح', 'success');
+            })
+            .catch(error => {
+                console.error('خطأ في حذف الرسالة:', error);
+                showNotification('فشل في حذف الرسالة', 'error');
+            });
     }
-}
+};
+
+// عرض الصورة بالحجم الكامل
+window.showImageFullscreen = function(imageUrl) {
+    const fullscreenContainer = document.createElement('div');
+    fullscreenContainer.className = 'image-fullscreen';
+    fullscreenContainer.innerHTML = `<img src="${imageUrl}" alt="صورة بحجم كامل">`;
+    
+    fullscreenContainer.addEventListener('click', () => {
+        document.body.removeChild(fullscreenContainer);
+    });
+    
+    document.body.appendChild(fullscreenContainer);
+};
 
 // إرسال رسالة
 function sendMessage() {
@@ -1024,6 +1571,9 @@ function sendMessage() {
             .then(() => {
                 messageInput.value = '';
                 messageInput.focus();
+                
+                // إلغاء حالة الكتابة
+                firebase.database().ref(`typing/${currentChatId}/${currentUser.uid}`).remove();
             })
             .catch((error) => {
                 console.error('خطأ في إرسال الرسالة:', error);
@@ -1035,6 +1585,32 @@ function sendMessage() {
     }
 }
 
+// إرسال رسالة صورة
+function sendImageMessage(imageBase64) {
+    if (!currentChatId) return;
+    
+    const messageData = {
+        type: 'image',
+        text: 'صورة',
+        image: imageBase64,
+        senderId: currentUser.uid,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    // إضافة الرسالة إلى قاعدة البيانات
+    const newMessageRef = firebase.database().ref('messages/' + currentChatId).push();
+    newMessageRef.set(messageData)
+        .then(() => {
+            hideElement(loadingScreen);
+            imageInput.value = ''; // إعادة تعيين حقل الإدخال
+        })
+        .catch((error) => {
+            hideElement(loadingScreen);
+            console.error('خطأ في إرسال الصورة:', error);
+            showNotification('فشل في إرسال الصورة', 'error');
+        });
+}
+
 // معالجة النقر على زر الإرسال
 sendButton.addEventListener('click', sendMessage);
 
@@ -1044,6 +1620,107 @@ messageInput.addEventListener('keypress', (e) => {
         e.preventDefault();
         sendMessage();
     }
+});
+
+// معالجة مؤشر الكتابة
+messageInput.addEventListener('input', () => {
+    if (!currentChatId) return;
+    
+    // إلغاء المؤقت السابق
+    if (typingTimeout) {
+        clearTimeout(typingTimeout);
+    }
+    
+    // ضبط حالة الكتابة
+    firebase.database().ref(`typing/${currentChatId}/${currentUser.uid}`).set(true);
+    
+    // إلغاء حالة الكتابة بعد توقف المستخدم عن الكتابة
+    typingTimeout = setTimeout(() => {
+        firebase.database().ref(`typing/${currentChatId}/${currentUser.uid}`).remove();
+    }, 3000);
+});
+
+// معالجة إرسال الصور
+imageButton.addEventListener('click', () => {
+    imageInput.click();
+});
+
+imageInput.addEventListener('change', (e) => {
+    try {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            showNotification('الرجاء اختيار صورة صالحة (JPEG، PNG، GIF)', 'error');
+            return;
+        }
+        
+        if (file.size > 2 * 1024 * 1024) {
+            showNotification('حجم الصورة يجب أن يكون أقل من 2 ميجابايت', 'error');
+            return;
+        }
+        
+        showElement(loadingScreen);
+        
+        // تحويل الصورة إلى Base64
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const base64Image = event.target.result;
+            
+            // ضغط الصورة
+            compressImage(base64Image, 800)
+                .then(compressedImage => {
+                    // إرسال الصورة كرسالة
+                    sendImageMessage(compressedImage);
+                })
+                .catch(error => {
+                    hideElement(loadingScreen);
+                    console.error('خطأ في ضغط الصورة:', error);
+                    showNotification('حدث خطأ أثناء معالجة الصورة', 'error');
+                });
+        };
+        
+        reader.onerror = function() {
+            hideElement(loadingScreen);
+            showNotification('حدث خطأ أثناء قراءة الصورة', 'error');
+        };
+        
+        reader.readAsDataURL(file);
+    } catch (error) {
+        hideElement(loadingScreen);
+        console.error('خطأ غير متوقع في إرسال الصورة:', error);
+        showNotification('حدث خطأ غير متوقع', 'error');
+    }
+});
+
+// الوضع المظلم
+darkModeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    
+    // حفظ تفضيل المستخدم في التخزين المحلي
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode);
+    
+    // تحديث أيقونة الزر
+    darkModeBtn.innerHTML = isDarkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    darkModeBtn.title = isDarkMode ? 'التحول للوضع العادي' : 'التحول للوضع المظلم';
+});
+
+// معالجة الرموز التعبيرية
+emojiBtn.addEventListener('click', () => {
+    emojiPickerContainer.style.display = emojiPickerContainer.style.display === 'none' ? 'block' : 'none';
+});
+
+document.addEventListener('click', (e) => {
+    if (!emojiBtn.contains(e.target) && !emojiPickerContainer.contains(e.target)) {
+        emojiPickerContainer.style.display = 'none';
+    }
+});
+
+document.getElementById('emojiPicker').addEventListener('emoji-click', (e) => {
+    messageInput.value += e.detail.unicode;
+    messageInput.focus();
 });
 
 // التعامل مع زر العودة إلى قائمة المحادثات (للشاشات الصغيرة)
@@ -1074,6 +1751,14 @@ window.addEventListener('resize', () => {
 // التعامل مع حالة الاتصال/عدم الاتصال بالإنترنت
 window.addEventListener('online', () => {
     showNotification('أنت متصل بالإنترنت الآن', 'success');
+    
+    // إعادة ضبط حالة الاتصال عند استعادة الاتصال
+    if (currentUser) {
+        firebase.database().ref(`status/${currentUser.uid}`).set({
+            status: 'online',
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        });
+    }
 });
 
 window.addEventListener('offline', () => {
@@ -1091,6 +1776,14 @@ imagePreviewModal.addEventListener('click', (e) => {
 // عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     try {
+        // التحقق من الوضع المظلم المحفوظ
+        const savedDarkMode = localStorage.getItem('darkMode');
+        if (savedDarkMode === 'true') {
+            document.body.classList.add('dark-mode');
+            darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            darkModeBtn.title = 'التحول للوضع العادي';
+        }
+        
         // تعطيل حقل الرسالة وزر الإرسال حتى يتم اختيار محادثة
         messageInput.disabled = true;
         sendButton.disabled = true;
@@ -1103,3 +1796,5 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('خطأ في تهيئة الصفحة:', error);
     }
 });
+
+
