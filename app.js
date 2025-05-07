@@ -47,6 +47,12 @@ const profilePhoto = document.getElementById('profilePhoto');
 const changePhotoBtn = document.getElementById('changePhotoBtn');
 const photoInput = document.getElementById('photoInput');
 
+// عناصر معاينة الصورة
+const imagePreviewModal = document.getElementById('imagePreviewModal');
+const imagePreview = document.getElementById('imagePreview');
+const confirmImageBtn = document.getElementById('confirmImageBtn');
+const cancelImageBtn = document.getElementById('cancelImageBtn');
+
 // عناصر إضافة المستخدم
 const addUserBtn = document.getElementById('addUserBtn');
 const addUserContainer = document.getElementById('addUserContainer');
@@ -62,6 +68,7 @@ let currentChatUser = null;
 let myContacts = {}; // المستخدمين الذين تمت إضافتهم فقط
 let allUsers = {}; // جميع المستخدمين في النظام
 let isAddUserVisible = false;
+let selectedImageBase64 = null; // لتخزين الصورة المختارة كـ Base64
 
 // وظائف المساعدة
 function showElement(element) {
@@ -119,6 +126,47 @@ function formatTime(timestamp) {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
+}
+
+// دالة مساعدة لضغط الصورة
+function compressImage(base64Image, maxWidth) {
+    return new Promise((resolve, reject) => {
+        try {
+            const img = new Image();
+            img.src = base64Image;
+            
+            img.onload = function() {
+                // حساب نسبة التصغير للحفاظ على التناسب
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
+                    height = height * ratio;
+                }
+                
+                // إنشاء canvas للضغط
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                
+                // رسم الصورة على canvas بالحجم الجديد
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // تحويل canvas إلى Base64 بجودة أقل
+                const compressedImage = canvas.toDataURL('image/jpeg', 0.7);
+                resolve(compressedImage);
+            };
+            
+            img.onerror = function() {
+                reject(new Error('فشل في تحميل الصورة للضغط'));
+            };
+        } catch (error) {
+            reject(error);
+        }
+    });
 }
 
 // الاستماع لحالة المصادقة
@@ -268,48 +316,51 @@ registerForm.addEventListener('submit', (e) => {
         return;
     }
 
-    try {
-        // التحقق من فريد اسم المستخدم
-        firebase.database().ref('usernames').child(username).once('value')
-            .then((snapshot) => {
-                if (snapshot.exists()) {
-                    hideElement(loadingScreen);
-                    registerError.textContent = 'اسم المستخدم مستخدم بالفعل، الرجاء اختيار اسم آخر';
-                    showNotification('اسم المستخدم مستخدم بالفعل', 'error');
-                    return Promise.reject(new Error('Username already exists'));
-                }
-                return firebase.auth().createUserWithEmailAndPassword(email, password);
-            })
-            .then((userCredential) => {
-                // إنشاء معلومات المستخدم في قاعدة البيانات
-                const user = userCredential.user;
-                
-                const userData = {
-                    fullName: fullName,
-                    username: username,
-                    email: email,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP,
-                    profilePicture: ''
-                };
+    // أولاً نقوم بإنشاء الحساب
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            
+            // ثم نتحقق من اسم المستخدم
+            return firebase.database().ref('usernames').child(username).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        // حذف الحساب لأن اسم المستخدم مستخدم بالفعل
+                        user.delete();
+                        throw new Error('اسم المستخدم مستخدم بالفعل');
+                    }
+                    
+                    // إنشاء بيانات المستخدم
+                    const userData = {
+                        fullName: fullName,
+                        username: username,
+                        email: email,
+                        createdAt: firebase.database.ServerValue.TIMESTAMP,
+                        profilePicture: ''
+                    };
 
-                // حفظ بيانات المستخدم
-                const userPromise = firebase.database().ref('users/' + user.uid).set(userData);
-                
-                // حفظ اسم المستخدم للبحث
-                const usernamePromise = firebase.database().ref('usernames/' + username).set(user.uid);
-                
-                return Promise.all([userPromise, usernamePromise]);
-            })
-            .then(() => {
-                registerForm.reset();
-                showNotification('تم إنشاء الحساب بنجاح!', 'success');
-            })
-            .catch((error) => {
-                if (error.message === 'Username already exists') return;
-                
-                hideElement(loadingScreen);
-                let errorMessage = 'خطأ في إنشاء الحساب';
-                
+                    // حفظ بيانات المستخدم
+                    const userPromise = firebase.database().ref('users/' + user.uid).set(userData);
+                    
+                    // حفظ اسم المستخدم للبحث
+                    const usernamePromise = firebase.database().ref('usernames/' + username).set(user.uid);
+                    
+                    return Promise.all([userPromise, usernamePromise]);
+                });
+        })
+        .then(() => {
+            hideElement(loadingScreen);
+            registerForm.reset();
+            showNotification('تم إنشاء الحساب بنجاح!', 'success');
+        })
+        .catch((error) => {
+            hideElement(loadingScreen);
+            
+            let errorMessage = 'خطأ في إنشاء الحساب';
+            
+            if (error.message === 'اسم المستخدم مستخدم بالفعل') {
+                errorMessage = 'اسم المستخدم مستخدم بالفعل، الرجاء اختيار اسم آخر';
+            } else {
                 switch (error.code) {
                     case 'auth/email-already-in-use':
                         errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
@@ -323,16 +374,13 @@ registerForm.addEventListener('submit', (e) => {
                     default:
                         errorMessage = `خطأ: ${error.message}`;
                 }
-                
-                registerError.textContent = errorMessage;
-                showNotification(errorMessage, 'error');
-            });
-    } catch (error) {
-        hideElement(loadingScreen);
-        console.error("خطأ غير متوقع أثناء إنشاء الحساب:", error);
-        registerError.textContent = 'حدث خطأ غير متوقع. حاول مرة أخرى.';
-        showNotification('حدث خطأ غير متوقع', 'error');
-    }
+            }
+            
+            registerError.textContent = errorMessage;
+            showNotification(errorMessage, 'error');
+            
+            console.error("خطأ في التسجيل:", error);
+        });
 });
 
 // معالجة تسجيل الخروج
@@ -398,6 +446,7 @@ changePhotoBtn.addEventListener('click', () => {
     photoInput.click();
 });
 
+// معالجة اختيار صورة جديدة
 photoInput.addEventListener('change', (e) => {
     try {
         const file = e.target.files[0];
@@ -409,47 +458,99 @@ photoInput.addEventListener('change', (e) => {
             return;
         }
         
-        if (file.size > 5 * 1024 * 1024) { // 5 ميجابايت
-            showNotification('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        // التحقق من حجم الملف - الحد 2 ميجابايت
+        if (file.size > 2 * 1024 * 1024) {
+            showNotification('حجم الصورة يجب أن يكون أقل من 2 ميجابايت', 'error');
             return;
         }
         
-        // تحميل الصورة إلى Firebase Storage
-        showElement(loadingScreen);
+        // إنشاء قارئ ملفات لتحويل الصورة إلى Base64
+        const reader = new FileReader();
         
-        const storageRef = firebase.storage().ref();
-        const fileRef = storageRef.child(`profile_pictures/${currentUser.uid}/${Date.now()}_${file.name}`);
+        reader.onload = function(event) {
+            const base64Image = event.target.result;
+            
+            // عرض معاينة للصورة قبل التأكيد
+            imagePreview.src = base64Image;
+            imagePreviewModal.style.display = 'flex';
+            selectedImageBase64 = base64Image;
+        };
         
-        fileRef.put(file)
-            .then((snapshot) => {
-                return snapshot.ref.getDownloadURL();
-            })
-            .then((downloadURL) => {
-                // تحديث URL الصورة في قاعدة البيانات
-                return firebase.database().ref(`users/${currentUser.uid}`).update({
-                    profilePicture: downloadURL
-                });
-            })
-            .then(() => {
-                // تحديث الصورة في واجهة المستخدم والمتغيرات العالمية
-                profilePhoto.innerHTML = `<img src="${downloadURL}" alt="صورة الملف الشخصي">`;
-                if (!currentUserData) currentUserData = {};
-                currentUserData.profilePicture = downloadURL;
-                
-                hideElement(loadingScreen);
-                showNotification('تم تحديث الصورة بنجاح', 'success');
-            })
-            .catch((error) => {
-                hideElement(loadingScreen);
-                console.error('خطأ في تحميل الصورة:', error);
-                showNotification('حدث خطأ أثناء تحميل الصورة', 'error');
-            });
+        reader.onerror = function() {
+            showNotification('حدث خطأ أثناء قراءة الصورة', 'error');
+        };
+        
+        // تحويل الملف إلى Base64
+        reader.readAsDataURL(file);
     } catch (error) {
-        hideElement(loadingScreen);
         console.error('خطأ غير متوقع في تغيير الصورة الشخصية:', error);
         showNotification('حدث خطأ أثناء تحميل الصورة', 'error');
     }
 });
+
+// معالجة تأكيد الصورة
+confirmImageBtn.addEventListener('click', () => {
+    if (!selectedImageBase64) {
+        imagePreviewModal.style.display = 'none';
+        return;
+    }
+    
+    showElement(loadingScreen);
+    imagePreviewModal.style.display = 'none';
+    
+    // ضغط الصورة قبل التخزين
+    compressImage(selectedImageBase64, 300)
+        .then(compressedImage => {
+            // تحديث URL الصورة في قاعدة البيانات
+            return firebase.database().ref(`users/${currentUser.uid}`).update({
+                profilePicture: compressedImage
+            });
+        })
+        .then(() => {
+            // تحديث الصورة في واجهة المستخدم
+            profilePhoto.innerHTML = `<img src="${selectedImageBase64}" alt="صورة الملف الشخصي">`;
+            if (!currentUserData) currentUserData = {};
+            currentUserData.profilePicture = selectedImageBase64;
+            
+            // تحديث الصورة في كل مكان في التطبيق
+            updateUserPictureInChat(currentUser.uid, selectedImageBase64);
+            
+            hideElement(loadingScreen);
+            showNotification('تم تحديث الصورة بنجاح', 'success');
+        })
+        .catch((error) => {
+            hideElement(loadingScreen);
+            console.error('خطأ في تحميل الصورة:', error);
+            showNotification('حدث خطأ أثناء تحميل الصورة', 'error');
+        });
+});
+
+// معالجة إلغاء الصورة
+cancelImageBtn.addEventListener('click', () => {
+    imagePreviewModal.style.display = 'none';
+    selectedImageBase64 = null;
+});
+
+// تحديث صورة المستخدم في قائمة المحادثات
+function updateUserPictureInChat(userId, pictureUrl) {
+    try {
+        // تحديث صورة المستخدم في قائمة المحادثات
+        const chatItems = document.querySelectorAll(`.chat-item[data-user-id="${userId}"] .chat-profile-pic`);
+        chatItems.forEach(item => {
+            item.innerHTML = `<img src="${pictureUrl}" alt="صورة المستخدم">`;
+        });
+        
+        // تحديث صورة المستخدم في المحادثة الحالية إذا كانت مفتوحة
+        if (currentChatUser && currentChatUser.id === userId) {
+            const currentChatProfile = document.querySelector('.current-chat-profile');
+            if (currentChatProfile) {
+                currentChatProfile.innerHTML = `<img src="${pictureUrl}" alt="صورة المستخدم">`;
+            }
+        }
+    } catch (error) {
+        console.error('خطأ في تحديث صورة المستخدم:', error);
+    }
+}
 
 // معالجة تحديث الملف الشخصي
 profileForm.addEventListener('submit', (e) => {
@@ -597,7 +698,7 @@ function loadContacts() {
                         chatItem.dataset.chatId = chatId;
                         chatItem.dataset.userId = userId;
                         
-                        chatItem.innerHTML = `
+                                                chatItem.innerHTML = `
                             <div class="chat-profile-pic">
                                 ${userData.profilePicture
                                     ? `<img src="${userData.profilePicture}" alt="${userData.fullName}">`
@@ -612,6 +713,9 @@ function loadContacts() {
                         
                         chatItem.addEventListener('click', () => openChat(chatId, userId));
                         chatList.appendChild(chatItem);
+                        
+                        // تحديث آخر رسالة في قائمة المحادثات
+                        updateLastMessage(chatId);
                     })
                     .catch(error => {
                         console.error('خطأ في تحميل بيانات المستخدم:', error);
@@ -663,7 +767,7 @@ searchUserBtn.addEventListener('click', () => {
                         return firebase.database().ref(`users/${userId}`).once('value');
                     });
             })
-                        .then((snapshot) => {
+            .then((snapshot) => {
                 if (!snapshot || !snapshot.val()) return;
                 
                 const userData = snapshot.val();
@@ -763,6 +867,7 @@ function openChat(chatId, userId) {
                 }
                 
                 const userData = snapshot.val();
+                userData.id = userId; // إضافة معرف المستخدم إلى البيانات
                 currentChatUser = userData;
                 
                 // تحديث واجهة المستخدم
@@ -975,6 +1080,14 @@ window.addEventListener('offline', () => {
     showNotification('أنت غير متصل بالإنترنت، قد لا تعمل بعض الميزات', 'warning');
 });
 
+// النقر خارج مربع معاينة الصورة لإغلاقه
+imagePreviewModal.addEventListener('click', (e) => {
+    if (e.target === imagePreviewModal) {
+        imagePreviewModal.style.display = 'none';
+        selectedImageBase64 = null;
+    }
+});
+
 // عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     try {
@@ -990,4 +1103,3 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('خطأ في تهيئة الصفحة:', error);
     }
 });
-
