@@ -6,6 +6,7 @@
     <title>تطبيق دردشة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
     <!-- شاشة التحميل -->
@@ -60,7 +61,9 @@
                     <span id="userDisplayName" class="user-name"></span>
                 </div>
                 <div class="header-actions">
+                    <div id="userOnlineStatus" class="online-status" title="متصل"></div>
                     <button id="addUserBtn" class="icon-btn" title="إضافة مستخدم جديد"><i class="fas fa-user-plus"></i></button>
+                    <button id="darkModeBtn" class="icon-btn" title="تبديل الوضع المظلم/العادي"><i class="fas fa-moon"></i></button>
                     <button id="profileBtn" class="icon-btn" title="الملف الشخصي"><i class="fas fa-user-cog"></i></button>
                     <button id="logoutBtn" class="icon-btn" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
@@ -75,6 +78,8 @@
             <ul class="chat-list" id="chatList">
                 <div class="no-conversations">لم تبدأ محادثات بعد.<br>استخدم زر + لإضافة مستخدم جديد.</div>
             </ul>
+            <div class="pinned-chats-header">محادثات مثبتة</div>
+            <ul class="pinned-chat-list" id="pinnedChatList"></ul>
         </div>
         <div class="chat-main" id="chatMain">
             <div class="chat-header">
@@ -82,7 +87,16 @@
                 <div class="current-chat-profile">
                     <i class="fas fa-user"></i>
                 </div>
-                <div class="current-chat-name" id="currentChatName">اختر محادثة</div>
+                <div class="chat-header-info">
+                    <div class="current-chat-name" id="currentChatName">اختر محادثة</div>
+                    <div class="chat-user-status" id="chatUserStatus"></div>
+                </div>
+                <div class="chat-header-options">
+                    <button id="pinChatBtn" class="pin-chat-btn" title="تثبيت المحادثة"><i class="fas fa-thumbtack"></i></button>
+                    <button id="unpinChatBtn" class="unpin-chat-btn" title="إلغاء تثبيت المحادثة" style="display: none;"><i class="fas fa-thumbtack fa-rotate-90"></i></button>
+                    <button id="blockUserBtn" class="block-user-btn" style="display: none;">حظر المستخدم</button>
+                    <button id="unblockUserBtn" class="unblock-user-btn" style="display: none;">إلغاء الحظر</button>
+                </div>
             </div>
             <div class="messages-container" id="messagesContainer">
                 <div class="welcome-message">
@@ -90,7 +104,13 @@
                     <p>أضف مستخدم للدردشة معه من زر + في الأعلى</p>
                 </div>
             </div>
+            <div id="typingIndicator" class="typing-indicator" style="display: none;">
+                جاري الكتابة...
+            </div>
             <div class="message-input-container">
+                <button class="emoji-button" id="emojiBtn" title="إضافة رموز تعبيرية">😊</button>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                <button class="image-button" id="imageButton" title="إرسال صورة"><i class="fas fa-image"></i></button>
                 <input type="text" class="message-input" id="messageInput" placeholder="اكتب رسالة..." disabled>
                 <button class="send-button" id="sendButton" disabled><i class="fas fa-paper-plane"></i></button>
             </div>
@@ -130,7 +150,7 @@
         </div>
     </div>
 
-    <!-- قسم اختيار الصورة المصغرة -->
+    <!-- قسم معاينة الصورة -->
     <div class="image-preview-modal" id="imagePreviewModal" style="display: none;">
         <div class="image-preview-content">
             <h3>معاينة الصورة</h3>
@@ -144,10 +164,18 @@
         </div>
     </div>
 
+    <!-- منطقة الرموز التعبيرية -->
+    <div id="emojiPickerContainer" class="emoji-picker-container" style="display: none;">
+        <emoji-picker id="emojiPicker"></emoji-picker>
+    </div>
+
     <!-- مكتبات Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- مكتبات إضافية -->
+    <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js" type="module"></script>
     
     <!-- ملف جافاسكريبت الخاص بالتطبيق -->
     <script src="app.js"></script>
