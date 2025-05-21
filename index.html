@@ -3,181 +3,557 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق دردشة</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <title>دردشة الذكاء الاصطناعي - نسخة مبسطة</title>
+    <style>
+        /* أنماط عامة */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            direction: rtl;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* رأس الصفحة */
+        header {
+            text-align: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        header h1 {
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        
+        /* منطقة الدردشة */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            min-height: 300px;
+            max-height: 60vh;
+        }
+        
+        /* رسائل الدردشة */
+        .message {
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+            position: relative;
+        }
+        
+        .user-message {
+            background-color: #dcf8c6;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
+        }
+        
+        .assistant-message {
+            background-color: #f1f0f0;
+            margin-right: auto;
+            border-bottom-left-radius: 0;
+        }
+        
+        .error-message {
+            background-color: #ffdddd;
+            margin: 10px auto;
+            text-align: center;
+            color: #d33;
+            width: 100%;
+        }
+        
+        .message-time {
+            font-size: 10px;
+            color: #999;
+            text-align: left;
+            margin-top: 5px;
+        }
+        
+        /* منطقة الإدخال */
+        .input-container {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 16px;
+            resize: none;
+            height: 50px;
+        }
+        
+        .send-button {
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .send-button:hover {
+            background-color: #45a049;
+        }
+        
+        .send-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        /* مؤشر التحميل */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .loading-dots {
+            display: inline-block;
+        }
+        
+        .loading-dots span {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            margin: 0 3px;
+            animation: loading 1.4s infinite ease-in-out both;
+        }
+        
+        .loading-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        
+        .loading-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        
+        @keyframes loading {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        
+        /* وضع الظلام */
+        .dark-mode {
+            background-color: #222;
+            color: #eee;
+        }
+        
+        .dark-mode .container {
+            background-color: #333;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .dark-mode header h1 {
+            color: #eee;
+        }
+        
+        .dark-mode .chat-container {
+            background-color: #444;
+            border-color: #555;
+        }
+        
+        .dark-mode .user-message {
+            background-color: #2e7d32;
+            color: #fff;
+        }
+        
+        .dark-mode .assistant-message {
+            background-color: #555;
+            color: #fff;
+        }
+        
+        .dark-mode .message-input {
+            background-color: #444;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        .dark-mode .message-time {
+            color: #aaa;
+        }
+        
+        /* زر تبديل الوضع */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+        
+        .dark-mode .theme-toggle {
+            color: #eee;
+        }
+        
+        /* تحسينات للأجهزة المحمولة */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+                border-radius: 0;
+                height: 100vh;
+                width: 100%;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+            
+            .theme-toggle {
+                top: 10px;
+                left: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- شاشة التحميل -->
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-spinner"></div>
-    </div>
-
-    <!-- قسم تسجيل الدخول -->
-    <div class="login-container" id="loginContainer">
-        <div class="login-form-container">
-            <div class="login-logo">
-                <h1>تطبيق الدردشة</h1>
-                <p>تواصل مع أصدقائك</p>
+    <button class="theme-toggle" id="theme-toggle">🌙</button>
+    <div class="container">
+        <header>
+            <h1>دردشة الذكاء الاصطناعي - نسخة مبسطة</h1>
+        </header>
+        
+        <div class="chat-container" id="chat-container">
+            <div class="message assistant-message">
+                <div class="message-content">مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟</div>
+                <div class="message-time">الآن</div>
             </div>
-            <form class="login-form" id="loginForm">
-                <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" required>
-                <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
-                <div id="loginError" class="error-message"></div>
-                <button type="submit">تسجيل الدخول</button>
-                <div class="login-divider">أو</div>
-                <button type="button" class="signup-button" id="goToRegisterBtn">إنشاء حساب جديد</button>
-            </form>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <textarea class="message-input" id="message-input" placeholder="اكتب رسالتك هنا..." rows="1"></textarea>
+            <button class="send-button" id="send-button">➤</button>
         </div>
     </div>
 
-    <!-- قسم إنشاء حساب جديد -->
-    <div class="register-container" id="registerContainer">
-        <div class="login-form-container">
-            <div class="login-logo">
-                <h1>إنشاء حساب جديد</h1>
-                <p>انضم إلى مجتمعنا</p>
-            </div>
-            <form class="login-form" id="registerForm">
-                <input type="text" id="registerFullName" placeholder="الاسم الكامل" required>
-                <input type="text" id="registerUsername" placeholder="اسم المستخدم (للبحث والإضافة)" required>
-                <input type="email" id="registerEmail" placeholder="البريد الإلكتروني" required>
-                <input type="password" id="registerPassword" placeholder="كلمة المرور" required>
-                <div id="registerError" class="error-message"></div>
-                <button type="submit" class="signup-button">إنشاء حساب</button>
-                <div class="login-divider">أو</div>
-                <button type="button" id="goToLoginBtn">تسجيل الدخول بحساب موجود</button>
-            </form>
-        </div>
-    </div>
+    <script>
+        // المتغيرات العامة
+        const API_KEY = "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"; // مفتاح API من Hugging Face
+        const DEFAULT_MODEL = "mistralai/Mistral-7B-Instruct-v0.2"; // النموذج الافتراضي
+        
+        // عناصر واجهة المستخدم
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const loadingIndicator = document.getElementById('loading');
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        // حالة التطبيق
+        let isLoading = false;
+        let isDarkMode = false;
+        let messages = [
+            { role: 'assistant', content: 'مرحباً! أنا مساعدك الذكي. كيف يمكنني مساعدتك اليوم؟' }
+        ];
+        
+        // تهيئة التطبيق
+        function init() {
+            // تحميل الوضع المظلم من التخزين المحلي
+            loadTheme();
+            
+            // ربط الأحداث
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            themeToggle.addEventListener('click', toggleTheme);
+            
+            // ضبط ارتفاع حقل الإدخال تلقائياً
+            messageInput.addEventListener('input', autoResizeTextarea);
+        }
+        
+        // إرسال رسالة
+        async function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (!messageText || isLoading) return;
+            
+            // مسح حقل الإدخال
+            messageInput.value = '';
+            autoResizeTextarea();
+            
+            // إضافة رسالة المستخدم
+            const userMessage = { role: 'user', content: messageText };
+            messages.push(userMessage);
+            addMessageToUI(userMessage);
+            
+            // تعيين حالة التحميل
+            setLoading(true);
+            
+            try {
+                // محاولة الحصول على رد من Hugging Face API
+                const aiResponse = await getAIResponse(messages);
+                
+                // إضافة رد المساعد
+                const assistantMessage = { role: 'assistant', content: aiResponse };
+                messages.push(assistantMessage);
+                addMessageToUI(assistantMessage);
+            } catch (error) {
+                console.error('Error getting AI response:', error);
+                
+                // في حالة الخطأ، استخدم رداً محلياً بسيطاً
+                const fallbackResponse = getFallbackResponse(messageText);
+                const assistantMessage = { role: 'assistant', content: fallbackResponse };
+                messages.push(assistantMessage);
+                addMessageToUI(assistantMessage);
+                
+                // إضافة رسالة خطأ صغيرة
+                addMessageToUI({ 
+                    role: 'error', 
+                    content: 'ملاحظة: تم استخدام رد محلي بسبب مشكلة في الاتصال بـ API' 
+                });
+            } finally {
+                // إيقاف حالة التحميل
+                setLoading(false);
+            }
+        }
+        
+        // الحصول على رد من Hugging Face API
+        async function getAIResponse(messages) {
+            // تحضير النص للإرسال إلى Hugging Face
+            const lastMessage = messages[messages.length - 1].content;
+            
+            // استخراج آخر 3 رسائل للحفاظ على السياق
+            const conversationHistory = messages
+                .slice(-3)
+                .map(msg => `${msg.role === 'user' ? 'المستخدم' : 'المساعد'}: ${msg.content}`)
+                .join('\n\n');
+            
+            // تحسين الـ prompt للحصول على ردود أكثر تفصيلاً وفائدة
+            const prompt = `أنت مساعد ذكاء اصطناعي عربي مفيد وودود. أجب على أسئلة المستخدم بشكل مفصل ودقيق.
 
-    <!-- قسم الدردشة -->
-    <div class="chat-container" id="chatContainer">
-        <div class="chat-sidebar" id="chatSidebar">
-            <div class="sidebar-header">
-                <h2>المحادثات</h2>
-                <div class="user-info">
-                    <span id="userDisplayName" class="user-name"></span>
-                </div>
-                <div class="header-actions">
-                    <div id="userOnlineStatus" class="online-status" title="متصل"></div>
-                    <button id="addUserBtn" class="icon-btn" title="إضافة مستخدم جديد"><i class="fas fa-user-plus"></i></button>
-                    <button id="darkModeBtn" class="icon-btn" title="تبديل الوضع المظلم/العادي"><i class="fas fa-moon"></i></button>
-                    <button id="profileBtn" class="icon-btn" title="الملف الشخصي"><i class="fas fa-user-cog"></i></button>
-                    <button id="logoutBtn" class="icon-btn" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
-                </div>
-            </div>
-            <div class="add-user-container" id="addUserContainer">
-                <div class="add-user-form">
-                    <input type="text" id="searchUsername" placeholder="البحث عن مستخدم باسم المستخدم">
-                    <button id="searchUserBtn"><i class="fas fa-search"></i></button>
-                </div>
-                <div id="searchResults" class="search-results"></div>
-            </div>
-            <ul class="chat-list" id="chatList">
-                <div class="no-conversations">لم تبدأ محادثات بعد.<br>استخدم زر + لإضافة مستخدم جديد.</div>
-            </ul>
-            <div class="pinned-chats-header">محادثات مثبتة</div>
-            <ul class="pinned-chat-list" id="pinnedChatList"></ul>
-        </div>
-        <div class="chat-main" id="chatMain">
-            <div class="chat-header">
-                <button class="back-to-chats" id="backToChats"><i class="fas fa-arrow-right"></i></button>
-                <div class="current-chat-profile">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="chat-header-info">
-                    <div class="current-chat-name" id="currentChatName">اختر محادثة</div>
-                    <div class="chat-user-status" id="chatUserStatus"></div>
-                </div>
-                <div class="chat-header-options">
-                    <button id="pinChatBtn" class="pin-chat-btn" title="تثبيت المحادثة"><i class="fas fa-thumbtack"></i></button>
-                    <button id="unpinChatBtn" class="unpin-chat-btn" title="إلغاء تثبيت المحادثة" style="display: none;"><i class="fas fa-thumbtack fa-rotate-90"></i></button>
-                    <button id="blockUserBtn" class="block-user-btn" style="display: none;">حظر المستخدم</button>
-                    <button id="unblockUserBtn" class="unblock-user-btn" style="display: none;">إلغاء الحظر</button>
-                </div>
-            </div>
-            <div class="messages-container" id="messagesContainer">
-                <div class="welcome-message">
-                    <h3>مرحباً بك في تطبيق الدردشة</h3>
-                    <p>أضف مستخدم للدردشة معه من زر + في الأعلى</p>
-                </div>
-            </div>
-            <div id="typingIndicator" class="typing-indicator" style="display: none;">
-                جاري الكتابة...
-            </div>
-            <div class="message-input-container">
-                <button class="emoji-button" id="emojiBtn" title="إضافة رموز تعبيرية">😊</button>
-                <input type="file" id="imageInput" accept="image/*" style="display: none;">
-                <button class="image-button" id="imageButton" title="إرسال صورة"><i class="fas fa-image"></i></button>
-                <input type="text" class="message-input" id="messageInput" placeholder="اكتب رسالة..." disabled>
-                <button class="send-button" id="sendButton" disabled><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>
-    </div>
+المحادثة السابقة:
+${conversationHistory}
 
-    <!-- قسم الملف الشخصي -->
-    <div class="profile-modal" id="profileModal">
-        <div class="profile-content">
-            <div class="profile-header">
-                <h2>الملف الشخصي</h2>
-                <button id="closeProfileBtn" class="close-btn">&times;</button>
-            </div>
-            <div class="profile-photo-container">
-                <div class="profile-photo" id="profilePhoto">
-                    <i class="fas fa-user"></i>
-                </div>
-                <button id="changePhotoBtn" class="change-photo-btn">تغيير الصورة</button>
-                <input type="file" id="photoInput" accept="image/*" style="display: none;">
-            </div>
-            <form id="profileForm" class="profile-form">
-                <div class="form-group">
-                    <label for="profileFullName">الاسم الكامل</label>
-                    <input type="text" id="profileFullName" name="fullName" required>
-                </div>
-                <div class="form-group">
-                    <label for="profileUsername">اسم المستخدم</label>
-                    <input type="text" id="profileUsername" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="profileEmail">البريد الإلكتروني</label>
-                    <input type="email" id="profileEmail" name="email" required readonly>
-                </div>
-                <div id="profileError" class="error-message"></div>
-                <button type="submit" class="save-profile-btn">حفظ التغييرات</button>
-            </form>
-        </div>
-    </div>
+المستخدم: ${lastMessage}
 
-    <!-- قسم معاينة الصورة -->
-    <div class="image-preview-modal" id="imagePreviewModal" style="display: none;">
-        <div class="image-preview-content">
-            <h3>معاينة الصورة</h3>
-            <div class="preview-container">
-                <img id="imagePreview" src="" alt="معاينة الصورة">
-            </div>
-            <div class="preview-actions">
-                <button id="confirmImageBtn" class="confirm-btn">استخدام هذه الصورة</button>
-                <button id="cancelImageBtn" class="cancel-btn">إلغاء</button>
-            </div>
-        </div>
-    </div>
+المساعد:`;
 
-    <!-- منطقة الرموز التعبيرية -->
-    <div id="emojiPickerContainer" class="emoji-picker-container" style="display: none;">
-        <emoji-picker id="emojiPicker"></emoji-picker>
-    </div>
-
-    <!-- مكتبات Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <!-- مكتبات إضافية -->
-    <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js" type="module"></script>
-    
-    <!-- ملف جافاسكريبت الخاص بالتطبيق -->
-    <script src="app.js"></script>
+            // إعداد طلب الـ API
+            const apiUrl = `https://api-inference.huggingface.co/models/${DEFAULT_MODEL}`;
+            
+            // إرسال الطلب إلى Hugging Face API
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    inputs: prompt,
+                    parameters: {
+                        max_new_tokens: 500,
+                        temperature: 0.7,
+                        top_p: 0.95,
+                        do_sample: true,
+                        return_full_text: false
+                    }
+                })
+            });
+            
+            // التحقق من نجاح الطلب
+            if (!response.ok) {
+                throw new Error(`فشل طلب Hugging Face API: ${response.status} ${response.statusText}`);
+            }
+            
+            // معالجة الرد
+            const data = await response.json();
+            
+            // استخراج النص من الرد
+            let aiResponse = '';
+            if (Array.isArray(data) && data.length > 0) {
+                aiResponse = data[0].generated_text || '';
+            } else if (data.generated_text) {
+                aiResponse = data.generated_text;
+            } else {
+                aiResponse = JSON.stringify(data);
+            }
+            
+            // تنظيف الرد
+            return cleanResponse(aiResponse);
+        }
+        
+        // تنظيف الرد من الذكاء الاصطناعي
+        function cleanResponse(response) {
+            if (!response) return 'عذراً، لم أتمكن من فهم السؤال. هل يمكنك إعادة صياغته؟';
+            
+            // إزالة أي علامات "المساعد:" أو "AI:" من بداية الرد
+            response = response.replace(/^(المساعد|AI|Assistant)(\s*:|:)?\s*/i, '');
+            
+            // إزالة أي نص بعد علامات نهاية الرد مثل "المستخدم:" أو "Human:"
+            const endMarkers = ['المستخدم:', 'Human:', 'User:', 'المستخدم :', 'Human :', 'User :'];
+            for (const marker of endMarkers) {
+                const index = response.indexOf(marker);
+                if (index !== -1) {
+                    response = response.substring(0, index).trim();
+                }
+            }
+            
+            return response.trim();
+        }
+        
+        // الحصول على رد محلي بسيط (في حالة فشل الاتصال بـ API)
+        function getFallbackResponse(message) {
+            // ردود بسيطة للأسئلة الشائعة
+            if (message.includes('مرحبا') || message.includes('أهلا') || message.includes('السلام عليكم')) {
+                return 'مرحباً! كيف يمكنني مساعدتك اليوم؟';
+            }
+            
+            if (message.includes('كيف حالك') || message.includes('كيف الحال')) {
+                return 'أنا بخير، شكراً على سؤالك! كيف يمكنني مساعدتك اليوم؟';
+            }
+            
+            if (message.includes('من أنت') || message.includes('ما هو اسمك')) {
+                return 'أنا مساعد ذكاء اصطناعي مصمم للدردشة ومساعدتك في الإجابة على أسئلتك وتقديم المعلومات المفيدة.';
+            }
+            
+            if (message.includes('شكرا') || message.includes('شكراً')) {
+                return 'العفو! سعيد بأنني تمكنت من مساعدتك. هل هناك شيء آخر تحتاج إليه؟';
+            }
+            
+            // رد عام للأسئلة الأخرى
+            return 'شكراً على سؤالك. هذا رد محلي بسيط لأنني لم أتمكن من الاتصال بخدمة الذكاء الاصطناعي. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.';
+        }
+        
+        // إضافة رسالة إلى واجهة المستخدم
+        function addMessageToUI(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${message.role}-message`;
+            
+            // إنشاء محتوى الرسالة
+            const contentElement = document.createElement('div');
+            contentElement.className = 'message-content';
+            contentElement.innerHTML = formatMessageContent(message.content);
+            
+            // إضافة الوقت
+            const timeElement = document.createElement('div');
+            timeElement.className = 'message-time';
+            const now = new Date();
+            timeElement.textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            // إضافة العناصر إلى الرسالة
+            messageElement.appendChild(contentElement);
+            messageElement.appendChild(timeElement);
+            
+            // إضافة الرسالة إلى المحادثة
+            chatContainer.appendChild(messageElement);
+            
+            // التمرير إلى أسفل
+            scrollToBottom();
+        }
+        
+        // تنسيق محتوى الرسالة
+        function formatMessageContent(content) {
+            if (!content) return '';
+            
+            // تحويل الروابط إلى روابط قابلة للنقر
+            content = content.replace(
+                /(https?:\/\/[^\s]+)/g, 
+                '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+            );
+            
+            // تحويل السطور الجديدة إلى <br>
+            content = content.replace(/\n/g, '<br>');
+            
+            return content;
+        }
+        
+        // التمرير إلى أسفل المحادثة
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // تعيين حالة التحميل
+        function setLoading(loading) {
+            isLoading = loading;
+            loadingIndicator.style.display = loading ? 'block' : 'none';
+            sendButton.disabled = loading;
+            messageInput.disabled = loading;
+        }
+        
+        // ضبط ارتفاع حقل الإدخال تلقائياً
+        function autoResizeTextarea() {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = (messageInput.scrollHeight) + 'px';
+        }
+        
+        // تحميل السمة المحفوظة
+        function loadTheme() {
+            isDarkMode = localStorage.getItem('darkMode') === 'true';
+            applyTheme();
+        }
+        
+        // تطبيق السمة الحالية
+        function applyTheme() {
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                themeToggle.textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.textContent = '🌙';
+            }
+        }
+        
+        // تبديل السمة بين الفاتح والداكن
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('darkMode', isDarkMode);
+            applyTheme();
+        }
+        
+        // تهيئة التطبيق عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
-</html>
+    </html>
+    
